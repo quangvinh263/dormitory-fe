@@ -1,11 +1,24 @@
-// src/components/shared/header/LogoutButton.jsx
+import { useNavigate } from 'react-router-dom';
 import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 
+import Button from '../../ui/Button'; 
+
 export default function LogoutButton() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // 1. Sau này sẽ thêm logic xóa Token/User trong Context ở đây
+    // 2. Chuyển hướng về trang login
+    navigate('/auth/login');
+  };
+
   return (
-    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm cursor-pointer">
-      <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
-      <span>Đăng xuất</span>
-    </button>
+    <Button 
+      variant="white" // Dùng variant 'white' để có viền xám, nền trắng như cũ
+      icon={<ArrowRightStartOnRectangleIcon className="w-5 h-5" />}
+      onClick={handleLogout}
+    >
+      Đăng xuất
+    </Button>
   );
 }

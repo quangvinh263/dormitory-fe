@@ -1,10 +1,44 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { BuildingOfficeIcon, LockClosedIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
+// Import UI Components
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+
 export default function ResetPassword() {
+  const navigate = useNavigate();
+  
+  // State lưu mật khẩu
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Hàm xử lý đổi mật khẩu
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // 1. Kiểm tra độ dài (Demo đơn giản)
+    if (password.length < 8) {
+      alert("Mật khẩu phải có ít nhất 8 ký tự!");
+      return;
+    }
+
+    // 2. Kiểm tra khớp mật khẩu
+    if (password !== confirmPassword) {
+      alert("Mật khẩu xác nhận không khớp!");
+      return;
+    }
+
+    // 3. Giả lập thành công
+    console.log("Đổi mật khẩu thành công:", password);
+    alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+    navigate('/auth/login');
+  };
+
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 animate-fade-in">
       
+      {/* Header */}
       <div className="text-center mb-8">
         <div className="bg-primary w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
           <BuildingOfficeIcon className="h-7 w-7 text-white" />
@@ -13,39 +47,31 @@ export default function ResetPassword() {
         <p className="text-gray-500 text-sm mt-2">Vui lòng thiết lập mật khẩu mới cho tài khoản</p>
       </div>
 
-      <form className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5">
         
         {/* Mật khẩu mới */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <LockClosedIcon className="h-5 w-5 text-gray-400" />
-            </div>
-            <input 
-              type="password" 
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block transition-colors"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
+        <Input 
+          label="Mật khẩu mới"
+          type="password"
+          placeholder="••••••••"
+          icon={<LockClosedIcon className="w-5 h-5"/>}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
         {/* Xác nhận mật khẩu */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <CheckCircleIcon className="h-5 w-5 text-gray-400" />
-            </div>
-            <input 
-              type="password" 
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block transition-colors"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
+        <Input 
+          label="Xác nhận mật khẩu"
+          type="password"
+          placeholder="••••••••"
+          icon={<CheckCircleIcon className="w-5 h-5"/>}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
 
-        {/* Gợi ý mật khẩu an toàn */}
+        {/* Gợi ý mật khẩu an toàn (Giữ nguyên UI này vì nó đặc thù, không cần component hóa) */}
         <div className="bg-blue-50 p-3 rounded-lg text-xs text-blue-700 space-y-1">
             <p className="font-bold">Yêu cầu mật khẩu:</p>
             <ul className="list-disc pl-4 space-y-0.5 text-blue-600/80">
@@ -55,9 +81,10 @@ export default function ResetPassword() {
             </ul>
         </div>
 
-        <button type="submit" className="w-full text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all shadow-md shadow-blue-500/20 cursor-pointer">
+        {/* Nút Đổi mật khẩu */}
+        <Button type="submit" className="w-full" size="lg">
           Đổi mật khẩu
-        </button>
+        </Button>
 
         <p className="text-sm font-light text-gray-500 text-center">
            <Link to="/auth/login" className="font-medium text-primary hover:underline">Quay lại đăng nhập</Link>

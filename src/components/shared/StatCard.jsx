@@ -1,15 +1,16 @@
 import clsx from 'clsx';
 
-export default function StatCard({ title, icon, value, subtext, type = 'default', action }) {
-  // Cấu hình màu sắc text dựa trên type
-  const theme = {
-    default: { text: 'text-gray-900', sub: 'text-gray-500' },
-    success: { text: 'text-green-600', sub: 'text-gray-500' }, // Màu xanh lá (Đang ở, Đã đăng ký)
-    warning: { text: 'text-orange-600', sub: 'text-gray-500' }, // Màu cam (Cần thanh toán)
-    danger:  { text: 'text-red-600', sub: 'text-red-400' },    // Màu đỏ (Vi phạm)
-  };
+const THEMES = {
+  default: { text: 'text-gray-900', sub: 'text-gray-500' },
+  success: { text: 'text-green-600', sub: 'text-gray-500' },
+  warning: { text: 'text-orange-600', sub: 'text-gray-500' },
+  danger:  { text: 'text-red-600', sub: 'text-red-400' },
+};
 
-  const color = theme[type] || theme.default;
+export default function StatCard({ title, icon, value, subtext, type = 'default', action }) {
+  
+  // 2. Lấy theme từ object tĩnh bên ngoài
+  const color = THEMES[type] || THEMES.default;
 
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col justify-between">
@@ -31,7 +32,7 @@ export default function StatCard({ title, icon, value, subtext, type = 'default'
         )}
       </div>
 
-      {/* Nút hành động (nếu có - VD: Nút bấm xem chi tiết) */}
+      {/* Nút hành động (nếu có) */}
       {action && <div className="mt-4 pt-3 border-t border-gray-50">{action}</div>}
     </div>
   );

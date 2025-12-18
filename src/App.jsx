@@ -13,8 +13,13 @@ import VerifyOtp from './pages/auth/VerifyOtp';
 
 // Import Pages - Admin
 import AdminDashboard from './pages/admin/Dashboard';
+
+// Import Pages - Manager
 import ManagerDashboard from './pages/manager/Dashboard';
+
+// Import Pages - Student
 import StudentDashboard from './pages/student/Dashboard';
+import Profile from './pages/student/Profile';
 
 export default function App() {
   return (
@@ -55,6 +60,7 @@ export default function App() {
           {/* --- STUDENT ROUTES (Sinh viên) --- */}
           <Route path="/student">
              <Route index element={<StudentDashboard />} />
+             <Route path="profile" element={<Profile />} />
              <Route path="contract" element={<div>Trang Hợp đồng của tôi</div>} />
              <Route path="bills" element={<div>Trang Hóa đơn</div>} />
           </Route>

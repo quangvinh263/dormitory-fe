@@ -1,11 +1,20 @@
-// src/components/shared/header/StudentDropdown.jsx
 import { Fragment } from 'react';
 import { Menu, Transition } from '@headlessui/react';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import { getInitials } from '../../../utils/format'; // Import hàm format
+import { getInitials } from '../../../utils/format';
 
 export default function StudentDropdown({ user }) {
+  const navigate = useNavigate();
+
+  // Hàm xử lý đăng xuất
+  const handleLogout = () => {
+    // 1. Xóa token/user data (sau này làm)
+    // 2. Chuyển về login
+    navigate('/auth/login');
+  };
+
   return (
     <Menu as="div" className="relative ml-3">
       {/* Nút Avatar tròn */}
@@ -43,16 +52,24 @@ export default function StudentDropdown({ user }) {
            <div className="py-1">
               <Menu.Item>
                 {({ active }) => (
-                  <a href="#" className={clsx(active ? 'bg-gray-50' : '', 'flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700')}>
+                  // SỬA: Dùng Link thay cho thẻ a
+                  <Link 
+                    to="/student/profile"
+                    className={clsx(active ? 'bg-gray-50' : '', 'flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700')}
+                  >
                     <UserIcon className="w-5 h-5 text-gray-400" />
                     Thông tin cá nhân
-                  </a>
+                  </Link>
                 )}
               </Menu.Item>
               
               <Menu.Item>
                 {({ active }) => (
-                  <button className={clsx(active ? 'bg-red-50' : '', 'flex w-full items-center gap-3 px-5 py-2.5 text-sm text-red-600 font-medium')}>
+                  // SỬA: Thêm sự kiện onClick={handleLogout}
+                  <button 
+                    onClick={handleLogout}
+                    className={clsx(active ? 'bg-red-50' : '', 'flex w-full items-center gap-3 px-5 py-2.5 text-sm text-red-600 font-medium')}
+                  >
                     <ArrowRightStartOnRectangleIcon className="w-5 h-5 text-red-500" />
                     Đăng xuất
                   </button>

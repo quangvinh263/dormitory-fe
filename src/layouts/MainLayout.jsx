@@ -1,14 +1,16 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import Header from '../components/shared/Header';
 import MenuTabs from '../components/shared/MenuTabs';
 import { ROLE_MENUS } from '../utils/menuConfig';
 import { ROLES } from '../utils/constants';
 
 export default function MainLayout() {
-  
+
+  const location = useLocation();
+
   // 1. CHỌN VAI TRÒ ĐỂ TEST (Đổi giá trị này để xem 3 màn hình khác nhau)
   // Các giá trị: ROLES.ADMIN | ROLES.MANAGER | ROLES.STUDENT
-  const currentRole = ROLES.MANAGER; 
+  const currentRole = ROLES.STUDENT; 
 
   // 2. Dữ liệu giả lập (Sau này lấy từ API/Context)
   const MOCK_USERS = {
@@ -18,9 +20,9 @@ export default function MainLayout() {
   };
 
   const currentUser = MOCK_USERS[currentRole];
-  
-  // Lấy menu tương ứng với Role
   const menus = ROLE_MENUS[currentRole] || [];
+
+  const isProfilePage = location.pathname.includes('/profile');
 
   // Bảo vệ: Nếu không có user (chưa login) -> Đá về trang login
   if (!currentUser) {
@@ -37,7 +39,7 @@ export default function MainLayout() {
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
         {/* Menu Tabs (Truyền danh sách menu tương ứng) */}
-        <MenuTabs menus={menus} />
+        {!isProfilePage && <MenuTabs menus={menus} />}
 
         {/* Nơi hiển thị các trang con (Dashboard, List,...) */}
         <div className="min-h-[500px] animate-fade-in-up">

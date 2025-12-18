@@ -8,8 +8,18 @@ export default function MenuTabs({ menus = [] }) {
   return (
     <div className="bg-gray-100 p-1.5 rounded-xl w-full flex overflow-x-auto gap-1 no-scrollbar">
       {menus.map((item) => {
-        // Kiểm tra xem tab có đang active không
-        const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
+        
+        // 1. Tính độ sâu của item
+        const itemDepth = item.path.split('/').filter(Boolean).length;
+        
+        // 2. Logic kiểm tra Active
+        let isActive = false;
+
+        if (itemDepth === 1) {
+           isActive = currentPath === item.path;
+        } else {
+           isActive = currentPath === item.path || currentPath.startsWith(item.path + '/');
+        }
 
         return (
           <Link
