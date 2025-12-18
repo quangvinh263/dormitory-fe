@@ -14,6 +14,30 @@ export const signUp = async(data) => {
   } 
 };
 
+export const resendOtpVerifyEmail = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/Auth/ResendOTPVerifyEmail`, { email });
+    if (response.status === 200 && response.data.success) {
+        return { success: true, message: response.data?.message || 'OTP resent successfully' };
+    }
+    return { success: false, message: response.data?.message || 'Failed to resend OTP' };
+    } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error resending OTP' };
+  }
+};
+
+export const verifyEmail = async (data) => {
+  try {
+    const response = await axios.post(`${API_URL}/Auth/VerifyEmail`, data);
+    if (response.status === 200 && response.data.success) {
+        return { success: true, message: response.data?.message || 'Email verified successfully' };
+    }
+    return { success: false, message: response.data?.message || 'Email verification failed' };
+    } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Email verification error' };
+  } 
+};
+
 export const signIn = async(data) => {
   try {
     const response = await axios.post(`${API_URL}/Auth/Login`, data);
@@ -29,6 +53,55 @@ export const signIn = async(data) => {
     return { success: false, message: response.data?.message || 'Sign in failed' };
     } catch (error) {
     return { success: false, message: error.response?.data?.message || 'Sign in error' };
+  }
+};
+
+export const forgotPassword = async (data) => {
+  try {
+    const response = await axios.post(`${API_URL}/Auth/ForgotPassword`, data);
+    if (response.status === 200 && response.data.success) {
+        return { success: true, message: response.data?.message || 'Password reset email sent' };
+    }
+    return { success: false, message: response.data?.message || 'Failed to send password reset email' };
+    }
+    catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error sending password reset email' };
+  }
+};
+
+export const resendOtpResetPassword = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/Auth/ResendOTPResetPassword`, { email });
+    if (response.status === 200 && response.data.success) {
+        return { success: true, message: response.data?.message || 'OTP resent successfully' };
+    }
+    return { success: false, message: response.data?.message || 'Failed to resend OTP' };
+    } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error resending OTP' };
+  } 
+};
+
+export const verifyResetToken = async (data) => {
+  try {
+    const response = await axios.post(`${API_URL}/Auth/VerifyResetToken`, data);
+    if (response.status === 200 && response.data.success) {
+        return { success: true, message: response.data?.message || 'Reset token is valid' };
+    }
+    return { success: false, message: response.data?.message || 'Invalid reset token' };
+    } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error verifying reset token' };
+  }
+};
+
+export const resetPassword = async (data) => {
+  try {
+    const response = await axios.post(`${API_URL}/Auth/ResetPassword`, data);
+    if (response.status === 200 && response.data.success) {
+        return { success: true, message: response.data?.message || 'Password reset successful' };
+    }
+    return { success: false, message: response.data?.message || 'Password reset failed' };
+    } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error resetting password' };
   }
 };
 
