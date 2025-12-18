@@ -44,10 +44,10 @@ export const signIn = async(data) => {
     if (response.status === 200 && response.data.success) {
         return { 
             success: true, 
+            message: response.data?.message || 'Sign in successful',
             accesstoken: response.data.accesstoken, 
             refreshtoken: response.data.refreshtoken, 
-            accountId: response.data.accountId, 
-            role: response.data.role
+            accountId: response.data.accountId
          };
     }
     return { success: false, message: response.data?.message || 'Sign in failed' };
@@ -108,7 +108,7 @@ export const resetPassword = async (data) => {
 export const signOut = async (refreshToken) => {
   try {
     if (!refreshToken) return { success: false, message: 'No refresh token provided' };
-    const response = await axios.post(`${API_URL}/Auth/LogOut`, { refreshToken });
+    const response = await axios.post(`${API_URL}/Auth/Logout`, { refreshToken });
     if (response.status === 200 || response.data.success) {
       return { success: true, message: response.data?.message || 'Signed out' };
     }
