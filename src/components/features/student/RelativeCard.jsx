@@ -1,5 +1,5 @@
 import { UserIcon, BriefcaseIcon, PhoneIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import ProfileField from './ProfileField'; // Import component con vừa tạo
+import ProfileField from './ProfileField';
 
 export default function RelativeCard({ index, data, isEditing, onChange, onRemove }) {
   return (

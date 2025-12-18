@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 
 export default function Button({ 
   children, 
-  variant = 'primary', // primary | danger | success | white | outline
-  size = 'md',         // sm | md | lg
+  variant = 'primary', 
+  size = 'md', 
   className, 
-  to,                  // Nếu có props 'to', nó sẽ biến thành thẻ Link
+  to, 
   icon,
   ...props 
 }) {
@@ -29,26 +29,37 @@ export default function Button({
 
   // 3. Class chung
   const baseClass = clsx(
+    // inline-flex, items-center, justify-center: Cốt lõi để căn giữa dọc/ngang
     'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
     variants[variant],
     sizes[size],
     className
   );
 
+  // Helper để render nội dung bên trong (tránh lặp code)
+  const renderContent = () => (
+    <>
+      {icon && (
+        <span className="flex shrink-0 items-center justify-center w-5 h-5">
+          {icon}
+        </span>
+      )}
+      <span>{children}</span>
+    </>
+  );
+
   // 4. Render (Link hoặc Button)
   if (to) {
     return (
       <Link to={to} className={baseClass} {...props}>
-        {icon && <span className="w-5 h-5">{icon}</span>}
-        {children}
+        {renderContent()}
       </Link>
     );
   }
 
   return (
     <button className={baseClass} {...props}>
-      {icon && <span className="w-5 h-5">{icon}</span>}
-      {children}
+      {renderContent()}
     </button>
   );
 }

@@ -1,4 +1,11 @@
 export default function Input({ label, error, icon, className, ...props }) {
+
+  const iconElement = icon ? (
+    <span className="w-5 h-5 text-gray-400 flex items-center justify-center">
+      {icon}
+    </span>
+  ) : null;
+  
   return (
     <div className={className}>
       {label && (

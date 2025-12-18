@@ -1,17 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  UserIcon, EnvelopeIcon, PhoneIcon, IdentificationIcon, 
-  MapPinIcon, AcademicCapIcon, ArrowLeftIcon, PlusIcon 
-} from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 // Import UI Components chung
 import Section from '../../components/shared/Section';
-import Button from   '../../components/ui/Button';
 
-// Import Components tách riêng cho tính năng Profile
-import ProfileField from '../../components/features/student/ProfileField';
-import RelativeCard from '../../components/features/student/RelativeCard';
+// Import các Feature Components đã tách
+import PersonalInfoSection from '../../components/features/student/PersonalInfoSection';
+import RelativeListSection from '../../components/features/student/RelativeListSection';
 
 // --- MOCK DATA ---
 const MOCK_DATA = {
@@ -34,17 +30,21 @@ export default function StudentProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(MOCK_DATA);
 
-  // Logic xử lý (Giữ nguyên như cũ)
-  const handleChange = (name, value) => {
+  // --- LOGIC XỬ LÝ ---
+  
+  // 1. Xử lý sửa thông tin cá nhân
+  const handleInfoChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // 2. Xử lý sửa thông tin người thân
   const handleRelativeChange = (index, field, value) => {
     const newRelatives = [...formData.relatives];
     newRelatives[index][field] = value;
     setFormData(prev => ({ ...prev, relatives: newRelatives }));
   };
 
+  // 3. Các hành động khác
   const addRelative = () => {
     const newRelative = { id: Date.now(), name: '', relation: '', job: '', phone: '', address: '' };
     setFormData(prev => ({ ...prev, relatives: [...prev.relatives, newRelative] }));
@@ -66,94 +66,46 @@ export default function StudentProfile() {
     setIsEditing(false);
   };
 
+  // --- RENDER GIAO DIỆN ---
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      {/* Header */}
+    <div className="space-y-4 animate-fade-in-up">
+      {/* Header Link */}
       <div>
-         <Link to="/student" className="inline-flex items-center text-sm text-gray-500 hover:text-primary mb-2">
-           <ArrowLeftIcon className="w-4 h-4 mr-1"/> Quay lại
+         <Link to="/student" className="inline-flex items-center text-base text-stone-800 hover:text-primary mb-2 pl-4">
+           <ArrowLeftIcon className="w-4 h-4 mr-2"/> Quay lại 
          </Link>
-         <h1 className="text-2xl font-bold text-gray-900">Thông Tin Cá Nhân</h1>
-         <p className="text-gray-500 text-sm">Quản lý và cập nhật thông tin hồ sơ của bạn</p>
       </div>
 
-      {/* --- PHẦN 1: THÔNG TIN CÁ NHÂN --- */}
-      <Section className="relative">
-        {!isEditing && (
-           <Button className="absolute top-6 right-6" size="sm" variant="primary" onClick={() => setIsEditing(true)}>
-             Chỉnh sửa
-           </Button>
-        )}
+      {/* BLOCK 1: THÔNG TIN CÁ NHÂN */}
+      <PersonalInfoSection 
+        data={formData}
+        isEditing={isEditing}
+        onEdit={() => setIsEditing(true)}
+        onCancel={handleCancel}
+        onSave={handleSave}
+        onChange={handleInfoChange}
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-           <ProfileField label="Họ và tên *" icon={<UserIcon/>} value={formData.fullName} isEditing={isEditing} onChange={(v) => handleChange('fullName', v)} disabled />
-           <ProfileField label="Mã sinh viên" icon={<IdentificationIcon/>} value={formData.studentId} isEditing={isEditing} disabled />
-           <ProfileField label="Email *" icon={<EnvelopeIcon/>} value={formData.email} isEditing={isEditing} disabled />
-           <ProfileField label="Số điện thoại *" icon={<PhoneIcon/>} value={formData.phone} isEditing={isEditing} onChange={(v) => handleChange('phone', v)} />
-           <ProfileField label="CCCD/CMND *" icon={<IdentificationIcon/>} value={formData.cccd} isEditing={isEditing} disabled />
-           <ProfileField label="Nơi cấp CCCD" icon={<MapPinIcon/>} value={formData.cccdPlace} isEditing={isEditing} onChange={(v) => handleChange('cccdPlace', v)} />
+      {/* BLOCK 2: DANH SÁCH NGƯỜI THÂN */}
+      <RelativeListSection 
+        relatives={formData.relatives}
+        isEditing={isEditing}
+        onAdd={addRelative}
+        onChange={handleRelativeChange}
+        onRemove={removeRelative}
+      />
 
-           <ProfileField 
-              type="select" label="Trường học" icon={<AcademicCapIcon/>} 
-              value={formData.school} isEditing={isEditing} 
-              onChange={(v) => handleChange('school', v)}
-              options={[
-                { value: 'uit', label: 'ĐH Công nghệ Thông tin' },
-                { value: 'bk', label: 'ĐH Bách Khoa' },
-                { value: 'khtn', label: 'ĐH Khoa học Tự nhiên' }
-              ]}
-           />
-
-           <ProfileField 
-              type="select" label="Đối tượng ưu tiên" icon={<UserIcon/>} 
-              value={formData.priority} isEditing={isEditing} 
-              onChange={(v) => handleChange('priority', v)}
-              options={[
-                { value: 'none', label: 'Không có' },
-                { value: 'lietsi', label: 'Con thương binh/liệt sĩ' },
-                { value: 'ngheo', label: 'Hộ nghèo/Cận nghèo' }
-              ]}
-           />
-
-           <div className="md:col-span-2">
-              <ProfileField label="Địa chỉ hiện tại" icon={<MapPinIcon/>} value={formData.address} isEditing={isEditing} onChange={(v) => handleChange('address', v)} />
-           </div>
-        </div>
-
-        {isEditing && (
-           <div className="flex items-center gap-3 mt-8 pt-6 border-t border-gray-100">
-              <Button onClick={handleSave}>Lưu thay đổi</Button>
-              <Button variant="white" onClick={handleCancel}>Hủy bỏ</Button>
-           </div>
-        )}
-      </Section>
-
-      {/* --- PHẦN 2: NGƯỜI THÂN --- */}
-      <Section>
-         <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900">Thông Tin Người Thân</h2>
-            {isEditing && (
-               <Button size="sm" variant="success" icon={<PlusIcon className="w-4 h-4"/>} onClick={addRelative}>
-                 Thêm người thân
-               </Button>
-            )}
-         </div>
-
-         <div className="space-y-4">
-            {formData.relatives.map((rel, index) => (
-               <RelativeCard 
-                  key={rel.id} 
-                  index={index} 
-                  data={rel} 
-                  isEditing={isEditing} 
-                  onChange={handleRelativeChange}
-                  onRemove={() => removeRelative(index)}
-               />
-            ))}
-            {formData.relatives.length === 0 && (
-              <p className="text-gray-500 italic text-center">Chưa có thông tin người thân.</p>
-            )}
-         </div>
+      {/* BLOCK 3: LƯU Ý */}
+      <Section className="bg-blue-50/50 border-blue-100">
+         <h3 className="font-bold text-blue-800 text-sm mb-3">Lưu ý</h3>
+         <ul className="list-disc pl-5 text-sm text-blue-700/80 space-y-2">
+           <li>Các trường có dấu (*) là bắt buộc.</li>
+           <li>Mã sinh viên và CCCD không thể chỉnh sửa sau khi đã xác thực.</li>
+           <li>Vui lòng cập nhật số điện thoại người thân chính xác để nhà trường liên hệ khi cần thiết.</li>
+           <li>Email phải đúng định dạng (ví dụ: example@email.com).</li>
+           <li>Số điện thoại phải bắt đầu bằng số 0 và có 10 chữ số.</li>
+           <li>Thay đổi sẽ có hiệu lực ngay sau khi lưu thành công.</li>
+         </ul>
       </Section>
     </div>
   );
