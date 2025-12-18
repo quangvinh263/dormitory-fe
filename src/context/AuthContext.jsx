@@ -1,5 +1,5 @@
 import React, { createContext, useState } from "react";
-import { signOut as apiSignOut } from "../api/authApi";
+import { signOut as apiSignOut } from "../services/authApi";
 
 export const AuthContext = createContext();
 
