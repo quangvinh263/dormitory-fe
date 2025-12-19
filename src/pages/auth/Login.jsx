@@ -1,9 +1,47 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { BuildingOfficeIcon, LockClosedIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 
+// Import các UI Component đã tách
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+
+
 export default function Login() {
+  const navigate = useNavigate();
+  
+  // 1. Quản lý dữ liệu form
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+
+  // Hàm xử lý khi nhập liệu
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(''); // Xóa lỗi khi người dùng gõ lại
+  };
+
+  // 2. Hàm xử lý đăng nhập (Giả lập)
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const { email, password } = formData;
+
+    // Logic Fake Login đơn giản để test chuyển trang
+    if (email === 'admin@dorm.vn' && password === 'password') {
+       navigate('/admin'); // Chuyển sang Dashboard Admin
+    } else if (email === 'manager@dorm.vn' && password === 'password') {
+       navigate('/manager'); // Chuyển sang Dashboard Manager
+    } else if (email === 'student@dorm.vn' && password === 'password') {
+       navigate('/student'); // Chuyển sang Dashboard Student
+    } else {
+       setError('Email hoặc mật khẩu không chính xác (Xem gợi ý bên dưới)');
+    }
+  };
+
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 animate-fade-in">
       
       {/* Header: Logo & Title */}
       <div className="text-center mb-8">
@@ -15,54 +53,65 @@ export default function Login() {
       </div>
 
       {/* Form */}
-      <form className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-            </div>
-            <input 
-              type="email" 
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block transition-colors"
-              placeholder="example@university.edu.vn"
-            />
+      <form onSubmit={handleLogin} className="space-y-5">
+        
+        {/* Hiển thị lỗi nếu có */}
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100 text-center">
+            {error}
           </div>
+        )}
+
+        {/* INPUT EMAIL (Dùng Component Input) */}
+        <Input 
+          label="Email"
+          type="email"
+          name="email"
+          placeholder="example@university.edu.vn"
+          icon={<EnvelopeIcon className="w-5 h-5"/>}
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+
+        {/* INPUT PASSWORD */}
+        <div>
+          {/* Label & Link Quên mật khẩu nằm chung 1 dòng nên ta viết tay phần label này */}
+          <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
+              <Link to="/auth/forgot-password" class="text-xs font-medium text-primary hover:underline">
+                Quên mật khẩu?
+              </Link>
+          </div>
+          {/* Gọi Component Input nhưng không truyền label (vì đã viết ở trên) */}
+          <Input 
+            type="password"
+            name="password"
+            placeholder="••••••••"
+            icon={<LockClosedIcon className="w-5 h-5"/>}
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
         </div>
 
-        <div>
-          <div className="flex justify-between items-center mb-1">
-             <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
-             <Link to="/auth/forgot-password" class="text-xs font-medium text-primary hover:underline">Quên mật khẩu?</Link>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <LockClosedIcon className="h-5 w-5 text-gray-400" />
-            </div>
-            <input 
-              type="password" 
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block transition-colors"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
-
-        <button type="submit" className="w-full text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all shadow-md shadow-blue-500/20 cursor-pointer">
+        {/* BUTTON LOGIN (Dùng Component Button) */}
+        <Button type="submit" className="w-full" size="lg">
           Đăng nhập
-        </button>
+        </Button>
 
         <p className="text-sm font-light text-gray-500 text-center">
           Chưa có tài khoản? <Link to="/auth/register" className="font-medium text-primary hover:underline">Đăng ký ngay</Link>
         </p>
       </form>
 
-      {/* Demo Account Info (Như trong ảnh) */}
+      {/* Demo Account Info */}
       <div className="mt-8 pt-6 border-t border-gray-100 text-center">
         <p className="text-xs text-gray-400 mb-2">Tài khoản demo:</p>
         <div className="text-xs text-gray-500 space-y-1 bg-gray-50 p-3 rounded-lg border border-dashed border-gray-200">
-           <p>Admin: <span className="font-mono text-gray-700">admin@dorm.vn / password</span></p>
-           <p>Trưởng tòa: <span className="font-mono text-gray-700">manager@dorm.vn / password</span></p>
-           <p>Sinh viên: <span className="font-mono text-gray-700">student@dorm.vn / password</span></p>
+           <p>Admin: <span className="font-mono text-gray-700 font-bold">admin@dorm.vn / password</span></p>
+           <p>Trưởng tòa: <span className="font-mono text-gray-700 font-bold">manager@dorm.vn / password</span></p>
+           <p>Sinh viên: <span className="font-mono text-gray-700 font-bold">student@dorm.vn / password</span></p>
         </div>
       </div>
     </div>
