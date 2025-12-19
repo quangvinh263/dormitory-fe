@@ -13,10 +13,11 @@ import RelativeListSection from '../../components/features/student/RelativeListS
 const MOCK_DATA = {
   fullName: 'Trần Thị B',
   studentId: 'SV2024001',
+  gender: 'Nữ',
   email: 'student@dorm.vn',
   phone: '0901234567',
   cccd: '079203001234',
-  cccdPlace: 'Công an TP. Hà Nội',
+  issuePlace: 'Công an TP. Hà Nội',
   school: 'bk',
   priority: 'none',
   address: '123 Đường Giải Phóng, Hà Nội',
