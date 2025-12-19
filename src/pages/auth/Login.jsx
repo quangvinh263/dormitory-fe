@@ -43,6 +43,7 @@ export default function Login() {
         const decodedToken = jwtDecode(result.accesstoken);
         const userRole = decodedToken?.role || result.role;
         result.role = userRole;
+        console.log('result after decoding token:', result);
         login(result);
         if (result.role === 'Admin') {
           navigate('/admin');

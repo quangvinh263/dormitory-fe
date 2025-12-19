@@ -108,13 +108,17 @@ export const resetPassword = async (data) => {
 
 export const signOut = async (refreshToken) => {
   try {
-    if (!refreshToken) return { success: false, message: 'No refresh token provided' };
-    const response = await axios.post(`${API_URL}/Auth/Logout`, { refreshToken });
-    if (response.status === 200 || response.data.success) {
-      return { success: true, message: response.data?.message || 'Signed out' };
+    const response = await axios.post(`${API_URL}/Auth/Logout`, null, {
+      params: { refreshToken } // Gửi qua query parameter
+    });
+    
+    if (response.status === 200) {
+      return { success: true, message: response.data?.message || 'Logged out successfully' };
     }
-    return { success: false, message: response.data?.message || 'Sign out failed' };
+    return { success: false, message: response.data?.message || 'Logout failed' };
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Sign out error' };
+    console.error('Logout API Error:', error);
+    console.error('Error details:', error.response?.data);
+    return { success: false, message: error.response?.data?.message || 'Logout error' };
   }
 };
