@@ -45,7 +45,7 @@ export default function Register() {
     // Giả lập gọi API thành công
     console.log('Dữ liệu đăng ký:', formData);
     alert('Đăng ký thành công! Vui lòng đăng nhập.');
-    navigate('/auth/login');
+    navigate('/student/registration');
   };
 
   return (

@@ -21,6 +21,7 @@ import ManagerDashboard from './pages/manager/Dashboard';
 import StudentDashboard from './pages/student/Dashboard';
 import Profile from './pages/student/Profile';
 import StudentContract from './pages/student/Contract';
+import Registration from './pages/student/Registration';
 
 export default function App() {
   return (
@@ -63,7 +64,7 @@ export default function App() {
              <Route index element={<StudentDashboard />} />
              <Route path="profile" element={<Profile />} />
              <Route path="contract" element={<StudentContract />} />
-             <Route path="bills" element={<div>Trang Hóa đơn</div>} />
+             <Route path="registration" element={<Registration />} />
           </Route>
 
         </Route>
