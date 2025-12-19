@@ -14,7 +14,10 @@ export default function Register() {
   const [formData, setFormData] = useState({
     studentId: '',
     fullName: '',
+    gender: '',
     cccd: '',
+    issuePlace: '',
+    address: '',
     phone: '',
     email: '',
     school: 'uit', // Giá trị mặc định
@@ -61,7 +64,7 @@ export default function Register() {
       <form onSubmit={handleRegister} className="space-y-5">
         
         {/* Hàng 1: MSSV + Họ tên */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <Input 
             label="Mã số sinh viên *" 
             name="studentId" 
@@ -78,6 +81,15 @@ export default function Register() {
             onChange={handleChange} 
             required 
           />
+          <Select 
+            label="Giới tính *" 
+            name="gender" 
+            value={formData.gender} 
+            onChange={handleChange}
+          >
+             <option value="male">Nam</option>
+             <option value="female">Nữ</option>
+          </Select>
         </div>
 
         {/* Hàng 2: CCCD + SĐT */}

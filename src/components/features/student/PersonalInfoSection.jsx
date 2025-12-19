@@ -2,6 +2,7 @@ import {
   UserIcon, EnvelopeIcon, PhoneIcon, IdentificationIcon, 
   MapPinIcon, AcademicCapIcon 
 } from '@heroicons/react/24/outline';
+import { BsGenderAmbiguous } from "react-icons/bs";
 
 import Section from '../../shared/Section';
 import Button from '../../ui/Button';
@@ -40,23 +41,15 @@ export default function PersonalInfoSection({
 
           <ProfileField label="Mã sinh viên" icon={<IdentificationIcon/>} value={data.studentId} isEditing={isEditing} disabled />
           <ProfileField label="Họ và tên *" icon={<UserIcon/>} value={data.fullName} isEditing={isEditing} onChange={(v) => onChange('fullName', v)}/>
-          
-          <ProfileField label="CCCD/CMND *" icon={<IdentificationIcon/>} value={data.cccd} isEditing={isEditing} disabled />
-          <ProfileField label="Nơi cấp CCCD" icon={<MapPinIcon/>} value={data.cccdPlace} isEditing={isEditing} onChange={(v) => onChange('cccdPlace', v)} />
 
-          <ProfileField label="Email *" icon={<EnvelopeIcon/>} value={data.email} isEditing={isEditing} />
+          <ProfileField label="Giới tính *" icon={<BsGenderAmbiguous/>} value={data.gender} isEditing={isEditing} disabled />
           <ProfileField label="Số điện thoại *" icon={<PhoneIcon/>} value={data.phone} isEditing={isEditing} onChange={(v) => onChange('phone', v)} />
 
-          <ProfileField 
-            type="select" label="Trường học" icon={<AcademicCapIcon/>} 
-            value={data.school} isEditing={isEditing} 
-            onChange={(v) => onChange('school', v)}
-            options={[
-              { value: 'uit', label: 'ĐH Công nghệ Thông tin' },
-              { value: 'bk', label: 'ĐH Bách Khoa' },
-              { value: 'khtn', label: 'ĐH Khoa học Tự nhiên' }
-            ]}
-          />
+          <ProfileField label="CCCD/CMND *" icon={<IdentificationIcon/>} value={data.cccd} isEditing={isEditing} disabled />
+          <ProfileField label="Nơi cấp CCCD" icon={<MapPinIcon/>} value={data.issuePlace} isEditing={isEditing} onChange={(v) => onChange('issuePlace', v)} />
+
+          <ProfileField label="Email *" icon={<EnvelopeIcon/>} value={data.email} isEditing={isEditing} />
+
 
           <ProfileField 
             type="select" label="Đối tượng ưu tiên" icon={<UserIcon/>} 
@@ -69,9 +62,18 @@ export default function PersonalInfoSection({
             ]}
           />
 
-          <div className="md:col-span-2">
-            <ProfileField label="Địa chỉ hiện tại" icon={<MapPinIcon/>} value={data.address} isEditing={isEditing} onChange={(v) => onChange('address', v)} />
-          </div>
+          <ProfileField 
+            type="select" label="Trường học" icon={<AcademicCapIcon/>} 
+            value={data.school} isEditing={isEditing} 
+            onChange={(v) => onChange('school', v)}
+            options={[
+              { value: 'uit', label: 'ĐH Công nghệ Thông tin' },
+              { value: 'bk', label: 'ĐH Bách Khoa' },
+              { value: 'khtn', label: 'ĐH Khoa học Tự nhiên' }
+            ]}
+          />
+
+          <ProfileField label="Địa chỉ hiện tại" icon={<MapPinIcon/>} value={data.address} isEditing={isEditing} onChange={(v) => onChange('address', v)} />
       </div>
 
       {/* Nút Lưu / Hủy */}
