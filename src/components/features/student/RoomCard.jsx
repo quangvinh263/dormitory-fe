@@ -116,7 +116,7 @@ export default function RoomCard({ room, onSelect }) {
         variant={isFull ? 'white' : 'primary'}
         onClick={() => onSelect(room)}
       >
-        {isFull ? 'Phòng đã đầy' : 'Chọn phòng này'}
+        {isFull ? 'Phòng đã đầy' : 'Đăng ký phòng này'}
       </Button>
     </div>
   );
