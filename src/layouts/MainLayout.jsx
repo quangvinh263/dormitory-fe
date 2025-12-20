@@ -22,7 +22,7 @@ export default function MainLayout() {
   const currentUser = MOCK_USERS[currentRole];
   const menus = ROLE_MENUS[currentRole] || [];
 
-  const hideTabsPaths = ['/profile', '/student/registration'];
+  const hideTabsPaths = ['/profile', '/student/registration', '/student/payment'];
 
   const shouldHideTabs = hideTabsPaths.some(path => location.pathname.includes(path));
 

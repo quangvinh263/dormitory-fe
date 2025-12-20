@@ -22,6 +22,7 @@ import StudentDashboard from './pages/student/Dashboard';
 import Profile from './pages/student/Profile';
 import StudentContract from './pages/student/Contract';
 import Registration from './pages/student/Registration';
+import Payment from './pages/student/Payment';
 
 export default function App() {
   return (
@@ -65,6 +66,7 @@ export default function App() {
              <Route path="profile" element={<Profile />} />
              <Route path="contract" element={<StudentContract />} />
              <Route path="registration" element={<Registration />} />
+              <Route path="payment" element={<Payment />} />
           </Route>
 
         </Route>
