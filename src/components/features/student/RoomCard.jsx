@@ -60,7 +60,7 @@ export default function RoomCard({ room, onSelect }) {
           </div>
           <div>
             <h4 className="font-bold text-gray-900 text-lg">{room.name}</h4>
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tòa {room.building}</span>
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide"> {room.building}</span>
           </div>
         </div>
         
@@ -79,7 +79,7 @@ export default function RoomCard({ room, onSelect }) {
          {/* Sức chứa */}
          <div className="flex items-center gap-2 text-sm text-gray-900">
             <UserGroupIcon className="w-4 h-4 text-gray-600"/>
-            <span>Phòng {room.capacity} người</span>
+            <span>{room.type}</span>
          </div>
 
          {/* Occupancy visualization */}
@@ -99,7 +99,7 @@ export default function RoomCard({ room, onSelect }) {
          <div className="border-t border-gray-200 pt-3 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Giới tính:</span>
-              <span className="text-gray-900 font-medium">{room.gender || 'Nam'}</span>
+              <span className="text-gray-900 font-medium">{room.gender === 'Male' ? 'Nam' : 'Nữ'}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Giá phòng:</span>

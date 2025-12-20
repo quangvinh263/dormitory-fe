@@ -50,7 +50,11 @@ export default function Login() {
         } else if (result.role === 'Manager') {
           navigate('/manager');
         } else if (result.role === 'Student') {
+          if (!result.hasActiveContract) {
+            navigate('/student/registration');
+          } else {
           navigate('/student');
+          }
         } else {
           navigate('/');
         }

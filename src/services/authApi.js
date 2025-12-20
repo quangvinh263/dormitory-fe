@@ -48,7 +48,8 @@ export const signIn = async(data) => {
             message: response.data?.message || 'Sign in successful',
             accesstoken: response.data.accessToken, 
             refreshtoken: response.data.refreshToken, 
-            accountId: response.data.userId
+            accountId: response.data.userId,
+            hasActiveContract: response.data.hasActiveContract
          };
     }
     return { success: false, message: response.data?.message || 'Sign in failed' };

@@ -1,7 +1,8 @@
 import Section from '../../shared/Section';
 import Select from '../../ui/Select'; 
+import { FunnelIcon } from '@heroicons/react/24/outline';
 
-export default function RoomFilters({ filters, onChange }) {
+export default function RoomFilters({ filters, onChange, buildings = [], roomTypes = [], loading = false }) {
   // Helper để wrap việc gọi onChange cho gọn
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -10,48 +11,62 @@ export default function RoomFilters({ filters, onChange }) {
 
   return (
     <Section className="mb-6 animate-fade-in-up">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        {/* Lọc theo Tòa */}
-        <Select 
-            label="Khu vực / Tòa nhà" 
-            name="building"
-            value={filters.building}
-            onChange={handleChange}
-        >
-              <option value="all">Tất cả khu vực</option>
-              <option value="A">Tòa A (Nam)</option>
-              <option value="B">Tòa B (Nữ)</option>
-              <option value="C">Tòa C (Dịch vụ)</option>
-        </Select>
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <div className="flex items-center gap-2 mb-4">
+          <FunnelIcon className="w-5 h-5 text-gray-700" />
+          <h2 className="text-lg font-semibold text-gray-900">Bộ lọc tìm kiếm</h2>
+          {loading && <span className="text-sm text-gray-500">(Đang tải...)</span>}
+        </div>
 
-        {/* Lọc theo Loại phòng */}
-        <Select 
-            label="Loại phòng" 
-            name="type"
-            value={filters.type}
-            onChange={handleChange}
-        >
-              <option value="all">Tất cả loại phòng</option>
-              <option value="8">Phòng 8 người (Phổ thông)</option>
-              <option value="6">Phòng 6 người (Tiêu chuẩn)</option>
-              <option value="4">Phòng 4 người (Chất lượng cao)</option>
-              <option value="2">Phòng 2 người (Dịch vụ)</option>
-        </Select>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          {/* Lọc theo Tòa */}
+          <Select 
+              label="Khu vực / Tòa nhà" 
+              name="building"
+              value={filters.building}
+              onChange={handleChange}
+              disabled={loading}
+          >
+                <option value="all">Tất cả khu vực</option>
+                {buildings.map((building) => (
+                  <option key={building.buildingID} value={building.buildingID}>
+                    {building.buildingName}
+                  </option>
+                ))}
+          </Select>
 
-        {/* Lọc theo Giá */}
-        <Select 
-            label="Mức giá (VNĐ/năm)" 
-            name="priceRange"
-            value={filters.priceRange}
-            onChange={handleChange}
-        >
-              <option value="all">Mọi mức giá</option>
-              <option value="low">Dưới 500.000đ</option>
-              <option value="medium">500.000đ - 1.000.000đ</option>
-              <option value="high">Trên 1.000.000đ</option>
-        </Select>
+          {/* Lọc theo Loại phòng */}
+          <Select 
+              label="Loại phòng" 
+              name="type"
+              value={filters.typeName}
+              onChange={handleChange}
+              disabled={loading}
+          >
+                <option value="all">Tất cả loại phòng</option>
+                {roomTypes.map((roomType) => (
+                  <option key={roomType.roomTypeID} value={roomType.roomTypeID}>
+                    {roomType.typeName}
+                  </option>
+                ))}
+          </Select>
 
+          {/* Lọc theo Giá */}
+          <Select 
+              label="Mức giá (VNĐ/năm)" 
+              name="priceRange"
+              value={filters.priceRange}
+              onChange={handleChange}
+              disabled={loading}
+          >
+                <option value="all">Mọi mức giá</option>
+                <option value="low">Dưới 1 triệu</option>
+                <option value="medium">1-2 triệu</option>
+                <option value="high">Trên 2 triệu</option>
+          </Select>
+
+        </div>
       </div>
     </Section>
   );
