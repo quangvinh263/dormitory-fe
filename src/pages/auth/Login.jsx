@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BuildingOfficeIcon, LockClosedIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { signIn } from '../../services/authApi';
+import { AuthContext } from '../../context/AuthContext';
+import { jwtDecode } from "jwt-decode";
 
 // Import các UI Component đã tách
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 
-
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
   
   // 1. Quản lý dữ liệu form
   const [formData, setFormData] = useState({
@@ -16,6 +19,7 @@ export default function Login() {
     password: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Hàm xử lý khi nhập liệu
   const handleChange = (e) => {
@@ -23,20 +27,41 @@ export default function Login() {
     setError(''); // Xóa lỗi khi người dùng gõ lại
   };
 
-  // 2. Hàm xử lý đăng nhập (Giả lập)
-  const handleLogin = (e) => {
+  // 2. Hàm xử lý đăng nhập với API
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const { email, password } = formData;
+    setLoading(true);
+    setError('');
 
-    // Logic Fake Login đơn giản để test chuyển trang
-    if (email === 'admin@dorm.vn' && password === 'password') {
-       navigate('/admin'); // Chuyển sang Dashboard Admin
-    } else if (email === 'manager@dorm.vn' && password === 'password') {
-       navigate('/manager'); // Chuyển sang Dashboard Manager
-    } else if (email === 'student@dorm.vn' && password === 'password') {
-       navigate('/student'); // Chuyển sang Dashboard Student
-    } else {
-       setError('Email hoặc mật khẩu không chính xác (Xem gợi ý bên dưới)');
+    try {
+      const result = await signIn({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (result.success) {
+        const decodedToken = jwtDecode(result.accesstoken);
+        const userRole = decodedToken?.role || result.role;
+        result.role = userRole;
+        console.log('result after decoding token:', result);
+        login(result);
+        if (result.role === 'Admin') {
+          navigate('/admin');
+        } else if (result.role === 'Manager') {
+          navigate('/manager');
+        } else if (result.role === 'Student') {
+          navigate('/student');
+        } else {
+          navigate('/');
+        }
+      } else {
+        setError(result.message || 'Email hoặc mật khẩu không chính xác');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,7 +104,7 @@ export default function Login() {
           {/* Label & Link Quên mật khẩu nằm chung 1 dòng nên ta viết tay phần label này */}
           <div className="flex justify-between items-center mb-1.5">
               <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
-              <Link to="/auth/forgot-password" class="text-xs font-medium text-primary hover:underline">
+              <Link to="/auth/forgot-password" className="text-xs font-medium text-primary hover:underline">
                 Quên mật khẩu?
               </Link>
           </div>
@@ -96,24 +121,14 @@ export default function Login() {
         </div>
 
         {/* BUTTON LOGIN (Dùng Component Button) */}
-        <Button type="submit" className="w-full" size="lg">
-          Đăng nhập
+        <Button type="submit" className="w-full" size="lg" disabled={loading}>
+          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </Button>
 
         <p className="text-sm font-light text-gray-500 text-center">
           Chưa có tài khoản? <Link to="/auth/register" className="font-medium text-primary hover:underline">Đăng ký ngay</Link>
         </p>
       </form>
-
-      {/* Demo Account Info */}
-      <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-        <p className="text-xs text-gray-400 mb-2">Tài khoản demo:</p>
-        <div className="text-xs text-gray-500 space-y-1 bg-gray-50 p-3 rounded-lg border border-dashed border-gray-200">
-           <p>Admin: <span className="font-mono text-gray-700 font-bold">admin@dorm.vn / password</span></p>
-           <p>Trưởng tòa: <span className="font-mono text-gray-700 font-bold">manager@dorm.vn / password</span></p>
-           <p>Sinh viên: <span className="font-mono text-gray-700 font-bold">student@dorm.vn / password</span></p>
-        </div>
-      </div>
     </div>
   );
 }

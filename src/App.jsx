@@ -10,6 +10,7 @@ import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import VerifyOtp from './pages/auth/VerifyOtp';
+import VerifyResetOtp from './pages/auth/VerifyResetOtp';
 
 // Import Pages - Admin
 import AdminDashboard from './pages/admin/Dashboard';
@@ -35,6 +36,7 @@ export default function App() {
            <Route path="login" element={<Login />} />
            <Route path="register" element={<Register />} />
            <Route path="forgot-password" element={<ForgotPassword />} />
+           <Route path="verify-reset-otp" element={<VerifyResetOtp />} />
            <Route path="verify-otp" element={<VerifyOtp />} />
            <Route path="reset-password" element={<ResetPassword />} />
         </Route>

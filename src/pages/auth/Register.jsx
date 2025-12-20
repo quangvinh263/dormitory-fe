@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { signUp } from '../../services/authApi';
+import { getSchoolInfo, getPriorityInfo } from '../../services/publicInforApi';
 
 // Import các UI Component
 import Input from '../../components/ui/Input';
@@ -10,7 +12,6 @@ import Button from '../../components/ui/Button';
 export default function Register() {
   const navigate = useNavigate();
 
-  // 1. Khởi tạo State chứa dữ liệu Form
   const [formData, setFormData] = useState({
     studentId: '',
     fullName: '',
@@ -20,33 +21,108 @@ export default function Register() {
     address: '',
     phone: '',
     email: '',
-    school: 'uit', // Giá trị mặc định
-    priority: 'none',
+    school: '',
+    priority: '',
     password: '',
     confirmPassword: ''
   });
 
-  // 2. Hàm xử lý nhập liệu chung cho tất cả các ô
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [schools, setSchools] = useState([]);
+  const [priorities, setPriorities] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoadingData(true);
+      try {
+        const [schoolResult, priorityResult] = await Promise.all([
+          getSchoolInfo(),
+          getPriorityInfo()
+        ]);
+        
+        if (schoolResult.success) {
+          setSchools(schoolResult.data);
+          if (schoolResult.data.length > 0) {
+            const firstSchoolId = schoolResult.data[0].schoolId || schoolResult.data[0].SchoolId;
+            setFormData(prev => ({ ...prev, school: firstSchoolId }));
+          }
+        }
+
+        if (priorityResult.success) {
+          setPriorities(priorityResult.data);
+          if (priorityResult.data.length > 0) {
+            const firstPriorityId = priorityResult.data[0].priorityID || priorityResult.data[0].PriorityID;
+            setFormData(prev => ({ ...prev, priority: firstPriorityId }));
+          }
+        }
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setError('Không thể tải dữ liệu. Vui lòng thử lại.');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setError('');
   };
 
-  // 3. Hàm xử lý Đăng ký
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     
-    // Kiểm tra mật khẩu khớp nhau
     if (formData.password !== formData.confirmPassword) {
-      alert("Mật khẩu xác nhận không khớp!");
+      setError("Mật khẩu xác nhận không khớp!");
       return;
     }
 
-    // Giả lập gọi API thành công
-    console.log('Dữ liệu đăng ký:', formData);
-    alert('Đăng ký thành công! Vui lòng đăng nhập.');
-    navigate('/student/registration');
+    setLoading(true);
+    setError('');
+
+    try {
+      const registerData = {
+        studentId: formData.studentId,
+        fullName: formData.fullName,
+        citizenId: formData.cccd,
+        citizenIdIssuePlace: formData.issuePlace,
+        phoneNumber: formData.phone,
+        gender: formData.gender,
+        email: formData.email,
+        address: formData.address,
+        schoolId: formData.school,
+        priorityId: formData.priority,
+        password: formData.password
+      };
+
+      const result = await signUp(registerData);
+      console.log('Register Result:', result); // Debug log
+      if (result.success) {
+        navigate('/auth/verify-otp', { state: { email: formData.email } });
+      } else {
+        setError(result.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      }
+    } catch (err) {
+      setError('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loadingData) {
+    return (
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl border border-gray-100 my-8">
+        <div className="text-center">
+          <p className="text-gray-500">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl border border-gray-100 my-8 animate-fade-in">
@@ -63,6 +139,13 @@ export default function Register() {
       {/* Form */}
       <form onSubmit={handleRegister} className="space-y-5">
         
+        {/* Hiển thị lỗi nếu có */}
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100 text-center">
+            {error}
+          </div>
+        )}
+
         {/* Hàng 1: MSSV + Họ tên */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <Input 
@@ -86,7 +169,9 @@ export default function Register() {
             name="gender" 
             value={formData.gender} 
             onChange={handleChange}
+            required
           >
+             <option value="">Chọn giới tính</option>
              <option value="male">Nam</option>
              <option value="female">Nữ</option>
           </Select>
@@ -142,30 +227,44 @@ export default function Register() {
           required 
         />
 
-        {/* Hàng 3: Trường + Ưu tiên (Dùng Component Select) */}
+        {/* Hàng 3: Trường + Ưu tiên (Load từ API) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Select 
             label="Trường *" 
             name="school" 
             value={formData.school} 
             onChange={handleChange}
+            required
           >
-             <option value="uit">Đại học Công nghệ Thông tin</option>
-             <option value="bk">Đại học Bách Khoa</option>
-             <option value="khtn">Đại học Khoa học Tự nhiên</option>
-             <option value="nv">Đại học Nhân Văn</option>
+             <option value="">Chọn trường</option>
+             {schools.map(school => {
+               const schoolId = school.schoolId || school.SchoolId;
+               const schoolName = school.schoolName || school.SchoolName;
+               return (
+                 <option key={schoolId} value={schoolId}>
+                   {schoolName}
+                 </option>
+               );
+             })}
           </Select>
 
           <Select 
-            label="Đối tượng ưu tiên" 
+            label="Đối tượng ưu tiên *" 
             name="priority" 
             value={formData.priority} 
             onChange={handleChange}
+            required
           >
-             <option value="none">Không có</option>
-             <option value="lietsi">Con thương binh/liệt sĩ</option>
-             <option value="ngheo">Hộ nghèo/Cận nghèo</option>
-             <option value="khuyettat">Sinh viên khuyết tật</option>
+             <option value="">Chọn đối tượng ưu tiên</option>
+             {priorities.map(priority => {
+               const priorityId = priority.priorityID || priority.PriorityID;
+               const priorityDesc = priority.priorityDescription || priority.PriorityDescription;
+               return (
+                 <option key={priorityId} value={priorityId}>
+                   {priorityDesc}
+                 </option>
+               );
+             })}
           </Select>
         </div>
 
@@ -192,8 +291,8 @@ export default function Register() {
         </div>
 
         {/* Nút Đăng ký */}
-        <Button type="submit" className="w-full mt-4" size="lg">
-          Đăng ký
+        <Button type="submit" className="w-full mt-4" size="lg" disabled={loading}>
+          {loading ? 'Đang đăng ký...' : 'Đăng ký'}
         </Button>
 
         <p className="text-sm font-light text-gray-500 text-center">
