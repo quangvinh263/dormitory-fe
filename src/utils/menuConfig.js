@@ -20,7 +20,7 @@ export const ROLE_MENUS = {
   [ROLES.STUDENT]: [
     { path: '/student', label: 'Tổng quan' },
     { path: '/student/contract', label: 'Hợp đồng' },
-    { path: '/student/register', label: 'Đăng ký/Gia hạn' },
+    { path: '/student/extension', label: 'Gia hạn' },
     { path: '/student/repair', label: 'Sửa chữa' },
     { path: '/student/utility', label: 'Điện nước' },
     { path: '/student/insurance', label: 'Bảo hiểm' },

@@ -22,7 +22,9 @@ export default function MainLayout() {
   const currentUser = MOCK_USERS[currentRole];
   const menus = ROLE_MENUS[currentRole] || [];
 
-  const isProfilePage = location.pathname.includes('/profile');
+  const hideTabsPaths = ['/profile', '/student/registration', '/student/payment'];
+
+  const shouldHideTabs = hideTabsPaths.some(path => location.pathname.includes(path));
 
   // Bảo vệ: Nếu không có user (chưa login) -> Đá về trang login
   if (!currentUser) {
@@ -39,7 +41,7 @@ export default function MainLayout() {
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
         {/* Menu Tabs (Truyền danh sách menu tương ứng) */}
-        {!isProfilePage && <MenuTabs menus={menus} />}
+        {!shouldHideTabs && <MenuTabs menus={menus} />}
 
         {/* Nơi hiển thị các trang con (Dashboard, List,...) */}
         <div className="min-h-[500px] animate-fade-in-up">
