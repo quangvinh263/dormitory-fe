@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { getRegistrationRooms } from '../../services/roomApi';
 import { getBuildingsForRegistration } from '../../services/buildingApi';
 import { getRoomTypesInRegistration } from '../../services/roomTypeApi';
+import { createRegistration } from '../../services/registrationApi';
+import { AuthContext } from '../../context/AuthContext';
 
 // Import các Module Features
 import RoomFilters from '../../components/features/student/RoomFilters';
@@ -112,12 +114,23 @@ export default function Registration() {
   };
 
   // Handle chọn phòng
-  const handleSelectRoom = (room) => {
-    const confirmMsg = `Xác nhận đăng ký ${room.name} (${room.building})?\nLoại: ${room.fullRoomType}\nGiá: ${room.price.toLocaleString()}đ/năm`;
+  const handleSelectRoom = async (room) => {
+    const confirmMsg = `Xác nhận đăng ký ${room.name}?\nLoại: ${room.fullRoomType}\nGiá: ${room.price.toLocaleString()}đ/năm`;
     
     if (window.confirm(confirmMsg)) {
-      // Chuyển hướng sang trang thanh toán
-      navigate('/student/payment', { state: { room } }); 
+      // Gọi API tạo đăng ký
+      const accountId = localStorage.getItem('accountId');
+      const data = { accountId, roomId: room.id };
+      console.log('Creating registration with data:', data);
+      const result = await createRegistration(data);
+      console.log('Create Registration Result:', result);
+      if(result.success) {
+        navigate('/student/payment', { state: { room, registrationId: result.registrationId } }); 
+      }
+      else
+      {
+        alert(result.message || 'Đăng ký phòng thất bại. Vui lòng thử lại.');
+      } 
     }
   };
 
