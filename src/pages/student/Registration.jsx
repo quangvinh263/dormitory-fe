@@ -1,22 +1,12 @@
-import { useState, useMemo } from 'react';
-import { useNavigate} from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getRegistrationRooms } from '../../services/roomApi';
+import { getBuildingsForRegistration } from '../../services/buildingApi';
+import { getRoomTypesInRegistration } from '../../services/roomTypeApi';
 
 // Import các Module Features
 import RoomFilters from '../../components/features/student/RoomFilters';
 import RoomList from '../../components/features/student/RoomList';
-
-// --- MOCK DATA (Dữ liệu giả lập) ---
-const MOCK_ROOMS = [
-  { id: 1, name: 'Phòng A101', building: 'A', type: '8', capacity: 8, currentOccupancy: 6, price: 400000 },
-  { id: 2, name: 'Phòng A102', building: 'A', type: '8', capacity: 8, currentOccupancy: 8, price: 400000 }, // Full
-  // Có 1 người đăng ký chờ (amber)
-  { id: 3, name: 'Phòng A201', building: 'A', type: '6', capacity: 6, currentOccupancy: 3, pendingRegistrations: 1, price: 650000 },
-  { id: 4, name: 'Phòng B101', building: 'B', type: '6', capacity: 6, currentOccupancy: 0, price: 600000 },
-  // Có nhiều người đăng ký chờ (amber)
-  { id: 5, name: 'Phòng B205', building: 'B', type: '4', capacity: 4, currentOccupancy: 2, pendingRegistrations: 2, price: 850000 },
-  { id: 6, name: 'Phòng C301', building: 'C', type: '2', capacity: 2, currentOccupancy: 1, price: 1500000 },
-  { id: 7, name: 'Phòng C302', building: 'C', type: '2', capacity: 2, currentOccupancy: 0, price: 1500000 },
-];
 
 export default function Registration() {
   const navigate = useNavigate();
@@ -28,39 +18,144 @@ export default function Registration() {
     priceRange: 'all'
   });
 
+  const [rooms, setRooms] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingFilters, setLoadingFilters] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch buildings và room types khi component mount
+  useEffect(() => {
+    const fetchFilterData = async () => {
+      setLoadingFilters(true);
+      try {
+        const [buildingsResult, roomTypesResult] = await Promise.all([
+          getBuildingsForRegistration(),
+          getRoomTypesInRegistration()
+        ]);
+
+        if (buildingsResult.success) {
+          setBuildings(buildingsResult.data);
+        }
+
+        if (roomTypesResult.success) {
+          setRoomTypes(roomTypesResult.data);
+        }
+      } catch (err) {
+        console.error('Error fetching filter data:', err);
+      } finally {
+        setLoadingFilters(false);
+      }
+    };
+
+    fetchFilterData();
+  }, []);
+
+  // Fetch rooms khi filters thay đổi
+  useEffect(() => {
+    const fetchRooms = async () => {
+      setLoading(true);
+      setError('');
+      
+      try {
+        const requestData = {
+          buildingId: filters.building === 'all' ? '' : filters.building,
+          roomTypeId: filters.type === 'all' ? '' : filters.type,
+          price: filters.priceRange === 'all' ? 0 : 
+                 filters.priceRange === 'low' ? 1000000 :
+                 filters.priceRange === 'medium' ? 1500000 :
+                 2000000,
+          onlyAvailable: true
+        };
+
+        const result = await getRegistrationRooms(requestData);
+        
+        if (result.success) {
+          console.log('Fetched rooms:', result.data);
+          // Transform data từ API sang format UI cần
+          const transformedRooms = result.data.map(room => ({
+            id: room.roomId,
+            name: room.roomName,
+            building: room.buildingName,
+            type: room.roomType,
+            capacity: room.capacity,
+            currentOccupancy: room.currentOccupancy,
+            pendingRegistrations: room.registeredOccupancy, // Số người đang đăng ký
+            price: room.price,
+            gender: room.gender,
+            fullRoomId: room.roomId,
+            fullRoomType: room.roomType
+          }));
+          
+          setRooms(transformedRooms);
+        } else {
+          setError(result.message || 'Không thể tải danh sách phòng');
+        }
+      } catch (err) {
+        console.error('Error fetching rooms:', err);
+        setError('Đã xảy ra lỗi khi tải danh sách phòng');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Chỉ fetch rooms sau khi đã load xong filter data
+    if (!loadingFilters) {
+      fetchRooms();
+    }
+  }, [filters, loadingFilters]);
+
   // Handle thay đổi filter
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
-  // Logic lọc phòng (Sử dụng useMemo để tối ưu hiệu năng)
-  const filteredRooms = useMemo(() => {
-    return MOCK_ROOMS.filter(room => {
-      // 1. Lọc tòa
-      if (filters.building !== 'all' && room.building !== filters.building) return false;
-      
-      // 2. Lọc loại phòng
-      if (filters.type !== 'all' && room.type !== filters.type) return false;
-      
-      // 3. Lọc giá
-      if (filters.priceRange === 'low' && room.price >= 500000) return false;
-      if (filters.priceRange === 'medium' && (room.price < 500000 || room.price > 1000000)) return false;
-      if (filters.priceRange === 'high' && room.price <= 1000000) return false;
-      
-      return true;
-    });
-  }, [filters]);
-
   // Handle chọn phòng
   const handleSelectRoom = (room) => {
-    // Trong thực tế, bạn sẽ gọi API để giữ chỗ hoặc tạo hợp đồng nháp tại đây
-    const confirmMsg = `Xác nhận đăng ký ${room.name} (Tòa ${room.building})?\nGiá: ${room.price.toLocaleString()}đ/năm`;
+    const confirmMsg = `Xác nhận đăng ký ${room.name} (${room.building})?\nLoại: ${room.fullRoomType}\nGiá: ${room.price.toLocaleString()}đ/năm`;
     
     if (window.confirm(confirmMsg)) {
       // Chuyển hướng sang trang thanh toán
       navigate('/student/payment', { state: { room } }); 
     }
   };
+
+  // Loading state
+  if (loadingFilters) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-500">Đang tải dữ liệu...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <p className="text-red-600 font-medium">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+            >
+              Thử lại
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -74,7 +169,7 @@ export default function Registration() {
             </div>
             <div className="text-right hidden md:block">
                 <span className="text-sm font-medium text-gray-500">Hiển thị</span>
-                <span className="ml-2 text-xl font-bold text-primary">{filteredRooms.length}</span>
+                <span className="ml-2 text-xl font-bold text-primary">{rooms.length}</span>
                 <span className="ml-2 text-sm text-gray-400">phòng phù hợp</span>
             </div>
          </div>
@@ -83,14 +178,26 @@ export default function Registration() {
       {/* SECTION 1: BỘ LỌC (Filter) */}
       <RoomFilters 
         filters={filters} 
-        onChange={handleFilterChange} 
+        onChange={handleFilterChange}
+        buildings={buildings}
+        roomTypes={roomTypes}
+        loading={loading}
       />
 
       {/* SECTION 2: DANH SÁCH PHÒNG (Grid) */}
-      <RoomList 
-        rooms={filteredRooms} 
-        onSelectRoom={handleSelectRoom} 
-      />
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-500">Đang tải danh sách phòng...</p>
+          </div>
+        </div>
+      ) : (
+        <RoomList 
+          rooms={rooms} 
+          onSelectRoom={handleSelectRoom} 
+        />
+      )}
       
     </div>
   );
