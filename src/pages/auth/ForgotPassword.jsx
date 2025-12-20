@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BuildingOfficeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { forgotPassword } from '../../services/authApi';
 
 // Import UI Components
 import Input from '../../components/ui/Input';
@@ -9,20 +10,36 @@ import Button from '../../components/ui/Button';
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Hàm xử lý khi bấm nút Gửi
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Giả lập logic gửi OTP
     if (!email) {
-      alert("Vui lòng nhập email!");
+      setError("Vui lòng nhập email!");
       return;
     }
 
-    console.log(`Đang gửi OTP tới: ${email}`);
-    // Chuyển hướng sang trang nhập mã OTP
-    navigate('/auth/verify-otp');
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await forgotPassword({ email });
+
+      if (result.success) {
+        // Chuyển hướng sang trang nhập mã OTP reset password
+        navigate('/auth/verify-reset-otp', { state: { email } });
+      } else {
+        setError(result.message || 'Không thể gửi mã OTP. Vui lòng thử lại.');
+      }
+    } catch (err) {
+      console.error('Forgot password error:', err);
+      setError('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,6 +56,13 @@ export default function ForgotPassword() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         
+        {/* Hiển thị lỗi nếu có */}
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100 text-center">
+            {error}
+          </div>
+        )}
+
         {/* Input Email (Dùng Component Input) */}
         <div>
           <Input 
@@ -46,7 +70,10 @@ export default function ForgotPassword() {
             type="email"
             placeholder="example@university.edu.vn"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setError('');
+            }}
             required
           />
           <p className="mt-2 text-xs text-gray-500">
@@ -55,8 +82,8 @@ export default function ForgotPassword() {
         </div>
 
         {/* Nút Gửi (Dùng Component Button) */}
-        <Button type="submit" className="w-full" size="lg">
-          Gửi mã OTP
+        <Button type="submit" className="w-full" size="lg" disabled={loading}>
+          {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
         </Button>
 
         {/* Link quay lại */}

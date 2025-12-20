@@ -1,26 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { BuildingOfficeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { verifyEmail, resendOtpVerifyEmail } from '../../services/authApi';
+import { verifyResetToken, resendOtpResetPassword } from '../../services/authApi';
 
 // Import UI Component
 import Button from '../../components/ui/Button';
 
-export default function VerifyOtp() {
+export default function VerifyResetOtp() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || '';
   
   // State
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(57);
+  const [timer, setTimer] = useState(60);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const inputRefs = useRef([]);
 
   useEffect(() => {
     if (!email) {
-      navigate('/auth/register');
+      navigate('/auth/forgot-password');
     }
   }, [email, navigate]);
 
@@ -62,7 +62,7 @@ export default function VerifyOtp() {
 
   const handleResendOtp = async () => {
     try {
-      const result = await resendOtpVerifyEmail(email);
+      const result = await resendOtpResetPassword(email);
       if (result.success) {
         setTimer(60);
         setError('');
@@ -88,13 +88,19 @@ export default function VerifyOtp() {
     setError('');
 
     try {
-      const result = await verifyEmail({
+      const result = await verifyResetToken({
         email: email,
         otp: otpCode
       });
 
       if (result.success) {
-        navigate('/auth/login');
+        // Truyền cả email và OTP token sang ResetPassword
+        navigate('/auth/reset-password', { 
+          state: { 
+            email,
+            otpToken: otpCode 
+          } 
+        });
       } else {
         setError(result.message || 'Mã OTP không chính xác');
       }
@@ -113,7 +119,7 @@ export default function VerifyOtp() {
         <div className="bg-primary w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
           <BuildingOfficeIcon className="h-7 w-7 text-white" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Xác Thực OTP</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Xác Thực OTP Reset Password</h1>
         <p className="text-gray-500 text-sm mt-2">
           Mã OTP đã được gửi đến <span className="font-medium text-gray-700">{email}</span>
         </p>
@@ -173,7 +179,7 @@ export default function VerifyOtp() {
 
         {/* Quay lại */}
         <div>
-          <Link to="/auth/register" className="inline-flex items-center text-sm font-medium text-primary hover:underline cursor-pointer">
+          <Link to="/auth/forgot-password" className="inline-flex items-center text-sm font-medium text-primary hover:underline cursor-pointer">
             <ArrowLeftIcon className="w-4 h-4 mr-1"/> Quay lại
           </Link>
         </div>
