@@ -24,5 +24,6 @@ export const ROLE_MENUS = {
     { path: '/student/maintenance', label: 'Bảo trì' },
     { path: '/student/utility', label: 'Điện nước' },
     { path: '/student/insurance', label: 'Bảo hiểm' },
+    { path: '/student/violations', label: 'Vi phạm' },
   ]
 };

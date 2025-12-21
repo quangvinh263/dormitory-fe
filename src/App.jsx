@@ -26,6 +26,9 @@ import Registration from './pages/student/Registration';
 import Payment from './pages/student/Payment';
 import RenewContract from './pages/student/RenewContract';
 import Maintenance from './pages/student/Maintenance';
+import Utility from './pages/student/Utility';
+import PaymentSuccess from './pages/student/UbilityPaymentSuccess';
+import Insurance from './pages/student/Insurance';
 
 export default function App() {
   return (
@@ -72,7 +75,10 @@ export default function App() {
              <Route path="extension" element={<RenewContract />} />
              <Route path="registration" element={<Registration />} />
              <Route path="payment" element={<Payment />} />
-              <Route path="maintenance" element={<Maintenance />} />
+             <Route path="maintenance" element={<Maintenance />} />
+             <Route path="utility" element={<Utility />} />
+             <Route path="payment-success" element={<PaymentSuccess />} />
+             <Route path="insurance" element={<Insurance />} />
           </Route>
 
         </Route>
