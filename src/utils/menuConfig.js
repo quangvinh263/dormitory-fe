@@ -21,7 +21,7 @@ export const ROLE_MENUS = {
     { path: '/student', label: 'Tổng quan' },
     { path: '/student/contract', label: 'Hợp đồng' },
     { path: '/student/extension', label: 'Gia hạn' },
-    { path: '/student/repair', label: 'Sửa chữa' },
+    { path: '/student/maintenance', label: 'Bảo trì' },
     { path: '/student/utility', label: 'Điện nước' },
     { path: '/student/insurance', label: 'Bảo hiểm' },
   ]
