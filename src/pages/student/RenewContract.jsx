@@ -14,14 +14,14 @@ export default function RenewContract() {
   const contract = location.state?.contract || {
     id: 'CT-202401',
     room: { name: 'A101', building: 'A' },
-    monthlyPrice: 400000,
+    yearlyPrice: 400000,
     expiresAt: '2025-06-30',
   };
 
   const [months, setMonths] = useState(6);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const totalAmount = contract.monthlyPrice * months;
+  const totalAmount = (contract.yearlyPrice / 12) * months;
 
   const parseDate = (d) => {
     const dt = new Date(d);
@@ -44,7 +44,7 @@ export default function RenewContract() {
   endDate.setMonth(endDate.getMonth() + months);
   endDate.setDate(endDate.getDate() - 1);
 
-  const breakdownText = `${contract.monthlyPrice.toLocaleString()}đ/tháng × ${months} tháng = ${totalAmount.toLocaleString()}đ`;
+  const breakdownText = `${months} tháng = ${totalAmount.toLocaleString()}đ`;
 
   const handleConfirm = () => {
     setIsProcessing(true);
@@ -85,14 +85,15 @@ export default function RenewContract() {
           <div className="flex items-start gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">Thời gian gia hạn</label>
-              <Select
-                value={months}
-                onChange={(e) => setMonths(Number(e.target.value))}
-              >
-                <option value={6}>6 tháng</option>
-                <option value={12}>12 tháng</option>
-              </Select>
-
+                <div className="w-full">
+                    <Select
+                        value={months}
+                        onChange={(e) => setMonths(Number(e.target.value))}
+                    >
+                        <option value={6}>6 tháng</option>
+                        <option value={12}>12 tháng</option>
+                    </Select>
+                </div>
               <div className="mt-3 text-sm text-gray-600">{months} tháng ({formatDate(startDate)} - {formatDate(endDate)})</div>
             </div>
 
