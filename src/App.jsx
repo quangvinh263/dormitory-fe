@@ -29,6 +29,7 @@ import Maintenance from './pages/student/Maintenance';
 import Utility from './pages/student/Utility';
 import PaymentSuccess from './pages/student/UbilityPaymentSuccess';
 import Insurance from './pages/student/Insurance';
+import Violations from './pages/student/Violations';
 
 export default function App() {
   return (
@@ -79,6 +80,7 @@ export default function App() {
              <Route path="utility" element={<Utility />} />
              <Route path="payment-success" element={<PaymentSuccess />} />
              <Route path="insurance" element={<Insurance />} />
+             <Route path="violations" element={<Violations />} />
           </Route>
 
         </Route>
