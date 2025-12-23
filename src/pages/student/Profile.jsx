@@ -10,7 +10,7 @@ import PersonalInfoSection from '../../components/features/student/PersonalInfoS
 import RelativeListSection from '../../components/features/student/RelativeListSection';
 
 // Import API
-import { getStudentInfo, updateStudentInfo, createRelative, updateRelative } from '../../services/studentApi';
+import { getStudentInfo, updateStudentInfo, createRelative, updateRelative, deleteRelative } from '../../services/studentApi';
 import { getSchoolInfo, getPriorityInfo } from '../../services/publicInforApi';
 
 export default function StudentProfile() {
@@ -424,6 +424,84 @@ export default function StudentProfile() {
     setIsEditingRelatives(false);
   };
 
+  // Xóa người thân
+  const removeRelative = async (index) => {
+    const relative = formData.relatives[index];
+    
+    // Nếu là relative mới (chưa lưu vào DB), xóa trực tiếp không cần gọi API
+    if (relative.isNew === true || String(relative.id).startsWith('new_')) {
+      const newRelatives = formData.relatives.filter((_, i) => i !== index);
+      setFormData(prev => ({ ...prev, relatives: newRelatives }));
+      return;
+    }
+    
+    // Nếu là relative đã có trong DB, hiện popup xác nhận
+    const confirmDelete = window.confirm(
+      `Bạn có chắc chắn muốn xóa người thân "${relative.fullName}"?\n\nHành động này không thể hoàn tác.`
+    );
+    
+    if (!confirmDelete) {
+      return; // User chọn Cancel
+    }
+
+    try {
+      setLoadingOptions(true);
+      
+      console.log('Deleting relative:', relative);
+      
+      const relativeId = relative.relativeID || relative.id;
+      const result = await deleteRelative(relativeId);
+      
+      if (result.success) {
+        console.log('✅ Delete success');
+        alert('Xóa người thân thành công!');
+        
+        // Xóa khỏi formData
+        const newRelatives = formData.relatives.filter((_, i) => i !== index);
+        setFormData(prev => ({ ...prev, relatives: newRelatives }));
+        
+        // Cập nhật originalData
+        setOriginalData(prev => ({
+          ...prev,
+          relatives: newRelatives
+        }));
+        
+        // Refresh lại data từ server để đảm bảo đồng bộ
+        const accountId = localStorage.getItem('accountId');
+        const refreshResult = await getStudentInfo(accountId);
+        if (refreshResult.success) {
+          const student = refreshResult.data;
+          const mappedRelatives = (student.relatives || []).map(rel => ({
+            relativeID: rel.relativeID || rel.RelativeID || rel.id,
+            fullName: rel.fullName || rel.FullName || '',
+            relationship: rel.relationship || rel.Relationship || '',
+            phoneNumber: rel.phoneNumber || rel.PhoneNumber || '',
+            address: rel.address || rel.Address || '',
+            occupation: rel.occupation || rel.Occupation || '',
+            isNew: false
+          }));
+          
+          setFormData(prev => ({
+            ...prev,
+            relatives: mappedRelatives
+          }));
+          setOriginalData(prev => ({
+            ...prev,
+            relatives: JSON.parse(JSON.stringify(mappedRelatives))
+          }));
+        }
+      } else {
+        console.error('❌ Delete failed:', result.message);
+        alert(`Lỗi khi xóa người thân: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error deleting relative:', error);
+      alert('Đã xảy ra lỗi khi xóa người thân');
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
+
   // --- RENDER LOADING/ERROR ---
   if (loading) {
     return (
@@ -484,7 +562,7 @@ export default function StudentProfile() {
         onSave={handleSaveRelatives}
         onAdd={addRelative}
         onChange={handleRelativeChange}
-        // onRemove={removeRelative}
+        onRemove={removeRelative}  // Bỏ comment
       />
 
       {/* BLOCK 3: LƯU Ý */}

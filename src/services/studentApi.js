@@ -128,3 +128,28 @@ export const updateRelative = async (relativeData) => {
     };
   }
 };
+
+export const deleteRelative = async (relativeId) => {
+  try {
+    console.log('Delete Relative ID:', relativeId);
+
+    const response = await axios.delete(`${API_URL}/Student/delete-relative/${relativeId}`);
+    
+    console.log('Delete Relative Response:', response.data);
+    
+    if (response.status === 200 || response.status === 204) {
+      return { 
+        success: true, 
+        message: response.data?.message || 'Xóa người thân thành công'
+      };
+    }
+    return { success: false, message: response.data?.message || 'Failed to delete relative' };
+  } catch (error) {
+    console.error('Delete Relative API Error:', error);
+    console.error('Error details:', error.response?.data);
+    return { 
+      success: false, 
+      message: error.response?.data?.message || error.message || 'Error deleting relative' 
+    };
+  }
+};
