@@ -13,15 +13,12 @@ export default function UtilityInputModal({ room, rates, onClose, onSave }) {
 
   // LOGIC TÍNH TOÁN TỰ ĐỘNG (Dùng useMemo để tối ưu)
   const calculation = useMemo(() => {
-    // Ép kiểu về số, nếu rỗng thì coi như = 0 hoặc bằng chỉ số cũ để không bị âm
     const nElec = parseInt(newElec) || 0;
     const nWater = parseInt(newWater) || 0;
 
-    // Tính tiêu thụ (Mới - Cũ). Nếu nhập nhỏ hơn cũ thì = 0
     const usageElec = Math.max(0, nElec - room.oldElec);
     const usageWater = Math.max(0, nWater - room.oldWater);
 
-    // Tính thành tiền
     const costElec = usageElec * rates.electricity;
     const costWater = usageWater * rates.water;
     const total = costElec + costWater;
@@ -31,7 +28,6 @@ export default function UtilityInputModal({ room, rates, onClose, onSave }) {
 
   // Xử lý Lưu
   const handleSave = () => {
-    // Validate cơ bản
     if (newElec === '' || newWater === '') {
       alert("Vui lòng nhập đầy đủ chỉ số mới!");
       return;
@@ -41,15 +37,16 @@ export default function UtilityInputModal({ room, rates, onClose, onSave }) {
       return;
     }
 
-    // Trả dữ liệu ra ngoài
+    // ✅ Trả dữ liệu kèm roomID
     onSave({
       ...room,
+      roomID: room.roomID, // ✅ Đảm bảo có roomID
       newElec: parseInt(newElec),
       newWater: parseInt(newWater),
       usageElec: calculation.usageElec,
       usageWater: calculation.usageWater,
       totalBill: calculation.total,
-      status: 'unpaid' // Chuyển trạng thái
+      status: 'unpaid'
     });
   };
 
@@ -65,7 +62,9 @@ export default function UtilityInputModal({ room, rates, onClose, onSave }) {
         <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-start">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Nhập Chỉ Số Điện Nước</h3>
-            <p className="text-sm text-gray-500 mt-1">Phòng {room.id} - Tháng 08/2024</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Phòng {room.id} {room.roomID && `(${room.roomID})`}
+            </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <XMarkIcon className="w-5 h-5" />

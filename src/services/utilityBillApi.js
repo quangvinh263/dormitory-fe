@@ -39,3 +39,16 @@ export const getZaloPayLink = async (billId, accountId) => {
         };
     }
 };
+
+export const getBillsByManager = async (data) => {
+    try {
+        const response = await axios.post(`${API_URL}/UtilityBill/by-manager`, data);   
+        console.log('API Response:', response);
+        if (response.status === 200) {
+            return { success: true, data: response.data?.data || [] };
+        }
+        return { success: false, error: 'Failed to fetch bills.' };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
