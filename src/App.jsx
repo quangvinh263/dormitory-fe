@@ -19,6 +19,8 @@ import AdminDashboard from './pages/admin/Dashboard';
 import ManagerDashboard from './pages/manager/Dashboard';
 import UtilityManagement from './pages/manager/Utility';
 import RoomManagement from './pages/manager/Room';
+import MaintenanceDashboard from './pages/manager/Maintenance';
+import ViolationDashboard from './pages/manager/Violation';
 
 // Import Pages - Student
 import StudentDashboard from './pages/student/Dashboard';
@@ -65,9 +67,12 @@ export default function App() {
           {/* --- MANAGER ROUTES (Trưởng tòa) --- */}
           <Route path="/manager">
             <Route index element={<ManagerDashboard />} />
-            <Route path="requests" element={<div>Trang Đơn đăng ký</div>} />
             <Route path="rooms" element={<RoomManagement />} />
             <Route path="utilities" element={<UtilityManagement />} />
+            <Route path="maintenance" element={<MaintenanceDashboard />} />
+            <Route path="violations" element={<ViolationDashboard />} />
+
+
             {/* Các route khác sẽ thêm sau */}
           </Route>
           
