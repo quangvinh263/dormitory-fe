@@ -10,8 +10,8 @@ export const ROLE_MENUS = {
   ],
   [ROLES.MANAGER]: [
     { path: '/manager', label: 'Tổng quan' },
-    { path: '/manager/requests', label: 'Đơn đăng ký' },
     { path: '/manager/rooms', label: 'Phòng' },
+    { path: '/manager/maintenance', label: 'Bảo trì' },
     { path: '/manager/utilities', label: 'Điện nước' },
     { path: '/manager/bills', label: 'Thanh toán' },
     { path: '/manager/violations', label: 'Vi phạm' },
