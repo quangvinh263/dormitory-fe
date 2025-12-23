@@ -4,7 +4,7 @@ import { EyeIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outlin
 // Import UI
 import Badge from '../../ui/Badge';
 
-export default function ViolationTable({ data }) {
+export default function ViolationTable({ data, onView, onUpdate }) {
   
   // Helper render Badge số lần vi phạm
   const renderCountBadge = (count) => {
@@ -46,10 +46,14 @@ export default function ViolationTable({ data }) {
               </td>
               <td className="px-6 py-4 text-center">
                 <div className="flex items-center justify-center gap-2">
-                  <button className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Xem chi tiết">
+                  <button 
+                  onClick={() => onView(row)}
+                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Xem chi tiết">
                     <EyeIcon className="w-4 h-4" />
                   </button>
-                  <button className="p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors" title="Chỉnh sửa">
+                  <button 
+                  onClick={() => onUpdate(row)}
+                  className="p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors" title="Chỉnh sửa">
                     <PencilSquareIcon className="w-4 h-4" />
                   </button>
                 </div>
