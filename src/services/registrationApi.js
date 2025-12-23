@@ -1,5 +1,4 @@
-import axios from "axios";
-
+import axios from "./axiosInstance";
 const API_URL = `${import.meta.env.VITE_API_BASE_URL}`;
 
 export const createRegistration = async (data) => {
