@@ -1,15 +1,22 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
+import { signOut } from '../../../services/authApi';
 
 import Button from '../../ui/Button'; 
 
 export default function LogoutButton() {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    // 1. Sau này sẽ thêm logic xóa Token/User trong Context ở đây
-    // 2. Chuyển hướng về trang login
-    navigate('/auth/login');
+  const handleLogout = async () => {
+    const refToken = localStorage.getItem('refreshToken'); 
+    const response = await signOut(refToken);
+    if(response.success) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('accountId');
+      navigate('/auth/login');
+    }
+    
   };
 
   return (
