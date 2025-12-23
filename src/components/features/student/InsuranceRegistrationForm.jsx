@@ -19,7 +19,24 @@ export default function InsuranceRegistrationForm({ onCancel, onConfirm }) {
 
       {/* 2. Body */}
       <div className="p-6 space-y-6">
-         
+
+         {/*Input: So BHYT */}
+         <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-900 flex gap-1">
+               Số thẻ bảo hiểm y tế <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+               <input 
+                  type="text"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  placeholder="VD: SV1234567890"
+                  value={hospital}
+                  onChange={(e) => setHospital(e.target.value)}
+               />
+               <CreditCardIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            </div>
+         </div>
+
          {/* Input: Tên cơ sở y tế */}
          <div className="space-y-2">
             <label className="text-sm font-medium text-gray-900 flex gap-1">
