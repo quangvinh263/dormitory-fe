@@ -1,7 +1,7 @@
 import { UserIcon, BriefcaseIcon, PhoneIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import ProfileField from './ProfileField';
 
-export default function RelativeCard({ index, data, isEditing, onChange, onRemove }) {
+export default function RelativeCard({ index, relative, isEditing, onChange, onRemove }) {
   return (
     <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 relative group transition-all hover:border-blue-200 hover:shadow-sm">
        {/* Nút Xóa (Chỉ hiện khi Edit) */}
@@ -19,35 +19,35 @@ export default function RelativeCard({ index, data, isEditing, onChange, onRemov
          <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">
             #{index + 1}
          </span>
-         Người thân {data.relation ? `(${data.relation})` : ''}
+         Người thân {relative?.relation ? `(${relative.relation})` : ''}
        </h3>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ProfileField 
             label="Họ và tên" 
             icon={<UserIcon/>} 
-            value={data.name} 
+            value={relative?.name || ''} 
             isEditing={isEditing} 
             onChange={(v) => onChange(index, 'name', v)} 
           />
           <ProfileField 
             label="Quan hệ (Bố/Mẹ/...)" 
             icon={<UserIcon/>} 
-            value={data.relation} 
+            value={relative?.relation || ''} 
             isEditing={isEditing} 
             onChange={(v) => onChange(index, 'relation', v)} 
           />
           <ProfileField 
             label="Nghề nghiệp" 
             icon={<BriefcaseIcon/>} 
-            value={data.job} 
+            value={relative?.job || ''} 
             isEditing={isEditing} 
             onChange={(v) => onChange(index, 'job', v)} 
           />
           <ProfileField 
             label="Số điện thoại" 
             icon={<PhoneIcon/>} 
-            value={data.phone} 
+            value={relative?.phone || ''} 
             isEditing={isEditing} 
             onChange={(v) => onChange(index, 'phone', v)} 
           />
@@ -55,7 +55,7 @@ export default function RelativeCard({ index, data, isEditing, onChange, onRemov
              <ProfileField 
                 label="Địa chỉ" 
                 icon={<MapPinIcon/>} 
-                value={data.address} 
+                value={relative?.address || ''} 
                 isEditing={isEditing} 
                 onChange={(v) => onChange(index, 'address', v)} 
              />

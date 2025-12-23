@@ -10,7 +10,7 @@ import PersonalInfoSection from '../../components/features/student/PersonalInfoS
 import RelativeListSection from '../../components/features/student/RelativeListSection';
 
 // Import API
-import { getStudentInfo } from '../../services/studentApi';
+import { getStudentInfo, updateStudentInfo } from '../../services/studentApi';
 import { getSchoolInfo, getPriorityInfo } from '../../services/publicInforApi';
 
 export default function StudentProfile() {
@@ -158,6 +158,21 @@ export default function StudentProfile() {
     setIsEditingRelatives(true);
   };
 
+  // Thêm người thân mới
+  const addRelative = () => {
+    const newRelative = { 
+      id: Date.now(), 
+      name: '', 
+      relation: '', 
+      job: '', 
+      phone: '', 
+      address: '' 
+    };
+    setFormData(prev => ({ ...prev, relatives: [...prev.relatives, newRelative] }));
+    // Tự động bật chế độ edit khi thêm người thân mới
+    setIsEditingRelatives(true);
+  };
+
   // --- LOGIC XỬ LÝ ---
   
   // 1. Xử lý sửa thông tin cá nhân
@@ -173,36 +188,62 @@ export default function StudentProfile() {
   };
 
   // 3. Các hành động khác
-  const addRelative = () => {
-    const newRelative = { 
-      id: Date.now(), 
-      name: '', 
-      relation: '', 
-      job: '', 
-      phone: '', 
-      address: '' 
-    };
-    setFormData(prev => ({ ...prev, relatives: [...prev.relatives, newRelative] }));
-  };
-
   const removeRelative = (index) => {
     const newRelatives = formData.relatives.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, relatives: newRelatives }));
   };
 
   // Lưu thông tin cá nhân
-  const handleSavePersonal = () => {
-    console.log("Saving Personal Info...", {
-      fullName: formData.fullName,
-      phone: formData.phone,
-      issuePlace: formData.issuePlace,
-      schoolId: formData.schoolId,
-      priorityId: formData.priorityId,
-      address: formData.address
-    });
-    // TODO: Call API update personal info
-    alert("Cập nhật thông tin cá nhân thành công!");
-    setIsEditingPersonal(false);
+  const handleSavePersonal = async () => {
+    // Validate dữ liệu trước khi gửi
+    if (!formData.fullName.trim()) {
+      alert('Vui lòng nhập họ tên');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      alert('Vui lòng nhập số điện thoại');
+      return;
+    }
+    if (!/^0\d{9}$/.test(formData.phone)) {
+      alert('Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số');
+      return;
+    }
+    if (!formData.schoolId) {
+      alert('Vui lòng chọn trường học');
+      return;
+    }
+
+    try {
+      setLoadingOptions(true); // Dùng loading để disable nút
+
+      const updateData = {
+        studentId: formData.studentId,
+        fullName: formData.fullName,
+        email: formData.email,
+        phoneNumber: formData.phone,
+        address: formData.address,
+        schoolId: formData.schoolId,
+        priorityId: formData.priorityId || null,
+        citizenIDIssuePlace: formData.issuePlace
+      };
+
+
+      const result = await updateStudentInfo(updateData);
+
+      if (result.success) {
+        
+        window.location.reload(); 
+        
+        setIsEditingPersonal(false);
+      } else {
+        alert(`Lỗi: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error saving personal info:', error);
+      alert('Đã xảy ra lỗi khi lưu thông tin');
+    } finally {
+      setLoadingOptions(false);
+    }
   };
 
   // Hủy chỉnh sửa thông tin cá nhân
