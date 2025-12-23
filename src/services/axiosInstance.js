@@ -4,12 +4,11 @@ import { refreshAccessToken } from "./tokenApi";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Tạo instance riêng cho API
 const api = axios.create({
   baseURL: API_URL,
 });
 
-// 🧠 Hàm kiểm tra token hết hạn
+// 🧠 Hàm kiểm tra token hết hạn (Giữ nguyên)
 function isTokenExpired(token) {
   if (!token) return true;
   try {
@@ -20,35 +19,42 @@ function isTokenExpired(token) {
   }
 }
 
-// 🛠️ Interceptor: luôn gắn token vào header, và tự refresh nếu hết hạn
-api.interceptors.request.use(async (config) => {
-  let token = localStorage.getItem("token");
+// ⭐ HÀM MỚI: Logic lấy token hợp lệ (Dùng chung cho Axios và SignalR)
+export const getValidAccessToken = async () => {
+  // ✅ Thống nhất dùng key "accessToken"
+  let token = localStorage.getItem("accessToken");
   const refreshToken = localStorage.getItem("refreshToken");
 
-  console.log('🔍 Axios Interceptor - Token check:', { 
-    hasToken: !!token, 
-    hasRefreshToken: !!refreshToken,
-    isExpired: isTokenExpired(token) 
-  });
+  if (!token) return null;
 
-  // Nếu token hết hạn → gọi refresh
-  if (isTokenExpired(token) && refreshToken) {
+  if (!isTokenExpired(token)) {
+    return token;
+  }
+
+  if (refreshToken) {
     try {
+      console.log("🔄 Token expired. Refreshing...");
       const result = await refreshAccessToken(refreshToken);
+      
       if (result?.success && result.token) {
-        token = result.token;
-        localStorage.setItem("token", result.token);
-      } else {
-        localStorage.clear();
-        window.location.href = "/signin";
-        return Promise.reject(new Error('Refresh token failed'));
+        // ✅ Lưu vào đúng key "accessToken"
+        localStorage.setItem("accessToken", result.token);
+        return result.token;
       }
     } catch (error) {
-      localStorage.clear();
-      window.location.href = "/signin";
-      return Promise.reject(error);
+      console.error("Refresh token failed", error);
     }
   }
+
+  console.log("Session expired. Logging out...");
+  localStorage.clear();
+  window.location.href = "/auth/login";
+  return null;
+};
+
+// 🛠️ Sửa lại Interceptor để dùng hàm getValidAccessToken cho gọn
+api.interceptors.request.use(async (config) => {
+  const token = await getValidAccessToken(); // Gọi hàm chung
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -57,13 +63,13 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Interceptor response (Giữ nguyên)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
-      console.log(response);
       localStorage.clear();
-      window.location.href = "/signin";
+      window.location.href = "/auth/login";
     }
     return Promise.reject(error);
   }

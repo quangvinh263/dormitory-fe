@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect }from 'react';
 import { FunnelIcon, ArrowDownTrayIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
-export default function UtilityHeader() {
+export default function UtilityHeader({ onRefresh, selectedMonth, selectedYear, onMonthYearChange }) {
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewYear, setViewYear] = useState(selectedDate.getFullYear()); 
+  const [viewYear, setViewYear] = useState(selectedYear); 
   const [isOpen, setIsOpen] = useState(false);
 
   const containerRef = useRef(null);
+
+  // Sync viewYear khi selectedYear thay đổi từ bên ngoài
+  useEffect(() => {
+    setViewYear(selectedYear);
+  }, [selectedYear]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -24,13 +28,17 @@ export default function UtilityHeader() {
   };
 
   const handleMonthSelect = (monthIndex) => {
-    const newDate = new Date(viewYear, monthIndex, 1);
-    setSelectedDate(newDate);
+    const month = monthIndex + 1; // Convert 0-11 to 1-12
+    
+    // ✅ Gọi callback để thông báo parent component
+    if (onMonthYearChange) {
+      onMonthYearChange(month, viewYear);
+    }
+    
     setIsOpen(false);
-
   };
 
-  const displayDate = `Tháng ${String(selectedDate.getMonth() + 1).padStart(2, '0')}/${selectedDate.getFullYear()}`;
+  const displayDate = `Tháng ${String(selectedMonth).padStart(2, '0')}/${selectedYear}`;
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
@@ -48,7 +56,7 @@ export default function UtilityHeader() {
           <div 
             onClick={() => {
               setIsOpen(!isOpen);
-              setViewYear(selectedDate.getFullYear()); // Reset năm xem về năm đang chọn
+              setViewYear(selectedYear); // Reset năm xem về năm đang chọn
             }}
             className={`flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 border rounded-lg cursor-pointer transition-all select-none min-w-[140px]
               ${isOpen ? 'border-blue-500 ring-2 ring-blue-100 bg-white' : 'border-gray-200 hover:bg-gray-100'}`}
@@ -82,7 +90,7 @@ export default function UtilityHeader() {
               <div className="grid grid-cols-3 gap-2">
                 {Array.from({ length: 12 }, (_, i) => i).map((monthIndex) => {
                   // Kiểm tra xem có phải tháng đang chọn không
-                  const isSelected = selectedDate.getMonth() === monthIndex && selectedDate.getFullYear() === viewYear;
+                  const isSelected = (monthIndex + 1) === selectedMonth && viewYear === selectedYear;
                   // Kiểm tra tháng hiện tại (Today)
                   const isCurrentMonth = new Date().getMonth() === monthIndex && new Date().getFullYear() === viewYear;
 
