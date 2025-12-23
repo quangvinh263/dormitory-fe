@@ -10,7 +10,7 @@ import PersonalInfoSection from '../../components/features/student/PersonalInfoS
 import RelativeListSection from '../../components/features/student/RelativeListSection';
 
 // Import API
-import { getStudentInfo, updateStudentInfo, createRelative } from '../../services/studentApi';
+import { getStudentInfo, updateStudentInfo, createRelative, updateRelative } from '../../services/studentApi';
 import { getSchoolInfo, getPriorityInfo } from '../../services/publicInforApi';
 
 export default function StudentProfile() {
@@ -58,6 +58,17 @@ export default function StudentProfile() {
         if (result.success && result.data) {
           const student = result.data;
           
+          // Map relatives với relativeID đúng format
+          const mappedRelatives = (student.relatives || []).map(rel => ({
+            relativeID: rel.relativeID || rel.RelativeID || rel.id,
+            fullName: rel.fullName || rel.FullName || '',
+            relationship: rel.relationship || rel.Relationship || '',
+            phoneNumber: rel.phoneNumber || rel.PhoneNumber || '',
+            address: rel.address || rel.Address || '',
+            occupation: rel.occupation || rel.Occupation || '',
+            isNew: false  // Đánh dấu là relative cũ
+          }));
+          
           // Map API data sang formData
           const studentData = {
             fullName: student.fullName || '',
@@ -72,11 +83,11 @@ export default function StudentProfile() {
             priorityName: student.priorityName || '',
             priorityId: '',
             address: student.address || '',
-            relatives: student.relatives || []
+            relatives: mappedRelatives
           };
           
           setFormData(studentData);
-          setOriginalData(studentData); // Lưu bản gốc
+          setOriginalData(JSON.parse(JSON.stringify(studentData))); // Deep clone để tránh reference
         } else {
           setError(result.message || 'Không thể tải thông tin sinh viên');
         }
@@ -162,10 +173,10 @@ export default function StudentProfile() {
   const addRelative = () => {
     const newRelative = { 
       id: `new_${Date.now()}`,
-      fullName: '',           // Đổi từ name → fullName
-      relationship: '',       // Đổi từ relation → relationship
-      occupation: '',         // Đổi từ job → occupation
-      phoneNumber: '',        // Đổi từ phone → phoneNumber
+      fullName: '',           
+      relationship: '',      
+      occupation: '',         
+      phoneNumber: '',        
       address: '',
       isNew: true
     };
@@ -173,25 +184,6 @@ export default function StudentProfile() {
     setIsEditingRelatives(true);
   };
 
-  // // Xóa người thân
-  // const removeRelative = (index) => {
-  //   const relative = formData.relatives[index];
-    
-  //   // Nếu là relative mới (chưa lưu vào DB), xóa trực tiếp
-  //   if (relative.isNew || String(relative.id).startsWith('new_')) {
-  //     const newRelatives = formData.relatives.filter((_, i) => i !== index);
-  //     setFormData(prev => ({ ...prev, relatives: newRelatives }));
-  //     return;
-  //   }
-    
-  //   // Nếu là relative đã có trong DB, confirm trước khi xóa
-  //   if (window.confirm(`Bạn có chắc muốn xóa người thân "${relative.name}"?`)) {
-  //     const newRelatives = formData.relatives.filter((_, i) => i !== index);
-  //     setFormData(prev => ({ ...prev, relatives: newRelatives }));
-  //   }
-  // };
-
-  // --- LOGIC XỬ LÝ ---
   
   // 1. Xử lý sửa thông tin cá nhân
   const handleInfoChange = (name, value) => {
@@ -284,8 +276,16 @@ export default function StudentProfile() {
 
       const results = [];
       
+      console.log('=== START SAVE RELATIVES ===');
+      console.log('Current relatives:', formData.relatives);
+      console.log('Original relatives:', originalData?.relatives);
+      
       for (let i = 0; i < formData.relatives.length; i++) {
         const relative = formData.relatives[i];
+        
+        console.log(`\n--- Processing Relative ${i + 1} ---`);
+        console.log('Relative data:', relative);
+        console.log('Is new?', relative.isNew);
         
         // Validate dữ liệu
         if (!relative.fullName?.trim()) {
@@ -310,21 +310,57 @@ export default function StudentProfile() {
         }
 
         // Nếu là relative mới → Create
-        if (relative.isNew || String(relative.id).startsWith('new_')) {
-          console.log('Creating new relative:', relative);
-          console.log('StudentID:', formData.studentId);
-          
+        if (relative.isNew === true) {
+          console.log('👉 ACTION: CREATE');
           const result = await createRelative(relative, formData.studentId);
           
           if (result.success) {
-            window.location.reload();
-          } else {
-            console.error('Create failed:', result.message);
+            console.error('❌ Create failed:', result.message);
           }
           
           results.push({ type: 'create', result });
         }
+        // Nếu là relative cũ → Check thay đổi và Update
+        else {
+          const originalRelative = originalData?.relatives?.find(
+            r => r.relativeID === relative.relativeID
+          );
+          
+          console.log('Original relative found:', originalRelative);
+          
+          if (originalRelative) {
+            // So sánh xem có thay đổi không
+            const hasChanged = 
+              relative.fullName !== originalRelative.fullName ||
+              relative.relationship !== originalRelative.relationship ||
+              relative.phoneNumber !== originalRelative.phoneNumber ||
+              relative.address !== originalRelative.address ||
+              relative.occupation !== originalRelative.occupation;
+
+            console.log('Has changes?', hasChanged);
+
+            if (hasChanged) {
+
+              const result = await updateRelative(relative);
+              
+              if (!result.success) {
+                console.error('❌ Update failed:', result.message);
+              }
+              
+              results.push({ type: 'update', result });
+            } else {
+              console.log('⏭️ SKIP: No changes');
+            }
+          } else {
+            const result = await createRelative(relative, formData.studentId);
+            results.push({ type: 'create', result });
+          }
+        }
       }
+
+      results.forEach((r, i) => {
+        console.log(`${i + 1}. ${r.type}: ${r.result.success ? '✅' : '❌'} ${r.result.message || ''}`);
+      });
 
       // Check kết quả
       const hasError = results.some(r => !r.result.success);
@@ -336,20 +372,34 @@ export default function StudentProfile() {
           .join('\n');
         alert(`Có lỗi xảy ra:\n${errorMessages}`);
       } else {
-        alert('Thêm người thân thành công!');
+        if (results.length > 0) {
+          alert('Cập nhật thông tin người thân thành công!');
+        }
         
         // Refresh lại data từ server
         const accountId = localStorage.getItem('accountId');
         const refreshResult = await getStudentInfo(accountId);
         if (refreshResult.success) {
           const student = refreshResult.data;
+          
+          // Map lại relatives với format đúng
+          const mappedRelatives = (student.relatives || []).map(rel => ({
+            relativeID: rel.relativeID || rel.RelativeID || rel.id,
+            fullName: rel.fullName || rel.FullName || '',
+            relationship: rel.relationship || rel.Relationship || '',
+            phoneNumber: rel.phoneNumber || rel.PhoneNumber || '',
+            address: rel.address || rel.Address || '',
+            occupation: rel.occupation || rel.Occupation || '',
+            isNew: false
+          }));
+          
           setFormData(prev => ({
             ...prev,
-            relatives: student.relatives || []
+            relatives: mappedRelatives
           }));
           setOriginalData(prev => ({
             ...prev,
-            relatives: student.relatives || []
+            relatives: JSON.parse(JSON.stringify(mappedRelatives))
           }));
         }
         
