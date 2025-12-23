@@ -131,7 +131,12 @@ export default function UtilityDashboard() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up">      
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Quản Lý Điện Nước</h1>
+        <p className="text-sm text-gray-500 mt-1">Quản lý các hóa đơn điện nước của sinh viên</p>
+      </div>
+      {/* MODULE 1: THỐNG KÊ (Top Cards) */}
       <UtilityStats stats={statsData} />
 
       <div className="space-y-4">
