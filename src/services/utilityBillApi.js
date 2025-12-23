@@ -39,3 +39,52 @@ export const getZaloPayLink = async (billId, accountId) => {
         };
     }
 };
+
+export const getBillsByManager = async (data) => {
+    try {
+        const response = await axios.post(`${API_URL}/UtilityBill/by-manager`, data);   
+        console.log('API Response:', response);
+        if (response.status === 200) {
+            return { success: true, data: response.data?.data || [] };
+        }
+        return { success: false, error: 'Failed to fetch bills.' };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
+
+export const getActiveParameter = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/UtilityBill/active-parameter`);
+        if (response.status === 200) {
+            return { success: true, data: response.data?.data || null };
+        }
+        return { success: false, error: 'Failed to fetch active parameter.' };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
+
+export const createUtilityBill = async (data) => {
+    try {
+        const response = await axios.post(`${API_URL}/UtilityBill/create`, data);
+        if (response.status === 201 || response.status === 200) {
+            return { success: true, message: response.data?.message || null };
+        }
+        return { success: false, error: 'Failed to create utility bill.' };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
+
+export const getLastMonthIndex = async (data) => {
+    try {
+        const response = await axios.post(`${API_URL}/UtilityBill/last-month-index`, data);
+        if (response.status === 200) {
+            return { success: true, data: response.data?.data || null };
+        }
+        return { success: false, error: 'Failed to fetch last month index.' };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+};

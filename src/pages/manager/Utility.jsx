@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { getBillsByManager } from '../../services/utilityBillApi';
 import UtilityStats from '../../components/features/manager/UtilityStats';
 import UtilityHeader from '../../components/features/manager/UtilityHeader';
 import UtilityTable from '../../components/features/manager/UtilityTable';
@@ -7,126 +7,158 @@ import UtilityInputModal from '../../components/features/manager/UtilityInputMod
 import ConfirmationModal from '../../components/features/manager/ConfirmationModal';
 
 export default function UtilityDashboard() {
-  // --- 1. CONFIG & MOCK DATA ---
+  // --- 1. STATE QUẢN LÝ ---
+  const [roomData, setRoomData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [tempData, setTempData] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   
-  // Dữ liệu thống kê (StatCards)
-  const statsData = [
-    { label: 'Tổng thanh toán', value: '₫850.000', subtext: 'Tháng 08/2024', type: 'default' },
-    { label: 'Đã thanh toán', value: '1', subtext: 'phòng', type: 'success' },
-    { label: 'Chưa thanh toán', value: '1', subtext: 'phòng', type: 'warning' },
-    { label: 'Chưa nhập chỉ số', value: '1', subtext: 'phòng', type: 'danger' },
-  ];
+  // State cho tháng/năm
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // Giá điện nước hiện hành
-  const ratesData = {
-    electricity: 3500, // VND/kWh
-    water: 15000       // VND/m3
+  // --- 2. LOAD DATA FROM API ---
+  const loadBillsData = async () => {
+    setLoading(true);
+    try {
+      const requestData = {
+        accountId: localStorage.getItem('accountId'),
+        month: selectedMonth,
+        year: selectedYear
+      };
+
+      console.log('Request Data for Bills:', requestData);
+      const result = await getBillsByManager(requestData);
+      
+      if (result.success && result.data) {
+        const transformedData = result.data.map(bill => {
+          let status = 'not_entered';
+          if (bill.status === 'Paid') status = 'paid';
+          else if (bill.status === 'Unpaid') status = 'unpaid';
+          else if (bill.status === 'No Bill') status = 'not_entered';
+
+          return {
+            id: bill.roomName,
+            roomID: bill.roomID,
+            oldElec: bill.electricityOldIndex,
+            newElec: bill.electricityNewIndex,
+            usageElec: bill.electricityUsage,
+            oldWater: bill.waterOldIndex,
+            newWater: bill.waterNewIndex,
+            usageWater: bill.waterUsage,
+            totalBill: bill.amount,
+            status: status
+          };
+        });
+
+        setRoomData(transformedData);
+      }
+    } catch (error) {
+      console.error('Error loading bills:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Dữ liệu danh sách phòng (State chính của trang)
-  const [roomData, setRoomData] = useState([
-    { 
-      id: 'A301', 
-      oldElec: 1250, newElec: 1350, usageElec: 100, 
-      oldWater: 85, newWater: 90, usageWater: 5, 
-      totalBill: 425000, 
-      status: 'paid' 
-    },
-    { 
-      id: 'A302', 
-      oldElec: 980, newElec: 1080, usageElec: 100, 
-      oldWater: 62, newWater: 67, usageWater: 5, 
-      totalBill: 425000, 
-      status: 'unpaid' 
-    },
-    { 
-      id: 'A303', 
-      oldElec: 1400, newElec: 0, usageElec: 0, 
-      oldWater: 120, newWater: 0, usageWater: 0, 
-      totalBill: 0, 
-      status: 'not_entered' 
-    },
-     { 
-      id: 'A304', 
-      oldElec: 1100, newElec: 0, usageElec: 0, 
-      oldWater: 50, newWater: 0, usageWater: 0, 
-      totalBill: 0, 
-      status: 'not_entered' 
-    },
-  ]);
+  useEffect(() => {
+    loadBillsData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMonth, selectedYear]);
 
-  // --- 2. STATE QUẢN LÝ MODAL ---
-  const [selectedRoom, setSelectedRoom] = useState(null); // Phòng đang được chọn để nhập liệu
-  const [tempData, setTempData] = useState(null);         // Dữ liệu vừa nhập xong (chưa lưu chính thức)
-  const [showConfirm, setShowConfirm] = useState(false);  // Trạng thái hiển thị Popup xác nhận
+  // --- 3. CALCULATE STATS ---
+  const calculateStats = () => {
+    const totalPaid = roomData.filter(r => r.status === 'paid').length;
+    const totalUnpaid = roomData.filter(r => r.status === 'unpaid').length;
+    const totalNotEntered = roomData.filter(r => r.status === 'not_entered').length;
+    const totalAmount = roomData.reduce((sum, r) => sum + r.totalBill, 0);
 
-  // --- 3. HANDLERS (XỬ LÝ SỰ KIỆN) ---
+    return [
+      { 
+        label: 'Tổng thanh toán', 
+        value: `₫${totalAmount.toLocaleString('vi-VN')}`, 
+        subtext: `Tháng ${selectedMonth}/${selectedYear}`, 
+        type: 'default' 
+      },
+      { 
+        label: 'Đã thanh toán', 
+        value: totalPaid.toString(), 
+        subtext: 'phòng', 
+        type: 'success' 
+      },
+      { 
+        label: 'Chưa thanh toán', 
+        value: totalUnpaid.toString(), 
+        subtext: 'phòng', 
+        type: 'warning' 
+      },
+      { 
+        label: 'Chưa nhập chỉ số', 
+        value: totalNotEntered.toString(), 
+        subtext: 'phòng', 
+        type: 'danger' 
+      },
+    ];
+  };
 
-  // Bước 1: Người dùng bấm nút "Nhập" trên bảng -> Mở Modal Nhập
+  const statsData = calculateStats();
+
+  // --- 4. HANDLERS ---
   const handleEnterClick = (room) => {
+    console.log('Opening modal for room:', room);
     setSelectedRoom(room);
   };
 
-  // Bước 2: Người dùng bấm "Lưu chỉ số" trong Modal Nhập -> Lưu tạm & Mở Confirm
-  const handleInputSave = (dataWithNewValues) => {
-    setTempData(dataWithNewValues); // Lưu dữ liệu tính toán vào biến tạm
-    setSelectedRoom(null);          // Đóng Modal Nhập
-    setShowConfirm(true);           // Mở Modal Xác nhận
+  const handleInputSave = async () => {
+    // Reload data sau khi save thành công
+    await loadBillsData();
+    setSelectedRoom(null);
   };
 
-  // Bước 3: Người dùng bấm "Đồng ý" trong Modal Xác nhận -> Cập nhật dữ liệu thật
-  const handleFinalConfirm = () => {
-    if (!tempData) return;
+  const handleMonthYearChange = (month, year) => {
+    console.log('Month/Year changed to:', month, year);
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
 
-    // Tìm và cập nhật phòng tương ứng trong mảng roomData
-    const updatedRooms = roomData.map(r => 
-      r.id === tempData.id ? tempData : r
+  // --- 5. RENDER ---
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Đang tải dữ liệu...</div>
+      </div>
     );
-
-    setRoomData(updatedRooms); // Cập nhật State giao diện
-    
-    // Reset các state tạm
-    setShowConfirm(false);
-    setTempData(null);
-  };
+  }
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      
-      {/* MODULE 1: THỐNG KÊ (Top Cards) */}
       <UtilityStats stats={statsData} />
 
       <div className="space-y-4">
-        {/* MODULE 2: HEADER & FILTER */}
-        <UtilityHeader />
+        <UtilityHeader 
+          onRefresh={loadBillsData}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          onMonthYearChange={handleMonthYearChange}
+        />
         
-        {/* MODULE 3: BẢNG DỮ LIỆU */}
         <UtilityTable 
           data={roomData} 
-          rates={ratesData} 
-          onEnterClick={handleEnterClick} 
+          onEnterClick={handleEnterClick}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
         />
       </div>
 
-      {/* --- KHU VỰC POPUP / MODAL --- */}
-      
-      {/* 1. Modal Nhập Liệu  */}
       {selectedRoom && (
         <UtilityInputModal 
           room={selectedRoom}
-          rates={ratesData}
+          month={selectedMonth}
+          year={selectedYear}
           onClose={() => setSelectedRoom(null)}
           onSave={handleInputSave}
         />
       )}
-
-      {/* 2. Modal Xác Nhận  */}
-      <ConfirmationModal 
-        isOpen={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={handleFinalConfirm}
-      />
-
     </div>
   );
 }
