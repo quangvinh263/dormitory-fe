@@ -10,8 +10,13 @@ export default function MainLayout() {
 
   // 1. CHỌN VAI TRÒ ĐỂ TEST (Đổi giá trị này để xem 3 màn hình khác nhau)
   // Các giá trị: ROLES.ADMIN | ROLES.MANAGER | ROLES.STUDENT
-  const currentRole = ROLES.STUDENT; 
-
+  let currentRole = ROLES.STUDENT; 
+  if (location.pathname.startsWith('/admin')) {
+    currentRole = ROLES.ADMIN;
+  }
+  else if (location.pathname.startsWith('/manager')) {
+    currentRole = ROLES.MANAGER;
+  }
   // 2. Dữ liệu giả lập (Sau này lấy từ API/Context)
   const MOCK_USERS = {
     [ROLES.ADMIN]:   { role: ROLES.ADMIN, name: 'Quản Trị Viên', code: 'ADMIN', email: 'admin@dorm.vn' },
