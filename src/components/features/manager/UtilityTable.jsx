@@ -1,8 +1,6 @@
 import React from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
-
-
 /* --- Component con: Status Badge --- */
 const StatusBadge = ({ status }) => {
   const configs = {
@@ -20,8 +18,26 @@ const StatusBadge = ({ status }) => {
 };
 
 /* --- Component Chính --- */
-export default function UtilityTable({ data, onEnterClick }) {
+export default function UtilityTable({ data, onEnterClick, selectedMonth, selectedYear }) {
   const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+  // ✅ Kiểm tra xem có thể nhập chỉ số không (chỉ cho phép tháng hiện tại hoặc quá khứ)
+  const canEnterData = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    // Nếu năm nhỏ hơn năm hiện tại -> OK
+    if (selectedYear < currentYear) return true;
+    
+    // Nếu cùng năm, tháng phải nhỏ hơn hoặc bằng tháng hiện tại
+    if (selectedYear === currentYear && selectedMonth <= currentMonth) return true;
+    
+    // Các trường hợp khác -> không cho phép
+    return false;
+  };
+
+  const isAllowedToEnter = canEnterData();
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -45,13 +61,17 @@ export default function UtilityTable({ data, onEnterClick }) {
           <tbody>
             {data.map((row) => {
               const isEntered = row.status !== 'not_entered';
-              const isPaid = row.status === 'Paid';
-              const isUnpaid = row.status === 'Unpaid';
+              const isPaid = row.status === 'paid';
+              const isUnpaid = row.status === 'unpaid';
 
               return (
                 <tr key={row.id} className="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-4 font-bold text-gray-900">{row.id}</td>
-                  <td className="px-4 py-4 text-center text-gray-700">{row.oldElec}</td>
+                  
+                  <td className="px-4 py-4 text-center text-gray-700">
+                    {row.oldElec != null ? row.oldElec : '-'}
+                  </td>
+                  
                   <td className="px-4 py-4 text-center font-medium text-gray-900">
                     {isEntered ? row.newElec : '-'}
                   </td>
@@ -64,7 +84,10 @@ export default function UtilityTable({ data, onEnterClick }) {
                     ) : '-'}
                   </td>
 
-                  <td className="px-4 py-4 text-center text-gray-700">{row.oldWater}</td>
+                  <td className="px-4 py-4 text-center text-gray-700">
+                    {row.oldWater != null ? row.oldWater : '-'}
+                  </td>
+                  
                   <td className="px-4 py-4 text-center font-medium text-gray-900">
                     {isEntered ? row.newWater : '-'}
                   </td>
@@ -86,13 +109,19 @@ export default function UtilityTable({ data, onEnterClick }) {
                   </td>
 
                   <td className="px-4 py-4 text-center">
-                    {row.status === 'not_entered' && (
+                    {/* ✅ Chỉ hiển thị nút "Nhập" nếu chưa nhập và trong khoảng thời gian cho phép */}
+                    {row.status === 'not_entered' && isAllowedToEnter && (
                       <button 
                         onClick={() => onEnterClick(row)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white border border-transparent rounded hover:bg-blue-700 text-xs font-medium shadow-sm transition-all cursor-pointer"
                       >
                         <PlusIcon className="w-3.5 h-3.5"/> Nhập
                       </button>
+                    )}
+
+                    {/* ✅ Hiển thị thông báo nếu không thể nhập */}
+                    {row.status === 'not_entered' && !isAllowedToEnter && (
+                      <span className="text-gray-400 text-xs italic">Chưa đến kỳ</span>
                     )}
 
                     {isUnpaid && <span className="text-orange-500 text-xs italic">Chờ thanh toán</span>}

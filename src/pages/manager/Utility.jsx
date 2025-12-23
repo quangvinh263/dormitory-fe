@@ -18,7 +18,6 @@ export default function UtilityDashboard() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-
   // --- 2. LOAD DATA FROM API ---
   const loadBillsData = async () => {
     setLoading(true);
@@ -62,11 +61,10 @@ export default function UtilityDashboard() {
     }
   };
 
-  // ✅ FIX: useEffect với đầy đủ dependencies
   useEffect(() => {
     loadBillsData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMonth, selectedYear]); // Chỉ phụ thuộc vào month và year
+  }, [selectedMonth, selectedYear]);
 
   // --- 3. CALCULATE STATS ---
   const calculateStats = () => {
@@ -107,30 +105,18 @@ export default function UtilityDashboard() {
 
   // --- 4. HANDLERS ---
   const handleEnterClick = (room) => {
-    console.log('Opening modal for room:', room); // Debug log
+    console.log('Opening modal for room:', room);
     setSelectedRoom(room);
   };
 
-  const handleInputSave = (dataWithNewValues) => {
-    setTempData(dataWithNewValues);
+  const handleInputSave = async () => {
+    // Reload data sau khi save thành công
+    await loadBillsData();
     setSelectedRoom(null);
-    setShowConfirm(true);
-  };
-
-  const handleFinalConfirm = () => {
-    if (!tempData) return;
-
-    const updatedRooms = roomData.map(r => 
-      r.id === tempData.id ? tempData : r
-    );
-
-    setRoomData(updatedRooms);
-    setShowConfirm(false);
-    setTempData(null);
   };
 
   const handleMonthYearChange = (month, year) => {
-    console.log('Month/Year changed to:', month, year); // Debug log
+    console.log('Month/Year changed to:', month, year);
     setSelectedMonth(month);
     setSelectedYear(year);
   };
@@ -158,23 +144,21 @@ export default function UtilityDashboard() {
         
         <UtilityTable 
           data={roomData} 
-          onEnterClick={handleEnterClick} 
+          onEnterClick={handleEnterClick}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
         />
       </div>
 
       {selectedRoom && (
         <UtilityInputModal 
           room={selectedRoom}
+          month={selectedMonth}
+          year={selectedYear}
           onClose={() => setSelectedRoom(null)}
           onSave={handleInputSave}
         />
       )}
-
-      <ConfirmationModal 
-        isOpen={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={handleFinalConfirm}
-      />
     </div>
   );
 }
