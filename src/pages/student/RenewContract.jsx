@@ -6,7 +6,7 @@ import Section from '../../components/shared/Section';
 import Button from '../../components/ui/Button';
 import Select from '../../components/ui/Select';
 import { AuthContext } from '../../context/AuthContext';
-import { getCurrentContract } from '../../services/contractApi';
+import { getStudentContractDetail, requestRenewal } from '../../services/contractApi';
 
 export default function RenewContract() {
   const navigate = useNavigate();
@@ -14,8 +14,10 @@ export default function RenewContract() {
 
   // Nếu được gọi từ trang khác có thể truyền contract/room trong location.state
   const initialContract = location.state?.contract || null;
+  console.debug('[RenewContract] initialContract from location.state:', initialContract);
   const { auth } = useContext(AuthContext);
-  const [contract, setContract] = useState(initialContract);
+  // Temporarily ignore initialContract so we always fetch fresh data from API
+  const [contract, setContract] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState('');
 
@@ -52,37 +54,91 @@ export default function RenewContract() {
   const breakdownText = `${months} tháng = ${totalAmount.toLocaleString()}đ`;
 
   const handleConfirm = () => {
-    setIsProcessing(true);
-    // giả lập gọi API gia hạn
-    setTimeout(() => {
-      setIsProcessing(false);
-      // chuyển về trang hợp đồng
-      navigate('/student/contract');
-    }, 1200);
+    const accountId = auth?.accountId || localStorage.getItem('accountId');
+    if (!accountId) {
+      alert('Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.');
+      return;
+    }
+
+    const doRequest = async () => {
+      setIsProcessing(true);
+      try {
+        const result = await requestRenewal(accountId, months);
+        console.debug('[RenewContract] requestRenewal result:', result);
+        if (result.success) {
+          const invoiceId = result.data?.invoiceId || result.data?.message || null;
+          alert('Yêu cầu gia hạn đã được tạo.');
+          navigate('/student/contract', { state: { invoiceId } });
+        } else {
+          alert(result.message || 'Không thể tạo yêu cầu gia hạn.');
+        }
+      } catch (err) {
+        console.error('[RenewContract] requestRenewal error:', err);
+        alert('Đã xảy ra lỗi khi gửi yêu cầu gia hạn. Vui lòng thử lại.');
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    doRequest();
   };
 
   useEffect(() => {
-    // nếu đã có contract từ location thì không cần gọi
-    if (contract) return;
+    
+    if (initialContract) {
+      console.debug('[RenewContract] using initialContract from location.state');
+      setContract(normalizeContract(initialContract));
+      setLoading(false);
+      return;
+    }
+    if (contract) {
+      console.debug('[RenewContract] skip fetch: contract state already set');
+      return;
+    }
 
     const accountId = auth?.accountId || localStorage.getItem('accountId');
+    console.debug('[RenewContract] resolved accountId=', accountId);
     if (!accountId) {
+      console.debug('[RenewContract] no accountId found, aborting fetch');
       setFetchError('Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.');
       return;
     }
 
     let mounted = true;
     setLoading(true);
-    getCurrentContract(accountId)
+    console.debug('[RenewContract] fetching student contract by accountId=', accountId);
+    getStudentContractDetail(accountId)
       .then((res) => {
+        console.debug('[RenewContract] getStudentContractDetail response:', res);
         if (!mounted) return;
-        if (res.success && res.data) {
-          setContract(res.data);
+        // Try to resolve contract object from multiple possible shapes
+        let candidate = null;
+        if (res.success) {
+          candidate = res.data || res.raw?.data || res.raw?.dto || res.raw?.contract || res.raw || null;
+          // sometimes BE returns wrapper { dto: {...} } or { data: {...} }
+          if (!candidate && res.raw) {
+            // attempt to find nested object that looks like a contract
+            const keys = Object.keys(res.raw || {});
+            for (const k of keys) {
+              const v = res.raw[k];
+              if (v && typeof v === 'object' && (v.id || v.expiresAt || v.room)) {
+                candidate = v;
+                break;
+              }
+            }
+          }
+        }
+
+        console.debug('[RenewContract] resolved contract candidate:', candidate);
+        if (candidate && typeof candidate === 'object') {
+          setContract(normalizeContract(candidate));
         } else {
           setContract(null);
+          if (res.message) setFetchError(res.message || 'Không tìm thấy hợp đồng cho sinh viên.');
         }
       })
       .catch((err) => {
+        console.error('[RenewContract] getStudentContractDetail error:', err);
         if (!mounted) return;
         setFetchError(err?.message || 'Lỗi khi lấy hợp đồng');
       })
@@ -92,6 +148,34 @@ export default function RenewContract() {
       mounted = false;
     };
   }, [auth?.accountId]);
+
+  useEffect(() => {
+    console.debug('[RenewContract] contract state updated:', contract);
+  }, [contract]);
+
+  // Normalize different API shapes into the fields this component expects
+  function normalizeContract(src) {
+    if (!src || typeof src !== 'object') return null;
+    const id = src.id || src.contractID || src.contractId || src.contract_id || src.code || null;
+
+    // room: try nested room object first, otherwise build from roomName/buildingName
+    const roomName = src.room?.name || src.roomName || src.room_name || src.roomName?.name || src.room?.roomName || src.roomName || null;
+    const building = src.room?.building || src.building || src.buildingName || src.building_name || null;
+
+    const room = roomName || building ? { name: roomName || '-', building: building || '' } : null;
+
+    const expiresAt = src.expiresAt || src.endDate || src.end_date || src.expiry || src.expires_at || src.expiredAt || null;
+
+    const yearlyPrice = src.yearlyPrice || src.roomPrice || src.price || src.room?.price || src.roomPricePerYear || null;
+
+    return {
+      ...src,
+      id,
+      room,
+      expiresAt,
+      yearlyPrice,
+    };
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -123,15 +207,15 @@ export default function RenewContract() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center w-full">
                   <span className="text-gray-500">Mã hợp đồng:</span>
-                  <span className="font-medium text-gray-900">{contract.id}</span>
+                  <span className="font-medium text-gray-900">{contract?.id || '-'}</span>
                 </div>
                 <div className="flex justify-between items-center w-full">
                   <span className="text-gray-500">Phòng:</span>
-                  <span className="font-medium text-gray-900">{contract.room.name} (Tòa {contract.room.building})</span>
+                  <span className="font-medium text-gray-900">{contract?.room?.name || '-'} {contract?.room?.building ? `(Tòa ${contract.room.building})` : ''}</span>
                 </div>
                 <div className="flex justify-between items-center w-full">
                   <span className="text-gray-500">Ngày hết hạn:</span>
-                  <span className="font-medium text-gray-900">{formatDate(contract.expiresAt)}</span>
+                  <span className="font-medium text-gray-900">{contract?.expiresAt ? formatDate(contract.expiresAt) : '-'}</span>
                 </div>
               </div>
             </div>
@@ -147,7 +231,7 @@ export default function RenewContract() {
                     <option value={12}>12 tháng</option>
                   </Select>
                 </div>
-                <div className="mt-3 text-sm text-gray-600">{months} tháng ({formatDate(startDate)} - {formatDate(endDate)})</div>
+                <div className="mt-3 text-sm text-gray-600">{months} tháng ({startDate ? formatDate(startDate) : '-'} - {endDate ? formatDate(endDate) : '-'})</div>
               </div>
 
               <div className="w-52 bg-white border border-gray-100 rounded-md p-3">
