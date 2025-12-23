@@ -10,7 +10,7 @@ import PersonalInfoSection from '../../components/features/student/PersonalInfoS
 import RelativeListSection from '../../components/features/student/RelativeListSection';
 
 // Import API
-import { getStudentInfo, updateStudentInfo } from '../../services/studentApi';
+import { getStudentInfo, updateStudentInfo, createRelative } from '../../services/studentApi';
 import { getSchoolInfo, getPriorityInfo } from '../../services/publicInforApi';
 
 export default function StudentProfile() {
@@ -161,17 +161,35 @@ export default function StudentProfile() {
   // Thêm người thân mới
   const addRelative = () => {
     const newRelative = { 
-      id: Date.now(), 
-      name: '', 
-      relation: '', 
-      job: '', 
-      phone: '', 
-      address: '' 
+      id: `new_${Date.now()}`,
+      fullName: '',           // Đổi từ name → fullName
+      relationship: '',       // Đổi từ relation → relationship
+      occupation: '',         // Đổi từ job → occupation
+      phoneNumber: '',        // Đổi từ phone → phoneNumber
+      address: '',
+      isNew: true
     };
     setFormData(prev => ({ ...prev, relatives: [...prev.relatives, newRelative] }));
-    // Tự động bật chế độ edit khi thêm người thân mới
     setIsEditingRelatives(true);
   };
+
+  // // Xóa người thân
+  // const removeRelative = (index) => {
+  //   const relative = formData.relatives[index];
+    
+  //   // Nếu là relative mới (chưa lưu vào DB), xóa trực tiếp
+  //   if (relative.isNew || String(relative.id).startsWith('new_')) {
+  //     const newRelatives = formData.relatives.filter((_, i) => i !== index);
+  //     setFormData(prev => ({ ...prev, relatives: newRelatives }));
+  //     return;
+  //   }
+    
+  //   // Nếu là relative đã có trong DB, confirm trước khi xóa
+  //   if (window.confirm(`Bạn có chắc muốn xóa người thân "${relative.name}"?`)) {
+  //     const newRelatives = formData.relatives.filter((_, i) => i !== index);
+  //     setFormData(prev => ({ ...prev, relatives: newRelatives }));
+  //   }
+  // };
 
   // --- LOGIC XỬ LÝ ---
   
@@ -188,11 +206,6 @@ export default function StudentProfile() {
   };
 
   // 3. Các hành động khác
-  const removeRelative = (index) => {
-    const newRelatives = formData.relatives.filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, relatives: newRelatives }));
-  };
-
   // Lưu thông tin cá nhân
   const handleSavePersonal = async () => {
     // Validate dữ liệu trước khi gửi
@@ -265,11 +278,89 @@ export default function StudentProfile() {
   };
 
   // Lưu thông tin người thân
-  const handleSaveRelatives = () => {
-    console.log("Saving Relatives...", formData.relatives);
-    // TODO: Call API update relatives
-    alert("Cập nhật thông tin người thân thành công!");
-    setIsEditingRelatives(false);
+  const handleSaveRelatives = async () => {
+    try {
+      setLoadingOptions(true);
+
+      const results = [];
+      
+      for (let i = 0; i < formData.relatives.length; i++) {
+        const relative = formData.relatives[i];
+        
+        // Validate dữ liệu
+        if (!relative.fullName?.trim()) {
+          alert(`Vui lòng nhập tên người thân thứ ${i + 1}`);
+          setLoadingOptions(false);
+          return;
+        }
+        if (!relative.relationship?.trim()) {
+          alert(`Vui lòng nhập quan hệ với người thân thứ ${i + 1}`);
+          setLoadingOptions(false);
+          return;
+        }
+        if (!relative.phoneNumber?.trim()) {
+          alert(`Vui lòng nhập số điện thoại người thân thứ ${i + 1}`);
+          setLoadingOptions(false);
+          return;
+        }
+        if (!/^0\d{9}$/.test(relative.phoneNumber)) {
+          alert(`Số điện thoại người thân thứ ${i + 1} phải bắt đầu bằng 0 và có 10 chữ số`);
+          setLoadingOptions(false);
+          return;
+        }
+
+        // Nếu là relative mới → Create
+        if (relative.isNew || String(relative.id).startsWith('new_')) {
+          console.log('Creating new relative:', relative);
+          console.log('StudentID:', formData.studentId);
+          
+          const result = await createRelative(relative, formData.studentId);
+          
+          if (result.success) {
+            window.location.reload();
+          } else {
+            console.error('Create failed:', result.message);
+          }
+          
+          results.push({ type: 'create', result });
+        }
+      }
+
+      // Check kết quả
+      const hasError = results.some(r => !r.result.success);
+      
+      if (hasError) {
+        const errorMessages = results
+          .filter(r => !r.result.success)
+          .map(r => r.result.message)
+          .join('\n');
+        alert(`Có lỗi xảy ra:\n${errorMessages}`);
+      } else {
+        alert('Thêm người thân thành công!');
+        
+        // Refresh lại data từ server
+        const accountId = localStorage.getItem('accountId');
+        const refreshResult = await getStudentInfo(accountId);
+        if (refreshResult.success) {
+          const student = refreshResult.data;
+          setFormData(prev => ({
+            ...prev,
+            relatives: student.relatives || []
+          }));
+          setOriginalData(prev => ({
+            ...prev,
+            relatives: student.relatives || []
+          }));
+        }
+        
+        setIsEditingRelatives(false);
+      }
+    } catch (error) {
+      console.error('Error saving relatives:', error);
+      alert('Đã xảy ra lỗi khi lưu thông tin người thân');
+    } finally {
+      setLoadingOptions(false);
+    }
   };
 
   // Hủy chỉnh sửa người thân
@@ -277,7 +368,7 @@ export default function StudentProfile() {
     if (originalData) {
       setFormData(prev => ({
         ...prev,
-        relatives: [...originalData.relatives]
+        relatives: [...(originalData.relatives || [])]
       }));
     }
     setIsEditingRelatives(false);
@@ -343,7 +434,7 @@ export default function StudentProfile() {
         onSave={handleSaveRelatives}
         onAdd={addRelative}
         onChange={handleRelativeChange}
-        onRemove={removeRelative}
+        // onRemove={removeRelative}
       />
 
       {/* BLOCK 3: LƯU Ý */}
