@@ -107,8 +107,7 @@ export default function BillCard({ bill, onPay }) {
          {/* Nếu đã thanh toán thì hiện ngày thanh toán */}
          {bill.status === 'paid' && (
             <div className="text-right">
-               <p className="text-xs text-gray-500">Đã thanh toán vào lúc</p>
-               <p className="text-sm font-medium text-green-600">{bill.paidDate}</p>
+              
             </div>
          )}
       </div>

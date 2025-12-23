@@ -1,19 +1,61 @@
 import { BellIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import { useContext, useEffect, useState } from 'react';
 import { ROLES, ROLE_THEME } from '../../utils/constants';
+import { getStudentInfo } from '../../services/studentApi';
+import { AuthContext } from '../../context/AuthContext';
 
 // Import các component con đã tách
 import StudentDropdown from './header/StudentDropdown';
 import LogoutButton from './header/LogoutButton';
 
 export default function Header({ user }) {
+  const { auth } = useContext(AuthContext);
+  const [studentData, setStudentData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Lấy thông tin student nếu role là STUDENT
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      if (auth.role === ROLES.STUDENT && auth.accountId) {
+        try {
+          const result = await getStudentInfo(auth.accountId);
+          if (result.success) {
+            setStudentData({
+              name: result.data.fullName || result.data.name,
+              code: result.data.studentID || result.data.studentCode,
+              email: result.data.email
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching student info:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    fetchStudentData();
+  }, [auth.role, auth.accountId]);
+
   // Lấy theme dựa trên role, nếu không có thì mặc định là STUDENT
-  const roleConfig = ROLE_THEME[user?.role] || ROLE_THEME[ROLES.STUDENT];
+  const roleConfig = ROLE_THEME[auth?.role || user?.role] || ROLE_THEME[ROLES.STUDENT];
 
   // Logic hiển thị subtext
   const getSubText = () => {
-    if (user?.role === ROLES.ADMIN) return `Xin chào, ${user?.name || 'Quản Trị Viên'}`;
-    return `${user?.name} - ${user?.code}`;
+    if (auth?.role === ROLES.ADMIN || user?.role === ROLES.ADMIN) {
+      return `Xin chào, ${user?.name || 'Quản Trị Viên'}`;
+    }
+    
+    // Nếu là student và đã load xong dữ liệu
+    if (auth?.role === ROLES.STUDENT && studentData) {
+      return `${studentData.name} - ${studentData.code}`;
+    }
+    
+    // Fallback
+    return `${user?.name || ''} - ${user?.code || ''}`;
   };
 
   return (
@@ -29,9 +71,13 @@ export default function Header({ user }) {
             <h1 className="text-lg font-bold text-gray-900 leading-none">
               {roleConfig.title}
             </h1>
-            <p className="text-sm text-gray-500 font-medium mt-0.5">
-              {getSubText()}
-            </p>
+            {loading && auth?.role === ROLES.STUDENT ? (
+              <div className="h-5 w-48 bg-gray-200 animate-pulse rounded mt-0.5" />
+            ) : (
+              <p className="text-sm text-gray-500 font-medium mt-0.5">
+                {getSubText()}
+              </p>
+            )}
           </div>
         </div>
 
@@ -45,8 +91,8 @@ export default function Header({ user }) {
           </button>
 
           {/* Kiểm tra Role để hiển thị đúng Component */}
-          {user?.role === ROLES.STUDENT ? (
-            <StudentDropdown user={user} />
+          {(auth?.role === ROLES.STUDENT || user?.role === ROLES.STUDENT) ? (
+            <StudentDropdown user={studentData || user} />
           ) : (
             <LogoutButton />
           )}
