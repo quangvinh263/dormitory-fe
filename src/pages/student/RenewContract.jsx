@@ -38,7 +38,7 @@ export default function RenewContract() {
         }
       } catch (err) {
         if (!mounted) return
-        setError('Đã xảy ra lỗi khi tải hợp đồng')
+        setError('Đã xảy ra lỗi khi tải hợp đồng'+`${err}`)
       } finally {
         mounted && setLoading(false)
       }
@@ -52,34 +52,36 @@ export default function RenewContract() {
     const accountId = auth?.accountId || localStorage.getItem('accountId')
     if (!accountId) return setError('Vui lòng đăng nhập lại.')
 
-    const confirmMsg = `Bạn sẽ gia hạn ${months} tháng. Tiếp tục?`
-    if (!window.confirm(confirmMsg)) return
-
     setProcessing(true)
     try {
       const stu = await getStudentInfo(accountId)
-      if (!stu.success || !stu.data) return setError(stu.message || 'Không thể lấy thông tin sinh viên')
+      if (!stu.success || !stu.data) {
+        setError(stu.message || 'Không thể lấy thông tin sinh viên')
+        return
+      }
 
-      const studentId = stu.data.studentID || stu.data.studentId || stu.data.id
-      if (!studentId) return setError('Không tìm thấy mã sinh viên')
+      const studentId = stu.data.studentId || stu.data.studentID || stu.data.id
+      if (!studentId) {
+        setError('Không tìm thấy mã sinh viên')
+        return
+      }
 
       const res = await createRenewalRequest(studentId, months)
       if (res.success) {
-        const paymentUrl = res.data?.paymentUrl || res.raw?.paymentUrl
-        const invoiceId = res.data?.invoiceId || res.raw?.invoiceId || null
+        const body = res.data || {}
+        const paymentUrl = body.paymentUrl || body.data?.paymentUrl || body.payment?.url || null
+        const invoiceId = body.invoiceId || body.data?.invoiceId || body.id || null
         if (paymentUrl) {
           window.location.href = paymentUrl
           return
         }
-        // done, navigate back to contract page
-        navigate('/student/contract', { state: { invoiceId } })
-      } else if (res.statusCode === 404) {
-        setError(res.message || 'Không tìm thấy hợp đồng')
+        navigate('/student/payment', { state: { invoiceId } })
+        
       } else {
         setError(res.message || 'Yêu cầu gia hạn thất bại')
       }
     } catch (err) {
-      setError('Đã xảy ra lỗi. Vui lòng thử lại.')
+      setError('Đã xảy ra lỗi. Vui lòng thử lại.' + `${err}`)
     } finally {
       setProcessing(false)
     }
