@@ -66,12 +66,8 @@ export default function Utility() {
   const filteredBills = bills.filter(b => b.status === activeTab);
 
   const handlePay = (bill) => {
-    // Logic thanh toán (Gọi API hoặc chuyển trang Payment)
-    if(window.confirm(`Thanh toán hóa đơn tháng ${bill.month} với số tiền ${bill.totalAmount.toLocaleString()}đ?`)) {
-      alert("Đang chuyển sang cổng thanh toán...");
-      // navigate('/student/payment', { state: { bill } }); 
-      navigate('/student/payment-success'); // Chuyển thẳng sang trang thành công để demo
-    }
+    // Chuyển sang trang thanh toán với thông tin bill
+    navigate('/student/utility/payment', { state: { bill } });
   };
 
   if (loading) {

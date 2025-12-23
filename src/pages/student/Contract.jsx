@@ -57,6 +57,7 @@ export default function StudentContract() {
   const equipmentsData = contractData?.equipments?.map(eq => ({
     name: eq.equipmentName,
     code: eq.equipmentID,
+    quantity: eq.quantity,
     status: eq.status
   })) || [];
 
