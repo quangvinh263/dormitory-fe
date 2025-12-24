@@ -22,6 +22,7 @@ import RoomManagement from './pages/manager/Room';
 import MaintenanceDashboard from './pages/manager/Maintenance';
 import ViolationDashboard from './pages/manager/Violation';
 import ContractManagement from './pages/manager/Contract';
+import BillManagement from './pages/manager/Bill';
 
 // Import Pages - Student
 import StudentDashboard from './pages/student/Dashboard';
@@ -73,6 +74,7 @@ export default function App() {
             <Route path="maintenance" element={<MaintenanceDashboard />} />
             <Route path="violations" element={<ViolationDashboard />} />
             <Route path="contracts" element={<ContractManagement />} />
+            <Route path="bills" element={<BillManagement />} />
 
 
             {/* Các route khác sẽ thêm sau */}
