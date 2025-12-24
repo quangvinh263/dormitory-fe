@@ -1,8 +1,8 @@
 // 1. Định nghĩa danh sách Role 
 export const ROLES = {
-  ADMIN: 'admin',
-  MANAGER: 'manager',
-  STUDENT: 'student',
+  ADMIN: 'Admin',
+  MANAGER: 'Manager',
+  STUDENT: 'Student',
 };
 
 // 2. Định nghĩa cấu hình giao diện chung (Màu sắc, Tiêu đề)

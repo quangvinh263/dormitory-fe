@@ -1,57 +1,90 @@
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext';
+import { getBillsByStudent } from '../../services/utilityBillApi';
 import BillCard from '../../components/features/student/BillCard';
 
-// MOCK DATA (Giống dữ liệu trong ảnh của bạn)
-const MOCK_BILLS = [
-  { 
-    id: 1, 
-    month: '08/2024', 
-    code: 'HD082024', 
-    status: 'unpaid', 
-    deadline: '20/08/2024',
-    electric: { old: 1250, new: 1350, usage: 100, rate: 3500, total: 350000 },
-    water: { old: 85, new: 90, usage: 5, rate: 15000, total: 75000 },
-    totalAmount: 425000 
-  },
-  { 
-    id: 2, 
-    month: '07/2024', 
-    code: 'HD072024', 
-    status: 'paid', 
-    paidDate: '18/07/2024',
-    electric: { old: 1150, new: 1250, usage: 100, rate: 3500, total: 350000 },
-    water: { old: 80, new: 85, usage: 5, rate: 15000, total: 75000 },
-    totalAmount: 425000 
-  },
-  { 
-    id: 3, 
-    month: '06/2024', 
-    code: 'HD062024', 
-    status: 'paid', 
-    paidDate: '19/06/2024',
-    electric: { old: 1000, new: 1150, usage: 150, rate: 3500, total: 525000 },
-    water: { old: 75, new: 80, usage: 5, rate: 15000, total: 75000 },
-    totalAmount: 600000 
-  }
-];
+// Giá điện và nước (có thể lấy từ config hoặc API)
 
 export default function Utility() {
+  const { auth } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('unpaid'); // 'unpaid' | 'paid'
-  const [bills, setBills] = useState(MOCK_BILLS);
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchBills = async () => {
+      try {
+        setLoading(true);
+        const result = await getBillsByStudent(auth.accountId);
+        
+        if (result.success && result.data) {
+          // Transform API data to component format
+          const transformedBills = result.data.map(bill => ({
+            id: bill.billId,
+            month: `${String(bill.month).padStart(2, '0')}/${bill.year}`,
+            code: bill.billId,
+            status: bill.status.toLowerCase(), // 'Unpaid' -> 'unpaid', 'Paid' -> 'paid'
+            deadline: bill.status === 'Unpaid' ? `20/${String(bill.month).padStart(2, '0')}/${bill.year}` : null,
+            paidDate: bill.status === 'Paid' ? bill.paidDate : null,
+            electric: {
+              old: bill.electricityOldIndex,
+              new: bill.electricityNewIndex,
+              usage: bill.electricityUsage,
+              rate: bill.electricityUnitPrice,
+              total: bill.electricityUsage * bill.electricityUnitPrice
+            },
+            water: {
+              old: bill.waterOldIndex,
+              new: bill.waterNewIndex,
+              usage: bill.waterUsage,
+              rate: bill.waterUnitPrice,
+              total: bill.waterUsage * bill.waterUnitPrice
+            },
+            totalAmount: bill.totalAmount
+          }));
+          
+          setBills(transformedBills);
+        } else {
+          setError(result.error || 'Không thể tải danh sách hóa đơn');
+        }
+      } catch (err) {
+        setError('Đã xảy ra lỗi khi tải dữ liệu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (auth.accountId) {
+      fetchBills();
+    }
+  }, [auth.accountId]);
 
   // Lọc hóa đơn theo tab
   const filteredBills = bills.filter(b => b.status === activeTab);
 
   const handlePay = (bill) => {
-    // Logic thanh toán (Gọi API hoặc chuyển trang Payment)
-    if(window.confirm(`Thanh toán hóa đơn tháng ${bill.month} với số tiền ${bill.totalAmount.toLocaleString()}đ?`)) {
-      alert("Đang chuyển sang cổng thanh toán...");
-      // navigate('/student/payment', { state: { bill } }); 
-      navigate('/student/payment-success'); // Chuyển thẳng sang trang thành công để demo
-    }
+    // Chuyển sang trang thanh toán với thông tin bill
+    navigate('/student/utility/payment', { state: { bill } });
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-gray-500">Đang tải danh sách hóa đơn...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -92,7 +125,11 @@ export default function Utility() {
             <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
                <div className="text-4xl mb-3">🎉</div>
                <p className="text-gray-900 font-medium">Không có hóa đơn nào</p>
-               <p className="text-sm text-gray-500">Bạn đã thanh toán hết các khoản phí!</p>
+               <p className="text-sm text-gray-500">
+                  {activeTab === 'unpaid' 
+                     ? 'Bạn không có hóa đơn chưa thanh toán!' 
+                     : 'Chưa có hóa đơn đã thanh toán nào!'}
+               </p>
             </div>
          ) : (
             filteredBills.map((bill) => (

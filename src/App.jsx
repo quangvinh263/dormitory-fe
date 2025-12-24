@@ -36,6 +36,7 @@ import Utility from './pages/student/Utility';
 import PaymentSuccess from './pages/student/UbilityPaymentSuccess';
 import Insurance from './pages/student/Insurance';
 import Violations from './pages/student/Violations';
+import UtilityPayment from './pages/student/UtilityPayment';
 
 export default function App() {
   return (
@@ -93,6 +94,7 @@ export default function App() {
              <Route path="payment-success" element={<PaymentSuccess />} />
              <Route path="insurance" element={<Insurance />} />
              <Route path="violations" element={<Violations />} />
+             <Route path="utility/payment" element={<UtilityPayment />} />
           </Route>
 
         </Route>

@@ -88,8 +88,6 @@ export default function BillCard({ bill, onPay }) {
                <span className="text-2xl font-bold text-gray-900">{formatMoney(bill.totalAmount)}</span>
                {bill.status === 'unpaid' && (
                   <div className="flex items-center gap-1 text-xs text-orange-600 font-medium mb-1.5 bg-orange-50 px-2 py-0.5 rounded">
-                     <ClockIcon className="w-3.5 h-3.5"/>
-                     Hạn: {bill.deadline}
                   </div>
                )}
             </div>
@@ -109,8 +107,7 @@ export default function BillCard({ bill, onPay }) {
          {/* Nếu đã thanh toán thì hiện ngày thanh toán */}
          {bill.status === 'paid' && (
             <div className="text-right">
-               <p className="text-xs text-gray-500">Đã thanh toán vào lúc</p>
-               <p className="text-sm font-medium text-green-600">{bill.paidDate}</p>
+              
             </div>
          )}
       </div>

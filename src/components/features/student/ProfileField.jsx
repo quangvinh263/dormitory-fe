@@ -1,6 +1,5 @@
 import React from 'react';
 import Input from '../../ui/Input';
-import Select from '../../ui/Select';
 
 export default function ProfileField({ 
   label, 
@@ -10,25 +9,31 @@ export default function ProfileField({
   onChange, 
   type = 'text', 
   options = [], 
-  disabled = false 
+  disabled = false,
+  displayValue  // Thêm prop mới để hiển thị riêng
 }) {
-  // Clone icon để thêm class size
   const iconStyled = icon ? React.cloneElement(icon, { className: "w-5 h-5 text-gray-400" }) : null;
 
-  // 1. CHẾ ĐỘ CHỈNH SỬA
+  // CHẾ ĐỘ CHỈNH SỬA
   if (isEditing) {
     if (type === 'select') {
       return (
-        <Select 
-          label={label} 
-          value={value} 
-          onChange={(e) => onChange(e.target.value)} 
-          disabled={disabled}
-        >
-           {options.map(opt => (
-             <option key={opt.value} value={opt.value}>{opt.label}</option>
-           ))}
-        </Select>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+            {iconStyled}
+            {label}
+          </label>
+          <select 
+            className="px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+          >
+            {options.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
       );
     }
     return (
@@ -42,12 +47,12 @@ export default function ProfileField({
     );
   }
 
-  // 2. CHẾ ĐỘ XEM (VIEW MODE)
-  // Tìm label cho select (nếu là select thì hiển thị Label thay vì Value)
-  let displayValue = value;
-  if (type === 'select') {
-     const option = options.find(o => o.value === value);
-     displayValue = option ? option.label : value;
+  // CHẾ ĐỘ XEM - Ưu tiên displayValue, sau đó tìm label từ value
+  let finalDisplayValue = displayValue || value;
+  
+  if (type === 'select' && !displayValue) {
+    const option = options.find(o => o.value === value);
+    finalDisplayValue = option ? option.label : value;
   }
 
   return (
@@ -56,7 +61,7 @@ export default function ProfileField({
       <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm font-medium h-[46px]">
         {iconStyled}
         <span className="truncate">
-          {displayValue || <span className="text-gray-400 italic">Chưa cập nhật</span>}
+          {finalDisplayValue || <span className="text-gray-400 italic">Chưa cập nhật</span>}
         </span>
       </div>
     </div>

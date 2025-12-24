@@ -7,12 +7,17 @@ import Badge from '../../ui/Badge';
 
 export default function ContractInfo({ data }) {
   
-  const Manager = {
-     name: "Nguyễn Văn A",
-     phone: "0123 456 789",
-     email: "nguyenvana@example.com",
-     office: "Văn phòng Tòa nhà A"
+  // Xác định trạng thái badge
+  const getStatusBadge = (status) => {
+    if (status === 'Active') {
+      return { type: 'success', text: 'Đang hoạt động' };
+    } else if (status === 'Expired') {
+      return { type: 'danger', text: 'Đã hết hạn' };
+    }
+    return { type: 'default', text: status };
   };
+
+  const statusBadge = getStatusBadge(data.status);
 
   return (
     <Section className="animate-fade-in-up">
@@ -23,7 +28,7 @@ export default function ContractInfo({ data }) {
           <p className="text-sm text-gray-500">Mã hợp đồng: <span className="font-mono font-medium text-gray-700">{data.contractCode}</span></p>
         </div>
         <div>
-           <Badge type="success" className="px-4 py-2 text-sm">Đang hoạt động</Badge>
+           <Badge type={statusBadge.type} className="px-4 py-2 text-sm">{statusBadge.text}</Badge>
         </div>
       </div>
 
@@ -43,7 +48,7 @@ export default function ContractInfo({ data }) {
                <div>
                   <p className="text-xs text-gray-500 font-medium uppercase mb-0.5">Phòng ở</p>
                   <p className="font-bold text-gray-900 text-lg">{data.roomName}</p>
-                  <p className="text-sm text-gray-500">{data.capacity} người</p>
+                  <p className="text-sm text-gray-500">{data.capacity}</p>
                </div>
             </div>
 
@@ -74,8 +79,7 @@ export default function ContractInfo({ data }) {
         </div>
 
         {/* === CỘT PHẢI (50%): THÔNG TIN QUẢN LÝ === */}
-        {/* Vẫn giữ border-l để ngăn cách 2 bên cho rõ ràng */}
-        <div className="flex flex-col h-full  lg:pl-12">
+        <div className="flex flex-col h-full lg:pl-12">
           <h3 className="font-bold text-gray-900 mb-6 pb-2">Quản lý tòa nhà</h3>
 
           <div className="flex-1 flex flex-col justify-between gap-6">
@@ -87,7 +91,7 @@ export default function ContractInfo({ data }) {
                </div>
                <div>
                   <p className="text-xs text-gray-500 font-medium uppercase mb-0.5">Phụ trách</p>
-                  <p className="font-bold text-gray-900 text-base">{Manager.name}</p>
+                  <p className="font-bold text-gray-900 text-base">{data.managerName}</p>
                </div>
             </div>
 
@@ -98,7 +102,7 @@ export default function ContractInfo({ data }) {
                </div>
                <div>
                   <p className="text-xs text-gray-500 font-medium uppercase mb-0.5">Điện thoại</p>
-                  <p className="font-bold text-gray-900 text-base">{Manager.phone}</p>
+                  <p className="font-bold text-gray-900 text-base">{data.managerPhone}</p>
                </div>
             </div>
 
@@ -109,7 +113,7 @@ export default function ContractInfo({ data }) {
                </div>
                <div>
                   <p className="text-xs text-gray-500 font-medium uppercase mb-0.5">Email</p>
-                  <p className="font-bold text-gray-900 text-base">{Manager.email}</p>
+                  <p className="font-bold text-gray-900 text-base">{data.managerEmail}</p>
                </div>
             </div>
 
@@ -120,7 +124,7 @@ export default function ContractInfo({ data }) {
                </div>
                <div>
                   <p className="text-xs text-gray-500 font-medium uppercase mb-0.5">Văn phòng</p>
-                  <p className="font-bold text-gray-900 text-base">{Manager.office}</p>
+                  <p className="font-bold text-gray-900 text-base">Văn phòng {data.buildingName}</p>
                </div>
             </div>
           </div>
