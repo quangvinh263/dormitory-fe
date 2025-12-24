@@ -139,9 +139,18 @@ export const rejectRenewal = async (dto) => {
     }
 }
 
+export const getPendingRequest = async (studentId) => {
+    try {
+        const response = await axios.get(`${API_URL}/Contract/pending-request-renew?studentId=${studentId}`)
+        if (response.status === 200 || response.data?.success) {
+            return { success: true, data: response.data }
+        }
+        return { success: false, message: response.data?.message || 'Failed to get pending request renew' }
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error rejecting renewal' }
+    }
+}
+
+
 // alias
 export const getContractDetailById = getStudentContractDetail
-
-
-
-
