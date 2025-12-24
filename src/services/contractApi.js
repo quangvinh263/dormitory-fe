@@ -30,7 +30,7 @@ export const createRenewalRequest = async (studentId, monthsToExtend) => {
     try {
         const body = { studentId, monthsToExtend }
         const response = await axios.post(`${API_URL}/Contract/renewal-request`, body)
-        if (response.status === 200 || response.data?.success) {
+        if (response.status === 201 || response.data?.success) {
             return { success: true, data: response.data }
         }
         return { success: false, message: response.data?.message || 'Failed to create renewal request' }

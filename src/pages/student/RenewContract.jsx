@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import Section from '../../components/shared/Section'
 import Button from '../../components/ui/Button'
@@ -7,9 +7,11 @@ import Select from '../../components/ui/Select'
 import { AuthContext } from '../../context/AuthContext'
 import { getStudentContractDetail, createRenewalRequest } from '../../services/contractApi'
 import { getStudentInfo } from '../../services/studentApi'
+import { createZaloPayLinkForRenewal } from '../../services/paymentApi'
 
 export default function RenewContract() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { auth } = useContext(AuthContext)
 
   const [contract, setContract] = useState(null)
@@ -17,6 +19,20 @@ export default function RenewContract() {
   const [error, setError] = useState('')
   const [months, setMonths] = useState(6)
   const [processing, setProcessing] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
+  
+  useEffect(() => {
+    // Kiểm tra xem trên URL có tham số của ZaloPay không (apptransid, status, amount...)
+    const appTransId = searchParams.get('apptransid');
+    const status = searchParams.get('status');
+
+    // Nếu có mã giao dịch -> Đây là người vừa thanh toán xong
+    if (appTransId || status) {
+      console.log("Phát hiện thanh toán, đang chuyển hướng về trang Kết quả...");
+    
+      navigate(`/student/extension?${searchParams.toString()}`, { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     let mounted = true
@@ -53,6 +69,7 @@ export default function RenewContract() {
     if (!accountId) return setError('Vui lòng đăng nhập lại.')
 
     setProcessing(true)
+    setError('')
     try {
       const stu = await getStudentInfo(accountId)
       if (!stu.success || !stu.data) {
@@ -67,18 +84,38 @@ export default function RenewContract() {
       }
 
       const res = await createRenewalRequest(studentId, months)
-      if (res.success) {
-        const body = res.data || {}
-        const paymentUrl = body.paymentUrl || body.data?.paymentUrl || body.payment?.url || null
-        const invoiceId = body.invoiceId || body.data?.invoiceId || body.id || null
-        if (paymentUrl) {
-          window.location.href = paymentUrl
+      // Accept multiple response shapes: top-level receiptId, res.data.receiptId, or nested ids
+      if (!res.success && !res.receiptId && !res.data && !res.id) {
+        setError(res.message || 'Yêu cầu gia hạn thất bại')
+        return
+      }
+
+      const body = res.data ?? {}
+      console.log("Renewal Response:", res, "body:", body);
+
+      const receiptId = res.receiptId || res.paymentId || body.receiptId || body.paymentId || body.data?.receiptId || body.data?.paymentId || res.id || body.id || null
+      if (!receiptId) {
+          console.error("Không tìm thấy Receipt ID");
+          setError('Lỗi hệ thống: Không lấy được mã hóa đơn');
+          return;
+      }
+      if (receiptId) {
+        const payRes = await createZaloPayLinkForRenewal(receiptId)
+        if (!payRes.success) {
+          setError(payRes.message || 'Không thể tạo đường dẫn thanh toán')
           return
         }
-        navigate('/student/payment', { state: { invoiceId } })
-        
-      } else {
-        setError(res.message || 'Yêu cầu gia hạn thất bại')
+        const payBody = payRes.data || {}
+        const link = payBody.paymentUrl || payBody.PaymentUrl || payBody.data?.paymentUrl || payBody.data?.PaymentUrl || null
+        if (link) {
+            sessionStorage.setItem('payment_redirect_to', window.location.pathname);
+            window.location.href = link;
+            return; 
+        }
+        else
+        {
+          setError('Lỗi: Hệ thống không trả về đường dẫn thanh toán.');
+        }
       }
     } catch (err) {
       setError('Đã xảy ra lỗi. Vui lòng thử lại.' + `${err}`)
@@ -106,6 +143,32 @@ export default function RenewContract() {
 
   const totalAmount = contract?.yearlyPrice ? (contract.yearlyPrice / 12) * months : 0
 
+  if (paymentSuccess) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto py-10">
+        <Section>
+          <div className="text-center py-8">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 mx-auto">
+              <span className="text-4xl">✅</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Thanh toán thành công!</h2>
+            <p className="text-gray-600 mb-6">
+              Hợp đồng của bạn đã được gia hạn thêm <b>{months} tháng</b>.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={() => navigate('/student/dashboard')}>
+                Về trang chủ
+              </Button>
+              <Button variant="white" onClick={() => window.location.reload()}>
+                Gia hạn tiếp
+              </Button>
+            </div>
+          </div>
+        </Section>
+      </div>
+    )
+  }
+  
   if (loading) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto">

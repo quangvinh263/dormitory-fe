@@ -14,11 +14,12 @@ export const createZaloPayLinkForRegistration = async (registrationId) => {
 
 export const createZaloPayLinkForRenewal = async (receiptId) => {
   try {
-    const response = await axios.post(`${API_URL}/Payment/zalo/renewal`, { receiptId })
-    if (response.status === 200 || response.data?.success) return { success: true, data: response.data }
-    return { success: false, message: response.data?.message || 'Failed to create payment link for renewal' }
+    const response = await axios.post(`${API_URL}/Payment/create-zalopay-link/renewal-contract/${receiptId}`)
+    const payload = response.data ?? {}
+    if (response.status === 200 || payload.success) return { success: true, data: payload }
+    return { success: false, message: payload.message || 'Failed to create payment link for renewal' }
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Error creating payment link for renewal' }
+    return { success: false, message: error.response?.data?.message || error.message || 'Error creating payment link for renewal' }
   }
 }
 
