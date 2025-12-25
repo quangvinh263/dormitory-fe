@@ -65,7 +65,8 @@ export default function RenewContract() {
       }
       if (pendingRes.success && pendingRes.data) {
           console.log("Pending Data:", pendingRes.data);
-          setPendingReq(pendingRes.data); 
+          setPendingReq(pendingRes.data.data); 
+          console.log(pendingReq)
         } else {
           setPendingReq(null); // Không có đơn chờ
         }
@@ -291,7 +292,7 @@ export default function RenewContract() {
             {/* Thông tin chi tiết đơn hàng */}
             <div className="bg-white bg-opacity-60 rounded-lg p-4 border border-orange-100 grid grid-cols-2 gap-4">
               <div>
-                <span className="block text-xs text-gray-500 uppercase font-semibold">Gói gia hạn</span>
+                <span className="block text-xs text-gray-500 uppercase font-semibold">Gia hạn</span>
                 <span className="text-gray-900 font-medium">
                   {pendingReq.months || 0} Tháng
                 </span>
@@ -300,14 +301,14 @@ export default function RenewContract() {
               <div>
                 <span className="block text-xs text-gray-500 uppercase font-semibold">Ngày tạo</span>
                 <span className="text-gray-900 font-medium">
-                  {pendingReq.createdDate ? new Date(pendingReq.createdDate).toLocaleDateString('vi-VN') : '---'}
+                  {pendingReq.receiptDate ? new Date(pendingReq.receiptDate).toLocaleDateString('vi-VN') : '---'}
                 </span>
               </div>
 
               <div className="col-span-2 border-t border-orange-200 pt-3 mt-1">
                 <span className="block text-xs text-gray-500 uppercase font-semibold">Tổng tiền cần thanh toán</span>
                 <span className="text-2xl font-bold text-orange-600">
-                  {pendingReq.amount ? pendingReq.amount.toLocaleString('vi-VN') : 0} đ
+                  {pendingReq.totalAmount ? pendingReq.totalAmount.toLocaleString('vi-VN') : 0} đ
                 </span>
               </div>
             </div>
