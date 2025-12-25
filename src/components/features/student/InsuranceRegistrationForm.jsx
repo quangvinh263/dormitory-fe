@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { ExclamationTriangleIcon, BuildingOffice2Icon, CreditCardIcon } from '@heroicons/react/24/outline';
 import Button from '../../ui/Button';
 
-export default function InsuranceRegistrationForm({ onCancel, onConfirm }) {
+const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+};
+export default function InsuranceRegistrationForm({ onCancel, onConfirm,price,year }) {
   const [hospital, setHospital] = useState('');
 
   // Validate form
@@ -71,9 +74,9 @@ export default function InsuranceRegistrationForm({ onCancel, onConfirm }) {
          <div className="bg-gray-50 rounded-lg p-4 flex justify-between items-center">
             <div>
                <p className="text-md font-medium text-gray-600">Tổng chi phí:</p>
-               <p className="text-sm text-gray-400 mt-1">Hiệu lực: 01/09/2024 - 31/08/2025</p>
+               <p className="text-sm text-gray-400 mt-1">Hiệu lực: 01/01/{year} - 31/12/{year}</p>
             </div>
-            <span className="text-xl font-bold text-green-700">250.000đ</span>
+            <span className="text-xl font-bold text-green-700">{formatCurrency(price)}</span>
          </div>
 
       </div>

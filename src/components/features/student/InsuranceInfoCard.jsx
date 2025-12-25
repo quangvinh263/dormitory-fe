@@ -1,7 +1,10 @@
 import { CalendarDaysIcon, CurrencyDollarIcon, CheckCircleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import Button from '../../ui/Button';
 
-export default function InsuranceInfoCard({ onRegister }) {
+const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+};
+export default function InsuranceInfoCard({ onRegister,price,year }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       
@@ -14,11 +17,11 @@ export default function InsuranceInfoCard({ onRegister }) {
            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                  <p className="text-sm font-bold text-gray-500 mb-1">Thời gian đăng ký:</p>
-                 <p className="text-gray-900 font-medium">01/08/2024 - 31/08/2024</p>
+                 <p className="text-gray-900 font-medium">01/12/{year-1} - 31/12/{year-1}</p>
               </div>
               <div>
                  <p className="text-sm font-bold text-gray-500 mb-1">Hiệu lực bảo hiểm:</p>
-                 <p className="text-gray-900 font-medium">01/09/2024 - 31/08/2025</p>
+                 <p className="text-gray-900 font-medium">01/01/{year} - 31/12/{year}</p>
               </div>
            </div>
         </div>
@@ -30,7 +33,7 @@ export default function InsuranceInfoCard({ onRegister }) {
         <div className="bg-blue-50 rounded-xl p-5 border border-blue-100">
            <div className="flex justify-between items-center mb-1">
               <span className="text-gray-900 font-medium text-base">Chi phí bảo hiểm</span>
-              <span className="text-2xl font-bold text-blue-600">250.000đ</span>
+              <span className="text-2xl font-bold text-blue-600">{price > 0 ? formatCurrency(price) : 'Đang cập nhật...'}</span>
            </div>
            <p className="text-sm text-gray-600">Áp dụng cho cả năm học (12 tháng)</p>
         </div>
