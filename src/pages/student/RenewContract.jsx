@@ -66,7 +66,6 @@ export default function RenewContract() {
       if (pendingRes.success && pendingRes.data) {
           console.log("Pending Data:", pendingRes.data);
           setPendingReq(pendingRes.data.data); 
-          console.log(pendingReq)
         } else {
           setPendingReq(null); // Không có đơn chờ
         }
