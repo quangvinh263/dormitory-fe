@@ -19,9 +19,7 @@ function isTokenExpired(token) {
   }
 }
 
-// ⭐ HÀM MỚI: Logic lấy token hợp lệ (Dùng chung cho Axios và SignalR)
 export const getValidAccessToken = async () => {
-  // ✅ Thống nhất dùng key "accessToken"
   let token = localStorage.getItem("accessToken");
   const refreshToken = localStorage.getItem("refreshToken");
 
