@@ -34,6 +34,29 @@ export const getDetailHealthInsurance = async (id) => {
     }
 }
 
+export const getHealthInsurancePrice = async (year) => {
+    try {
+        // params: { year } sẽ tự động chuyển thành ?year=2025 trên URL
+        const response = await axios.get(`${API_URL}/prices`, { params: { year } })
+
+        if (response.status === 200 || response.data?.success) {
+            return { 
+                success: true, 
+                data: response.data?.data ?? response.data?.dto ?? response.data 
+            }
+        }
+        return { 
+            success: false, 
+            message: response.data?.message || 'Failed to fetch insurance price' 
+        }
+    } catch (error) {
+        return { 
+            success: false, 
+            message: error.response?.data?.message || 'Error fetching insurance price' 
+        }
+    }
+}
+
 /**
  * GET: api/health-insurances/students/{studentId}
  * Lấy BHYT theo Student ID
@@ -100,3 +123,4 @@ export const createHealthPrice = async (priceData) => {
         return { success: false, message: error.response?.data?.message || 'Error creating health price' }
     }
 }
+
