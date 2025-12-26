@@ -1,19 +1,29 @@
-import React from 'react';
+import { useState } from 'react';
 import { ArrowDownTrayIcon, BellAlertIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 import ContractStats from '../../components/features/manager/ContractStats';
 import ContractFilter from '../../components/features/manager/ContractFilter';
 import ContractTable from '../../components/features/manager/ContractTable';
+import RoomChangeModal from '../../components/features/manager/RoomChangeModal';
 import Button from '../../components/ui/Button';
 
 export default function ContractPage() {
+
+  const [isRoomChangeModalOpen, setIsRoomChangeModalOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState(null);
+
+  const handleOpenRoomChange = (contract) => {
+    setSelectedContract(contract);
+    setIsRoomChangeModalOpen(true);
+  };
+
   return (
     <div className="animate-fade-in-up space-y-6 pb-10">
       
       {/* 1. Header Page */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Báo Cáo Hợp Đồng Hết Hạn</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Báo Cáo Hợp Đồng</h1>
           <p className="text-sm text-gray-500 mt-1">Theo dõi và quản lý các hợp đồng sắp hết hạn hoặc đã quá hạn</p>
         </div>
         
@@ -35,7 +45,7 @@ export default function ContractPage() {
       <ContractFilter />
 
       {/* 4. Bảng dữ liệu */}
-      <ContractTable />
+      <ContractTable onRoomChange={handleOpenRoomChange} />
 
       {/* 5. Footer Info Alert (Màu xanh dương) */}
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start">
@@ -47,6 +57,12 @@ export default function ContractPage() {
             Để gia hạn, vui lòng hướng dẫn sinh viên nộp đơn gia hạn thông qua Cổng thông tin sinh viên.
         </div>
       </div>
+
+      <RoomChangeModal 
+        isOpen={isRoomChangeModalOpen}
+        onClose={() => setIsRoomChangeModalOpen(false)}
+        contract={selectedContract}
+      />
 
     </div>
   );
