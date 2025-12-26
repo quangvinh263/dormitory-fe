@@ -11,7 +11,9 @@ import RequestDetailModal from '../../components/features/student/RequestDetailM
 
 import {getMaintenances} from '../../services/maintenanceApi'
 import { getStudentInfo } from '../../services/studentApi'
+import { getStudentContractDetail } from '../../services/contractApi'
 import { AuthContext } from '../../context/AuthContext'
+
 
 export default function Maintenance() {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ export default function Maintenance() {
 
   const [requests,setRequests] = useState([]);
   const [studentId, setStudentId] = useState(null);
+  const [equipments,setEquipments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -49,14 +52,29 @@ export default function Maintenance() {
                 setStudentId(sId);
                 
                 const params = { studentId: studentId };
-                const res = await getMaintenances(params);
-
+                const [contractRes,maintenanceRes] = await Promise.all([
+                          getStudentContractDetail(accountId),
+                          getMaintenances(params)
+                        ]);
                 if (!mounted) return;
 
-                if (res.success) {
-                    setRequests(Array.isArray(res.data) ? res.data : []);
+                if (maintenanceRes.success) {
+                    setRequests(Array.isArray(maintenanceRes.data) ? maintenanceRes.data : []);
                 } else {
-                    throw new Error(res.message || 'Không thể tải danh sách yêu cầu.');
+                    throw new Error(maintenanceRes.message || 'Không thể tải danh sách yêu cầu.');
+                }
+
+                if (contractRes.success && contractRes.data)
+                {
+                  const listThietBi = contractRes.data.equipments;
+                  if (Array.isArray(listThietBi)) {
+                      setEquipments(listThietBi); // Gán đúng dữ liệu vào
+                  } else {
+                      setEquipments([]); // Nếu null hoặc không phải mảng thì gán rỗng
+                  }
+                }
+                else {
+                    throw new Error(maintenanceRes.message || 'Không thể tải hợp đồng');
                 }
 
             } catch (err) {
@@ -70,6 +88,7 @@ export default function Maintenance() {
 
         return () => { mounted = false; };
     }, [auth]);
+
   // Tính toán số liệu thống kê
   const stats = {
     total: requests.length,
@@ -94,6 +113,18 @@ export default function Maintenance() {
     setIsCreateModalOpen(false); // Đóng modal sau khi tạo xong
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-500">Đang tải dữ liệu...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="space-y-6">
       
@@ -119,7 +150,7 @@ export default function Maintenance() {
          <div className="p-4 bg-gray-50 min-h-[400px]">
             <div className="space-y-3">
                {requests.map((req) => (
-                  <div key={req.id} onClick={() => setSelectedRequest(req)} className="cursor-pointer">
+                  <div key={req.maintenanceID} onClick={() => setSelectedRequest(req)} className="cursor-pointer">
                      <RequestItem request={req} />
                   </div>
                ))}
@@ -132,6 +163,7 @@ export default function Maintenance() {
         isOpen={isCreateModalOpen} 
         onClose={() => setIsCreateModalOpen(false)} 
         onSubmit={handleCreateRequest}
+        equipments = {equipments}
       />
 
       <RequestDetailModal

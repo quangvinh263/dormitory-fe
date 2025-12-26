@@ -18,9 +18,7 @@ export const getEquipmentsByRoomId = async (roomId) => {
 }
 
 /**
- * PATCH: api/maintenance/{id}/status
- * Cập nhật trạng thái yêu cầu bảo trì
- * Payload (data): { status, note, ... }
+ * POST: api/RoomEquipment/
  */
 export const changeStatus = async (dto) => {
     try {

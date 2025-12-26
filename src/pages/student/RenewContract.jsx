@@ -19,6 +19,7 @@ export default function RenewContract() {
   const [error, setError] = useState('')
   const [months, setMonths] = useState(6)
   const [processing, setProcessing] = useState(false)
+  const [studentId, setStudentId] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [pendingReq, setPendingReq] = useState(null);
   
@@ -52,6 +53,7 @@ export default function RenewContract() {
       }
       // Lấy studentId (xử lý nhiều trường hợp key khác nhau)
       const studentId = stuRes.data.studentID || stuRes.data.studentID || stuRes.data.id;
+      setStudentId(studentId);
 
       const [contractRes, pendingRes] = await Promise.all([
           getStudentContractDetail(accountId),
