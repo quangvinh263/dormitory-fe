@@ -13,9 +13,10 @@ export default function ViolationDashboard() {
   const [modalMode, setModalMode] = useState('create'); // 'create' | 'view' | 'update'
   const [selectedViolation, setSelectedViolation] = useState(null);
 
+  // Cập nhật filters state
   const [filters, setFilters] = useState({
     search: '',
-    floor: '',
+    violationCount: '', // Thay đổi từ 'floor' thành 'violationCount'
     period: ''
   });
 
@@ -198,6 +199,64 @@ export default function ViolationDashboard() {
     setIsModalOpen(false);
   };
 
+  // Filter tableData based on filters
+  const filteredTableData = useMemo(() => {
+    let filtered = [...tableData];
+
+    // Filter by search
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.studentId.toLowerCase().includes(searchLower) ||
+        item.studentName.toLowerCase().includes(searchLower) ||
+        item.id.toLowerCase().includes(searchLower) ||
+        item.room.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Filter by violation count
+    if (filters.violationCount) {
+      const count = parseInt(filters.violationCount);
+      filtered = filtered.filter(item => item.count === count);
+    }
+
+    // Filter by period
+    if (filters.period) {
+      const now = new Date();
+      filtered = filtered.filter(item => {
+        if (item.originalData?.violationTime === '0001-01-01T00:00:00') return false;
+        
+        const violationDate = new Date(item.originalData?.violationTime);
+        
+        switch (filters.period) {
+          case 'this_month':
+            return violationDate.getMonth() === now.getMonth() && 
+                   violationDate.getFullYear() === now.getFullYear();
+          case 'last_month':
+            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
+            return violationDate.getMonth() === lastMonth.getMonth() && 
+                   violationDate.getFullYear() === lastMonth.getFullYear();
+          case 'this_week':
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            weekStart.setHours(0, 0, 0, 0);
+            return violationDate >= weekStart;
+          case 'yesterday':
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+            const todayStart = new Date(now);
+            todayStart.setHours(0, 0, 0, 0);
+            return violationDate >= yesterday && violationDate < todayStart;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  }, [tableData, filters]);
+
   if (loading) {
     return (
       <div className="animate-fade-in-up space-y-6">
@@ -228,54 +287,60 @@ export default function ViolationDashboard() {
 
   return (
     <div className="animate-fade-in-up space-y-6">
-      
-      {/* 1. Header Page */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Quản Lý Vi Phạm</h1>
-        <p className="text-sm text-gray-500 mt-1">Lập biên bản và theo dõi các lỗi vi phạm nội quy của sinh viên</p>
-      </div>
-
-      {/* 2. Cảnh báo (Alert) */}
-      <div className="bg-red-50 border border-red-100 rounded-lg p-4 flex items-start gap-3">
-        <ExclamationCircleIcon className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <p className="text-sm text-red-800">
-          <span className="font-bold">Cảnh báo:</span> Có <span className="font-bold">{criticalStudents} sinh viên</span> đã vi phạm từ 2 lần trở lên, cần theo dõi đặc biệt. Vi phạm lần 3 sẽ tự động kích hoạt quy trình chấm dứt hợp đồng.
-        </p>
-      </div>
-
-      {/* 3. Thống kê */}
-      <ViolationStats />
-
-      {/* 4. Bộ lọc & Bảng danh sách */}
-      <div>
-        <ViolationFilter 
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onOpenCreateModal={handleOpenCreate} 
-        />
-        
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-md font-bold text-gray-900">Danh sách biên bản ({tableData.length})</h2>
-          </div>
-          
-          <ViolationTable 
-            data={tableData} 
-            onView={handleOpenView}
-            onUpdate={handleOpenUpdate}
-          />
-        </div>
-      </div>
-      
-      <ViolationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleModalSubmit}
-        mode={modalMode}
-        initialData={selectedViolation}
-        allViolations={violations}
-        updateLoading={updateLoading}
-      />
+    
+    {/* 1. Header Page */}
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900">Quản Lý Vi Phạm</h1>
+      <p className="text-sm text-gray-500 mt-1">Lập biên bản và theo dõi các lỗi vi phạm nội quy của sinh viên</p>
     </div>
-  );
+
+    {/* 2. Cảnh báo (Alert) */}
+    <div className="bg-red-50 border border-red-100 rounded-lg p-4 flex items-start gap-3">
+      <ExclamationCircleIcon className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+      <p className="text-sm text-red-800">
+        <span className="font-bold">Cảnh báo:</span> Có <span className="font-bold">{criticalStudents} sinh viên</span> đã vi phạm từ 2 lần trở lên, cần theo dõi đặc biệt. Vi phạm lần 3 sẽ tự động kích hoạt quy trình chấm dứt hợp đồng.
+      </p>
+    </div>
+
+    {/* 3. Thống kê */}
+    <ViolationStats violations={violations} />
+
+    {/* 4. Bộ lọc & Bảng danh sách */}
+    <div>
+      <ViolationFilter 
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onOpenCreateModal={handleOpenCreate} 
+        violations={violations}
+      />
+      
+      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-md font-bold text-gray-900">
+            Danh sách biên bản ({filteredTableData.length})
+            {filteredTableData.length !== tableData.length && (
+              <span className="text-gray-500 font-normal"> / {tableData.length}</span>
+            )}
+          </h2>
+        </div>
+        
+        <ViolationTable 
+          data={filteredTableData} 
+          onView={handleOpenView}
+          onUpdate={handleOpenUpdate}
+        />
+      </div>
+    </div>
+    
+    <ViolationModal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      onSubmit={handleModalSubmit}
+      mode={modalMode}
+      initialData={selectedViolation}
+      allViolations={violations}
+      updateLoading={updateLoading}
+    />
+  </div>
+);
 }
