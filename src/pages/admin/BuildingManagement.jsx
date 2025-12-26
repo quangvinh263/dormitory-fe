@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 import Badge from '../../components/ui/Badge'; 
+import BuildingStats from '../../components/features/admin/BuildingStats';
 import BuildingModal from '../../components/features/admin/BuildingModal'; 
 import RoomModal from '../../components/features/admin/RoomModal';
 import RoomTypeModal from '../../components/features/admin/RoomTypeModal';
@@ -81,6 +82,10 @@ const BuildingManagement = () => {
           <h1 className="text-2xl font-bold text-gray-900">Quản lý Tòa nhà & Phòng</h1>
           <p className="text-sm text-gray-500 mt-1">Cấu hình sơ đồ phòng ốc ký túc xá</p>
         </div>
+      </div>
+
+      <div className='shrink-0'>
+        <BuildingStats rooms={rooms} />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">

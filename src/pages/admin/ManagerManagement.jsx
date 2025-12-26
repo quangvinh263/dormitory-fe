@@ -8,9 +8,9 @@ import ManagerFormModal from '../../components/features/admin/ManagerFormModal';
 const ManagerManagement = () => {
   // Mock Data (Dữ liệu giả lập)
   const [managers, setManagers] = useState([
-    { code: 'TT001', name: 'Nguyễn Văn A', email: 'manager.a@dorm.vn', phone: '0912345678', building: 'Tòa A', status: 'active' },
-    { code: 'TT002', name: 'Trần Thị B', email: 'manager.b@dorm.vn', phone: '0923456789', building: 'Tòa B', status: 'active' },
-    { code: 'TT003', name: 'Lê Văn C', email: 'manager.c@dorm.vn', phone: '0934567890', building: 'Tòa C', status: 'inactive' },
+    { code: 'TT001', name: 'Nguyễn Văn A', email: 'manager.a@dorm.vn', phone: '0912345678', building: 'Tòa A'},
+    { code: 'TT002', name: 'Trần Thị B', email: 'manager.b@dorm.vn', phone: '0923456789', building: 'Tòa B'},
+    { code: 'TT003', name: 'Lê Văn C', email: 'manager.c@dorm.vn', phone: '0934567890', building: 'Tòa C'},
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');

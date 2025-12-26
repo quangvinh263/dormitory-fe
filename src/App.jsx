@@ -16,6 +16,7 @@ import VerifyResetOtp from './pages/auth/VerifyResetOtp';
 import AdminDashboard from './pages/admin/Dashboard';
 import ManagerManagement from './pages/admin/ManagerManagement';
 import BuildingManagement from './pages/admin/BuildingManagement';
+import Report from './pages/admin/Report';
 
 // Import Pages - Manager
 import ManagerDashboard from './pages/manager/Dashboard';
@@ -66,7 +67,7 @@ export default function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="managers" element={<ManagerManagement />} />
             <Route path="buildings" element={<BuildingManagement />} />
-            <Route path="reports" element={<div>Trang Báo cáo thống kê</div>} />
+            <Route path="reports" element={<Report />} />
             <Route path="settings" element={<div>Trang Cấu hình</div>} />
           </Route>
           

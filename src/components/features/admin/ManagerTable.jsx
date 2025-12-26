@@ -3,14 +3,6 @@ import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Badge from '../../ui/Badge'; 
 
 const ManagerTable = ({ managers, onEdit, onDelete }) => {
-  
-  const renderStatus = (status) => {
-    if (status === 'active') {
-      return <Badge type="success">Hoạt động</Badge>; 
-    }
-    return <Badge type="default">Ngừng</Badge>; // Màu xám
-  };
-
   return (
     <div className="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
       <table className="min-w-full divide-y divide-gray-200">
@@ -21,7 +13,6 @@ const ManagerTable = ({ managers, onEdit, onDelete }) => {
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 tracking-wider">Email</th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 tracking-wider">Số điện thoại</th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 tracking-wider">Tòa nhà</th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 tracking-wider">Trạng thái</th>
             <th className="px-6 py-3 text-center text-sm font-medium text-gray-500 tracking-wider">Thao tác</th>
           </tr>
         </thead>
@@ -33,12 +24,6 @@ const ManagerTable = ({ managers, onEdit, onDelete }) => {
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{manager.email}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{manager.phone}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{manager.building}</td>
-              
-              {/* 👇 3. Gọi hàm renderStatus */}
-              <td className="px-6 py-4 whitespace-nowrap">
-                {renderStatus(manager.status)}
-              </td>
-              
               <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                 <div className="flex items-center justify-center gap-2">
                   <button 
