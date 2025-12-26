@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect,useContext } from 'react'
+import { useNavigate,useSearchParams} from 'react-router-dom'
 import { WrenchIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 
@@ -8,43 +9,73 @@ import RequestItem from '../../components/features/student/RequestItem';
 import CreateRequestModal from '../../components/features/student/CreateRequestModal';
 import RequestDetailModal from '../../components/features/student/RequestDetailModal';
 
-// MOCK DATA (Giống trong hình Figma của bạn)
-const MOCK_DATA = [
-  { 
-    id: 1, code: 'MNT_001', 
-    status: 'pending', 
-    room: 'A1.01', device: 'Điều hòa', 
-    description: 'Điều hòa không hoạt động, cần kiểm tra sửa chữa gấp', 
-    date: '17/12/2025', cost: 0 
-  },
-  { 
-    id: 2, code: 'MNT_002', 
-    status: 'processing', 
-    room: 'A3.01', device: 'Vòi nước', 
-    description: 'Vòi nước bị hỏng, nước chảy yếu', 
-    date: '17/12/2025', cost: 150000 
-  },
-  { 
-    id: 3, code: 'MNT_003', 
-    status: 'done', 
-    room: 'A1.01', device: 'Bóng đèn', 
-    description: 'Đèn trong phòng không sáng, nghi hỏng bóng đèn', 
-    date: '07/12/2025', cost: 50000 
-  },
-];
+import {getMaintenances} from '../../services/maintenanceApi'
+import { getStudentInfo } from '../../services/studentApi'
+import { AuthContext } from '../../context/AuthContext'
 
 export default function Maintenance() {
-  const [requests] = useState(MOCK_DATA);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { auth } = useContext(AuthContext);
+
+
+  const [requests,setRequests] = useState([]);
+  const [studentId, setStudentId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
+  
+  useEffect(() => {
+        let mounted = true;
+        const accountId = auth?.accountId || localStorage.getItem('accountId');
 
+        if (!accountId) {
+          setError('Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.');
+          setLoading(false);
+          return;
+        }
+
+        const fetchData = async () => {
+            try {
+                const stuRes = await getStudentInfo(accountId);
+                if (!mounted) return;
+
+                if (!stuRes.success || !stuRes.data) {
+                    throw new Error(stuRes.message || 'Không thể lấy thông tin sinh viên');
+                }
+                const sId = stuRes.data.studentID || stuRes.data.studentId || stuRes.data.id;
+                setStudentId(sId);
+                
+                const params = { studentId: studentId };
+                const res = await getMaintenances(params);
+
+                if (!mounted) return;
+
+                if (res.success) {
+                    setRequests(Array.isArray(res.data) ? res.data : []);
+                } else {
+                    throw new Error(res.message || 'Không thể tải danh sách yêu cầu.');
+                }
+
+            } catch (err) {
+                if (mounted) setError(err.message);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+
+        fetchData();
+
+        return () => { mounted = false; };
+    }, [auth]);
   // Tính toán số liệu thống kê
   const stats = {
     total: requests.length,
-    pending: requests.filter(r => r.status === 'pending').length,
+    pending: requests.filter(r => r.status === 'Pending').length,
     processing: requests.filter(r => r.status === 'processing').length,
-    done: requests.filter(r => r.status === 'done').length,
+    done: requests.filter(r => r.status === 'completed').length,
   };
 
   const handleCreateRequest = (newData) => {
