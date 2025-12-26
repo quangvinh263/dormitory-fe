@@ -4,7 +4,7 @@ const API_URL = `${import.meta.env.VITE_API_BASE_URL}`
 
 export const getStudentContractDetail = async (accountId) => {
     try {
-        const response = await axios.get(`${API_URL}/Contracts/students/${accountId}`)
+        const response = await axios.get(`${API_URL}/Contract/students/${accountId}`)
         if (response.status === 200 || response.data?.success) {
             return { success: true, data: response.data?.data ?? response.data?.dto ?? response.data }
         }
@@ -29,7 +29,7 @@ export const getCurrentContract = async (studentId) => {
 export const createRenewalRequest = async (studentId, monthsToExtend) => {
     try {
         const body = { studentId, monthsToExtend }
-        const response = await axios.post(`${API_URL}/contracts/renewals`, body)
+        const response = await axios.post(`${API_URL}/contract/renewals`, body)
         if (response.status === 201 || response.data?.success) {
             return { success: true, data: response.data }
         }
@@ -141,7 +141,7 @@ export const rejectRenewal = async (dto) => {
 
 export const getPendingRequest = async (studentId) => {
     try {
-        const response = await axios.get(`${API_URL}/contracts/pending-renewals?studentId=${studentId}`)
+        const response = await axios.get(`${API_URL}/contract/pending-renewals?studentId=${studentId}`)
         if (response.status === 200 || response.data?.success) {
             return { success: true, data: response.data }
         }

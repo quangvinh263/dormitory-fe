@@ -3,11 +3,12 @@ import { useState, useEffect } from 'react'
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import InsuranceInfoCard from '../../components/features/student/InsuranceInfoCard';
 import InsuranceRegistrationForm from '../../components/features/student/InsuranceRegistrationForm'; 
-import {getHealthInsurancePrice} from '../../services/insuranceApi'
+import {getHealthInsurancePrice,getAllHospital} from '../../services/insuranceApi'
 export default function StudentInsurance() {
   const [step, setStep] = useState(1); 
   const [insuranceYear, setInsuranceYear] = useState(new Date().getFullYear()+1); // Mặc định là năm nay (2025)
   const [insurancePrice, setInsurancePrice] = useState(0);
+  const [hospitalList, setHospitalList] = useState([]);
 
 
   // Chuyển sang bước điền form
@@ -21,22 +22,31 @@ export default function StudentInsurance() {
     setStep(1);
   };
   useEffect(() => {
-    const fetchPrice = async () => {
+    const fetchData = async () => {
         try {
-            const currentYear = new Date().getFullYear(); 
-            const res = await getHealthInsurancePrice(currentYear+1);
+            const yearToFetch = new Date().getFullYear() + 1;
+            const [priceRes, hospitalRes] = await Promise.all([
+                getHealthInsurancePrice(yearToFetch),
+                getAllHospital()
+            ]);
             
-            if (res.success && res.data) {
-                setInsurancePrice(res.data.price || res.data.amount || 0);
-            } 
+            if (priceRes.success && priceRes.data) {
+                setInsurancePrice(priceRes.data.price || priceRes.data.amount || 0);
+            }
+            if (hospitalRes.success && Array.isArray(hospitalRes.data)) {
+                setHospitalList(hospitalRes.data);
+            } else {
+                console.warn("API bệnh viện không trả về mảng:", hospitalRes);
+            }
         } catch (error) {
             console.error("Lỗi lấy giá bảo hiểm:", error);
         }
     };
 
-    fetchPrice();
+    fetchData();
   }, []);
-  // Xác nhận thanh toán -> Chuyển sang trang Payment
+
+  
   const handleConfirmPayment = (hospitalName) => {
     // navigate('/student/payment', { state: { ... } });
     alert(`Đang chuyển hướng thanh toán cho cơ sở: ${hospitalName}`);
@@ -71,6 +81,7 @@ export default function StudentInsurance() {
             onConfirm={handleConfirmPayment} 
             price={insurancePrice}
             year ={insuranceYear}
+            hospitalList={hospitalList}
         />
       )}
 
