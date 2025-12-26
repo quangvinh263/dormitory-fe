@@ -8,7 +8,7 @@ import RequestItem from '../../components/features/student/RequestItem';
 import CreateRequestModal from '../../components/features/student/CreateRequestModal';
 import RequestDetailModal from '../../components/features/student/RequestDetailModal';
 
-import {getMaintenances} from '../../services/maintenanceApi'
+import {getMaintenances,createMaintenanceRequest} from '../../services/maintenanceApi'
 import { getStudentInfo } from '../../services/studentApi'
 import { getStudentContractDetail } from '../../services/contractApi'
 import { AuthContext } from '../../context/AuthContext'
@@ -91,23 +91,48 @@ export default function Maintenance() {
   const stats = {
     total: requests.length,
     pending: requests.filter(r => r.status === 'Pending').length,
-    processing: requests.filter(r => r.status === 'processing').length,
-    done: requests.filter(r => r.status === 'completed').length,
+    confirmed: requests.filter(r => r.status === 'Confirmed').length,
+    processing: requests.filter(r => r.status === 'Processing').length,
+    wait_payment : requests.filter(r=>r.status==="Wait-Payment").length,
+    completed: requests.filter(r => r.status === 'Completed').length,
   };
-  const handleCreateRequest = (newData) => {
-    const newRequest = {
-      id: Date.now(),
-      code: `MNT_00${requests.length + 1}`,
-      status: 'pending',
-      room: newData.room,
-      device: newData.device,
+  const handleCreateRequest = async (newData) => {
+    if (!studentId) {
+      alert("Không tìm thấy thông tin sinh viên. Vui lòng tải lại trang.");
+      return;
+    }
+    const payload = {
+      studentId : studentId,
+      equipmentId : newData.device,
       description: newData.description,
-      date: new Date().toLocaleDateString('en-GB'), // DD/MM/YYYY
-      cost: 0
     };
+    setLoading(true);
+    try
+    {
+        const res = await createMaintenanceRequest(payload);
+        if (res.success) {
+          const newRequestForUI = {
+          maintenanceID: res.data?.maintenanceID || res.data?.id || Date.now(), // Lấy ID từ server hoặc tạo tạm
+          studentId: studentId,
+          equipmentName: "Đang cập nhật...", // Hoặc map từ mảng equipments nếu muốn hiển thị ngay tên
+          description: payload.description,
+          status: 'Pending', // Mặc định là đang chờ
+          issueDate: new Date().toLocaleDateString('en-GB'),
+          repairCost: 0
+          };
+          setRequests(prev => [newRequestForUI, ...prev]);
+          setIsCreateModalOpen(false);
+          alert("Gửi yêu cầu thành công!");
+        } else {
+          alert(res.message || "Gửi yêu cầu thất bại.");
+      }
 
-    requests([newRequest, ...requests]);
-    setIsCreateModalOpen(false); // Đóng modal sau khi tạo xong
+    } catch (error) {
+      console.error("Lỗi tạo yêu cầu:", error);
+      alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
