@@ -1,7 +1,7 @@
-import { CalendarDaysIcon, BanknotesIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { CalendarDaysIcon, BanknotesIcon, EyeIcon ,CreditCardIcon} from '@heroicons/react/24/outline';
 import Badge from '../../ui/Badge'; // Tận dụng Badge có sẵn
 
-export default function RequestItem({ request }) {
+export default function RequestItem({ request,handlePayment }) {
   // Helper render trạng thái giống design
   const renderStatus = (status) => {
     switch(status) {
@@ -11,6 +11,10 @@ export default function RequestItem({ request }) {
             return { label: 'Đang xử lý', color: 'info', text: 'text-blue-700' };
         case 'Completed': 
             return { label: 'Hoàn thành', color: 'success', text: 'text-green-700' };
+         case 'Confirmed':
+            return { label: 'Đã xác nhận', color: 'success', text: 'text-green-700' };
+         case 'Wait Payment':
+            return { label: 'Chờ thanh toán', color: 'success', text: 'text-green-700' };
         default: 
             return { label: 'Khác', color: 'default', text: 'text-gray-700' };
     }
@@ -62,7 +66,16 @@ export default function RequestItem({ request }) {
                    <BanknotesIcon className="w-3.5 h-3.5"/>
                    <span>Chi phí: {formattedCost}</span>
                 </div>
+                {request.repairCost > 0 && request.status === 'Wait Payment'  && (
+                  <button className="absolute bottom-4 right-4 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 flex items-center gap-2"
+                     onClick={handlePayment}
+                  >
+                  <CreditCardIcon className="w-4 h-4" />
+                  Thanh toán ngay
+                  </button>
+               )}
              </div>
+             
           </div>
 
           {/* Cột phụ: Action Button (3 chấm) */}

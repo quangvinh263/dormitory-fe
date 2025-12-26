@@ -134,7 +134,9 @@ export default function Maintenance() {
       setLoading(false);
     }
   };
+  const handlePayment = async ()=> {
 
+  };
   if (loading) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
@@ -173,7 +175,7 @@ export default function Maintenance() {
             <div className="space-y-3">
                {requests.map((req) => (
                   <div key={req.maintenanceID} onClick={() => setSelectedRequest(req)} className="cursor-pointer">
-                     <RequestItem request={req} />
+                     <RequestItem request={req} handlePayment={handlePayment} />
                   </div>
                ))}
             </div>
