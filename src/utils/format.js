@@ -96,3 +96,5 @@ export const formatRelativeTime = (dateString) => {
   // Quá 7 ngày → hiển thị ngày tháng theo giờ VN (dùng lại hàm formatDateTime của bạn)
   return formatDateTime(dateString);
 };
+
+export const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);

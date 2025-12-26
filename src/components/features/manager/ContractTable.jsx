@@ -1,9 +1,9 @@
 import React from 'react';
-import { BellAlertIcon } from '@heroicons/react/24/outline';
+import { BellAlertIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Badge from '../../ui/Badge'; 
 
-const ContractTable = () => {
-  // Mock Data chuẩn theo hình Figma
+const ContractTable = ({ onRoomChange }) => {
+
   const contracts = [
     { id: 'SV2024001', name: 'Nguyễn Văn A', room: 'A301 (Tòa A)', endDate: '20/08/2024', daysLeft: 5, status: 'warning' },
     { id: 'SV2024005', name: 'Trần Thị B', room: 'A302 (Tòa A)', endDate: '10/08/2024', daysLeft: -5, status: 'danger' }, // Âm là quá hạn
@@ -56,11 +56,18 @@ const ContractTable = () => {
                 <td className="px-6 py-4">{item.endDate}</td>
                 <td className="px-6 py-4">{renderDaysText(item.daysLeft)}</td>
                 <td className="px-6 py-4">{renderStatus(item.status)}</td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-6 py-4 text-center gap-2 flex justify-center">
                   <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm">
                     <BellAlertIcon className="w-3.5 h-3.5" />
                     Nhắc nhở
                   </button>
+                  <button 
+                        onClick={() => onRoomChange(item)}
+                        className="inline-flex items-center p-1.5 bg-orange-50 border border-orange-100 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-100 hover:border-orange-200 transition-colors shadow-sm"
+                    >
+                        <ArrowPathIcon className="w-4 h-4" />
+                        Đổi phòng
+                    </button>
                 </td>
               </tr>
             ))}
