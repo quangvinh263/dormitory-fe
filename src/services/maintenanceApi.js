@@ -39,6 +39,34 @@ export const getMaintenances = async (params) => {
 }
 
 /**
+ * GET: api/maintenance/receipt
+ * Lấy hoas ddown
+ */
+export const getReceipt = async (requestId) => {
+    try {
+
+        const response = await axios.get(`${API_URL}/${requestId}/receipt`);
+
+        if (response.status === 200 || response.data?.success) {
+            return { 
+                success: true, 
+                data: response.data?.data ?? response.data 
+            };
+        }
+        return { 
+            success: false, 
+            message: response.data?.message || 'Failed to fetch receipt' 
+        };
+    } catch (error) {
+        console.error("API Error:", error);
+        return { 
+            success: false, 
+            message: error.response?.data?.message || 'Error fetching receipt' 
+        };
+    }
+}
+
+/**
  * GET: api/maintenance/{id}
  * Lấy chi tiết một yêu cầu bảo trì theo ID
  */

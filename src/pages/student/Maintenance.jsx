@@ -8,10 +8,11 @@ import RequestItem from '../../components/features/student/RequestItem';
 import CreateRequestModal from '../../components/features/student/CreateRequestModal';
 import RequestDetailModal from '../../components/features/student/RequestDetailModal';
 
-import {getMaintenances,createMaintenanceRequest} from '../../services/maintenanceApi'
+import {getMaintenances,createMaintenanceRequest,getReceipt} from '../../services/maintenanceApi'
 import { getStudentInfo } from '../../services/studentApi'
 import { getStudentContractDetail } from '../../services/contractApi'
 import { AuthContext } from '../../context/AuthContext'
+import { createZaloPayLinkForMaintenance } from '../../services/paymentApi';
 
 
 export default function Maintenance() {
@@ -134,8 +135,44 @@ export default function Maintenance() {
       setLoading(false);
     }
   };
-  const handlePayment = async ()=> {
+  const handlePayment = async (request)=> {
+    if (loading) return; 
 
+    try {
+        setLoading(true);
+
+        // --- BƯỚC 1: Lấy ID Hóa đơn (Kiểm tra xem đã có hóa đơn chưa) ---
+
+        const receiptRes = await getReceipt(request.maintenanceID);
+
+        if (!receiptRes.success || !receiptRes.data) {
+            alert(receiptRes.message || "Chưa tìm thấy hóa đơn cho yêu cầu này.");
+            return; // Dừng lại nếu không có hóa đơn
+        }
+
+        const receiptId = receiptRes.data; // Đây là ID hóa đơn (GUID/String)
+
+        // --- BƯỚC 2: Tạo link thanh toán ZaloPay ---
+        const payRes = await createZaloPayLinkForMaintenance(receiptId);
+
+        if (!payRes.success) {
+          setError(payRes.message || 'Không thể tạo đường dẫn thanh toán')
+          return
+        }
+        const payBody = payRes.data || {}
+        const link = payBody.paymentUrl || payBody.PaymentUrl || payBody.data?.paymentUrl || payBody.data?.PaymentUrl || null
+        if (link) {
+            sessionStorage.setItem('payment_redirect_to', window.location.pathname);
+            window.location.href = link;
+            return; 
+        }
+
+    } catch (error) {
+        console.error("Payment Error:", error);
+        alert("Đã xảy ra lỗi trong quá trình xử lý thanh toán.");
+    } finally {
+        setLoading(false);
+    }
   };
   if (loading) {
     return (
@@ -194,6 +231,7 @@ export default function Maintenance() {
         isOpen={!!selectedRequest} 
         onClose={() => setSelectedRequest(null)}
         request={selectedRequest}
+        handlePayment={() => handlePayment(selectedRequest)}
       />
 
     </div>

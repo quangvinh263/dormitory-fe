@@ -75,7 +75,10 @@ export default function RequestItem({ request,handlePayment }) {
                      {request.repairCost > 0 && request.status === 'Wait Payment' && (
                            <button 
                               className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 flex items-center gap-2"
-                              onClick={handlePayment}
+                              onClick={(e) => {
+                                 e.stopPropagation(); // <--- Chặn sự kiện nổi bọt (để không mở Modal detail)
+                                 handlePayment(request);
+                              }}
                            >
                               <CreditCardIcon className="w-4 h-4" />
                               Thanh toán ngay
