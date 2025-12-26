@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
-import { getAllViolationsForManager } from '../../services/violationApi';
+import { getAllViolationsForManager, updateViolationResolution } from '../../services/violationApi';
 
 import ViolationStats from '../../components/features/manager/ViolationStats';
 import ViolationFilter from '../../components/features/manager/ViolationFilter';
@@ -23,6 +23,7 @@ export default function ViolationDashboard() {
   const [violations, setViolations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   const accountId = localStorage.getItem('accountId');
 
@@ -137,7 +138,7 @@ export default function ViolationDashboard() {
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = (formData, mode) => {
+  const handleModalSubmit = async (formData, mode) => {
     if (mode === 'create') {
       // --- Logic Tạo Mới ---
       const newViolation = {
@@ -154,13 +155,44 @@ export default function ViolationDashboard() {
       setViolations([newViolation, ...violations]);
     } 
     else if (mode === 'update') {
-      // --- Logic Cập Nhật ---
-      const updatedList = violations.map(v => 
-        v.id === selectedViolation.id 
-          ? { ...v, resolution: formData.resolution }
-          : v
-      );
-      setViolations(updatedList);
+      // --- Logic Cập Nhật qua API ---
+      try {
+        setUpdateLoading(true);
+
+        // Tìm violationId từ originalData
+        const violationId = selectedViolation.originalData?.violationId || selectedViolation.id;
+        
+        if (!violationId) {
+          throw new Error('Không thể cập nhật vi phạm này (không có ID hợp lệ)');
+        }
+
+        // Gọi API cập nhật
+        const updateResult = await updateViolationResolution({
+          violationId: violationId,
+          resolution: formData.resolution
+        });
+
+        if (!updateResult.success) {
+          throw new Error(updateResult.message || 'Không thể cập nhật xử lý vi phạm');
+        }
+
+        // Cập nhật local state
+        const updatedList = violations.map(v => 
+          v.id === selectedViolation.id 
+            ? { ...v, resolution: formData.resolution }
+            : v
+        );
+        setViolations(updatedList);
+
+        // Hiển thị thông báo thành công
+        alert('Cập nhật xử lý vi phạm thành công!');
+
+      } catch (err) {
+        alert(`Lỗi: ${err.message}`);
+        return; // Không đóng modal nếu có lỗi
+      } finally {
+        setUpdateLoading(false);
+      }
     }
 
     setIsModalOpen(false);
@@ -242,6 +274,7 @@ export default function ViolationDashboard() {
         mode={modalMode}
         initialData={selectedViolation}
         allViolations={violations}
+        updateLoading={updateLoading}
       />
     </div>
   );

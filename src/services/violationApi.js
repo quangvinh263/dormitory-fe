@@ -39,6 +39,7 @@ export const getAllViolationsForManager = async (accountId) => {
 
 export const updateViolationResolution = async (data) => {
     try {
+        console.log('Updating violation resolution with data:', data);
         const response = await axios.put(`${API_URL}/Violation/resolution`, data);
         if (response.status === 200 || response.data.success) {
             return { success: true, message: response.data?.message || null };

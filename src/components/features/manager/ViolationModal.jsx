@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 import { XMarkIcon, ExclamationTriangleIcon, ClockIcon, EyeIcon } from '@heroicons/react/24/outline';
 
-const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialData, allViolations = [] }) => {
+const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialData, allViolations = [], updateLoading = false }) => {
   
   // State mặc định
   const defaultState = {
@@ -66,8 +66,19 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validation cho update mode
+    if (isUpdate && (!formData.resolution || formData.resolution.trim() === '')) {
+      alert('Vui lòng nhập nội dung xử lý!');
+      return;
+    }
+
     onSubmit(formData, mode); 
-    onClose();
+    
+    // Không đóng modal ngay lập tức nếu đang update (sẽ đóng sau khi API thành công)
+    if (!isUpdate) {
+      onClose();
+    }
   };
 
   const getTitle = () => {
@@ -89,7 +100,11 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                 {isView ? "Xem thông tin chi tiết biên bản" : "Nhập thông tin vi phạm và hướng xử lý"}
               </p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <button 
+              onClick={onClose} 
+              disabled={updateLoading}
+              className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+            >
               <XMarkIcon className="w-5 h-5" />
             </button>
           </div>
@@ -152,10 +167,10 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   <input 
                       type="text" 
                       value={formData.studentId}
-                      disabled={!isCreate}
+                      disabled={!isCreate || updateLoading}
                       onChange={(e) => setFormData({...formData, studentId: e.target.value})}
                       className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
-                      ${!isCreate ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                      ${!isCreate || updateLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                       placeholder="Nhập MSSV"
                   />
                   </div>
@@ -164,10 +179,10 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   <input 
                       type="text" 
                       value={formData.room}
-                      disabled={!isCreate}
+                      disabled={!isCreate || updateLoading}
                       onChange={(e) => setFormData({...formData, room: e.target.value})}
                       className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
-                      ${!isCreate ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                      ${!isCreate || updateLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                       placeholder="Số phòng"
                   />
                   </div>
@@ -179,10 +194,10 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   <input
                   type="text"
                   value={formData.violationType}
-                  disabled={!isCreate}
+                  disabled={!isCreate || updateLoading}
                   onChange={(e) => setFormData({...formData, violationType: e.target.value})}
                   className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
-                      ${!isCreate ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                      ${!isCreate || updateLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                   placeholder="Loại vi phạm"
                   />
               </div>
@@ -193,10 +208,10 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   <textarea 
                   rows="3"
                   value={formData.description}
-                  disabled={!isCreate}
+                  disabled={!isCreate || updateLoading}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none
-                      ${!isCreate ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                      ${!isCreate || updateLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
                   placeholder="Mô tả chi tiết hành vi vi phạm..."
                   ></textarea>
               </div>
@@ -209,11 +224,11 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   <textarea 
                       rows="3"
                       value={formData.resolution}
-                      disabled={isView} 
+                      disabled={isView || updateLoading} 
                       autoFocus={isUpdate} 
                       onChange={(e) => setFormData({...formData, resolution: e.target.value})}
                       className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none
-                      ${isView ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-white border-blue-500 ring-1 ring-blue-500'}`} 
+                      ${isView || updateLoading ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-white border-blue-500 ring-1 ring-blue-500'}`} 
                       placeholder={isCreate ? "Chưa có nội dung xử lý..." : "Nhập hình thức xử lý, kỷ luật..."}
                   ></textarea>
               </div>
@@ -232,7 +247,8 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   <button 
                   type="button" 
                   onClick={onClose}
-                  className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                  disabled={updateLoading}
+                  className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                   {isView ? "Đóng" : "Hủy"}
                   </button>
@@ -240,9 +256,18 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   {!isView && (
                       <button 
                       type="submit" 
-                      className={`px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm flex items-center gap-2 transition-colors bg-blue-600 hover:bg-blue-700`}
+                      disabled={updateLoading}
+                      className={`px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm flex items-center gap-2 transition-colors 
+                        ${updateLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                       >
-                      <span>{isUpdate ? "Cập nhật xử lý" : "Lập biên bản"}</span>
+                      {updateLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Đang cập nhật...</span>
+                        </>
+                      ) : (
+                        <span>{isUpdate ? "Cập nhật xử lý" : "Lập biên bản"}</span>
+                      )}
                       </button>
                   )}
               </div>

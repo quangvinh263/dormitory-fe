@@ -1,13 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { getValidAccessToken } from '../services/axiosInstance';
+import { AuthContext } from '../context/AuthContext';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const HUB_URL = API_BASE_URL.replace('/api', '') + "/notificationHub"; 
 
 const useNotificationSignalR = () => {
     const [notifications, setNotifications] = useState([]);
+    const { auth } = useContext(AuthContext); // ✅ Thêm auth context
 
     useEffect(() => {
+        // ✅ Chỉ kết nối khi đã có auth
+        if (!auth?.accessToken || !auth?.accountId) {
+            return;
+        }
+
         // Cấu hình kết nối
         const connection = new signalR.HubConnectionBuilder()
             .withUrl(HUB_URL, {
@@ -27,7 +35,6 @@ const useNotificationSignalR = () => {
             })
             .configureLogging(signalR.LogLevel.Warning) 
             .build();
-
 
         const startConnection = async () => {
             try {
@@ -49,7 +56,7 @@ const useNotificationSignalR = () => {
         return () => {
             connection.stop();
         };
-    }, []);
+    }, [auth?.accessToken, auth?.accountId]); // ✅ Dependency array
 
     return { notifications };
 };
