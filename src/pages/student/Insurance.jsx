@@ -92,6 +92,32 @@ export default function StudentInsurance() {
   }, [auth,insuranceYear]);
 
   const handleStart = async () => {
+    if (currentInsurance && currentInsurance.status === 'Pending') {
+        
+        setProcessing(true); // Hiện loading xoay xoay
+        try {
+            const insuranceId = currentInsurance.healthInsuranceId || currentInsurance.insuranceID;
+            
+            // Gọi API lấy link thanh toán lại
+            const payRes = await createZaloPayLinkForHealthInsurance(insuranceId);
+            
+            if (payRes.success) {
+                const url = payRes.data?.paymentUrl || payRes.data?.data?.paymentUrl || payRes.data?.orderUrl;
+                if (url) {
+                    sessionStorage.setItem('payment_redirect_to', window.location.pathname);
+                    window.location.href = url; // Chuyển hướng
+                }
+            } else {
+                setError("Không thể tạo link thanh toán: " + payRes.message);
+            }
+        } catch (err) {
+            setError("Lỗi xử lý thanh toán: " + err.message);
+        } finally {
+            setProcessing(false);
+        }
+        return; 
+    }
+
     setStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
