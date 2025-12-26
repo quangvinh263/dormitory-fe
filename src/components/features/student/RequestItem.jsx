@@ -57,23 +57,31 @@ export default function RequestItem({ request,handlePayment }) {
                </p>
              
              {/* Footer: Date & Cost */}
-             <div className="flex items-center gap-4 pt-2 border-t border-gray-100 border-dashed mt-2">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                   <CalendarDaysIcon className="w-3.5 h-3.5"/>
-                   <span>Ngày tạo yêu cầu : {request.issueDate}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded">
-                   <BanknotesIcon className="w-3.5 h-3.5"/>
-                   <span>Chi phí: {formattedCost}</span>
-                </div>
-                {request.repairCost > 0 && request.status === 'Wait Payment'  && (
-                  <button className="absolute bottom-4 right-4 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 flex items-center gap-2"
-                     onClick={handlePayment}
-                  >
-                  <CreditCardIcon className="w-4 h-4" />
-                  Thanh toán ngay
-                  </button>
-               )}
+             <div className="flex items-center justify-between gap-4 pt-2 border-t border-gray-100 border-dashed mt-2">
+                  <div className="flex items-center gap-4">
+                     {/* Ngày tháng */}
+                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <CalendarDaysIcon className="w-3.5 h-3.5"/>
+                        <span>Ngày tạo: {request.issueDate}</span>
+                     </div>
+
+                     {/* Chi phí */}
+                     <div className="flex items-center gap-1.5 text-xs text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded">
+                        <BanknotesIcon className="w-3.5 h-3.5"/>
+                        <span>Chi phí: {formattedCost}</span>
+                     </div>
+                  </div>
+                  <div>
+                     {request.repairCost > 0 && request.status === 'Wait Payment' && (
+                           <button 
+                              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 flex items-center gap-2"
+                              onClick={handlePayment}
+                           >
+                              <CreditCardIcon className="w-4 h-4" />
+                              Thanh toán ngay
+                           </button>
+                     )}
+                  </div>
              </div>
              
           </div>
