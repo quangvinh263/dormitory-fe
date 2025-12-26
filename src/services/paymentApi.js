@@ -43,6 +43,17 @@ export const createZaloPayLinkForHealthInsurance = async (insuranceId) => {
   }
 }
 
+export const createZaloPayLinkForMaintenance = async (receiptId) => {
+  try {
+    const response = await axios.post(`${API_URL}/Payment/create-zalopay-link/maintenance/${receiptId}`)
+    if (response.status === 200 || response.data?.success) return { success: true, data: response.data }
+    return { success: false, message: response.data?.message || 'Failed to create payment link for insurance' }
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error creating payment link for insurance' }
+  }
+}
+
+
 export const createZaloPayLinkForRoomChange = async (receiptId) => {
   try {
     const response = await axios.post(`${API_URL}/Payment/create-zalopay-link/room-change`, { receiptId })
