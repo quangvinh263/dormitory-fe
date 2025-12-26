@@ -1,6 +1,6 @@
 
 import axios from './axiosInstance'
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/maintenance`
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/Maintenance`
 
 /**
  * POST: api/maintenance

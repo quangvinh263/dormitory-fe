@@ -1,5 +1,4 @@
 import { useState, useEffect,useContext } from 'react'
-import { useNavigate,useSearchParams} from 'react-router-dom'
 import { WrenchIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 
@@ -16,14 +15,13 @@ import { AuthContext } from '../../context/AuthContext'
 
 
 export default function Maintenance() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { auth } = useContext(AuthContext);
 
 
   const [requests,setRequests] = useState([]);
   const [studentId, setStudentId] = useState(null);
   const [equipments,setEquipments] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -96,7 +94,6 @@ export default function Maintenance() {
     processing: requests.filter(r => r.status === 'processing').length,
     done: requests.filter(r => r.status === 'completed').length,
   };
-
   const handleCreateRequest = (newData) => {
     const newRequest = {
       id: Date.now(),
