@@ -267,8 +267,17 @@ export default function RenewContract() {
     )
   }
 
-  if (pendingReq){
-    return (
+  return (
+  <div className="space-y-6 max-w-4xl mx-auto">
+    
+    {/* 1. Header Title */}
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900">Gia hạn hợp đồng</h1>
+      <p className="text-gray-500">Chọn thời gian gia hạn và thanh toán nếu cần.</p>
+    </div>
+
+    {/* 2. BLOCK CẢNH BÁO (Chỉ hiện khi có pendingReq) */}
+    {pendingReq && (
       <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 shadow-sm animate-fade-in-up">
         <div className="flex flex-col md:flex-row gap-6 items-start">
           
@@ -288,7 +297,7 @@ export default function RenewContract() {
               Vui lòng thanh toán để hệ thống cập nhật hợp đồng mới.
             </p>
 
-            {/* Thông tin chi tiết đơn hàng */}
+            {/* Thông tin chi tiết đơn hàng pending */}
             <div className="bg-white bg-opacity-60 rounded-lg p-4 border border-orange-100 grid grid-cols-2 gap-4">
               <div>
                 <span className="block text-xs text-gray-500 uppercase font-semibold">Gia hạn</span>
@@ -313,9 +322,8 @@ export default function RenewContract() {
             </div>
           </div>
 
-          {/* Cột 2: Nút hành động */}
+          {/* Cột 2: Nút hành động thanh toán lại */}
           <div className="w-full md:w-auto flex flex-col gap-3 min-w-[200px]">
-            {/* Nút Thanh toán lại */}
             <button
               onClick={handleRepay}
               disabled={processing}
@@ -342,71 +350,66 @@ export default function RenewContract() {
                 </>
               )}
             </button>
-
-            {/* Nút Hủy (Optional - Nếu bạn chưa làm logic hủy thì có thể ẩn đi) */}
-            {/* <button 
-              className="w-full py-2 px-4 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
-              onClick={() => alert('Chức năng hủy đang phát triển')}
-            >
-              Hủy yêu cầu & Tạo mới
-            </button> 
-            */}
           </div>
         </div>
       </div>
-    );
-  }
-    
+    )}
 
-  return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Gia hạn hợp đồng</h1>
-        <p className="text-gray-500">Chọn thời gian gia hạn và thanh toán nếu cần.</p>
-      </div>
-
-      <Section>
-        <div className="space-y-4">
-          <div className="bg-[#EFF6FF] rounded-xl p-5 border border-blue-100">
-            <h3 className="font-bold text-base mb-4 text-gray-700">Thông tin hợp đồng hiện tại</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Mã hợp đồng</span>
-                <span className="font-medium">{contract.id || '-'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Phòng</span>
-                <span className="font-medium">{contract.room?.building ? `${contract.room.building} - ` : ''}{contract.room?.name || '-'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Ngày hết hạn</span>
-                <span className="font-medium">{contract.expiresAt ? formatDate(contract.expiresAt) : '-'}</span>
-              </div>
+    {/* 3. SECTION THÔNG TIN VÀ FORM ĐĂNG KÝ */}
+    <Section>
+      <div className="space-y-4">
+        
+        {/* Phần A: Luôn hiển thị thông tin hợp đồng hiện tại */}
+        <div className="bg-[#EFF6FF] rounded-xl p-5 border border-blue-100">
+          <h3 className="font-bold text-base mb-4 text-gray-700">Thông tin hợp đồng hiện tại</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Mã hợp đồng</span>
+              <span className="font-medium">{contract.id || '-'}</span>
             </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Thời gian gia hạn</label>
-              <Select value={months} onChange={(e) => setMonths(Number(e.target.value))}>
-                <option value={6}>6 tháng</option>
-                <option value={12}>12 tháng</option>
-              </Select>
-              <div className="mt-3 text-sm text-gray-600">{months} tháng</div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Phòng</span>
+              <span className="font-medium">{contract.room?.building ? `${contract.room.building} - ` : ''}{contract.room?.name || '-'}</span>
             </div>
-
-            <div className="w-52 bg-white border border-gray-100 rounded-md p-3">
-              <div className="text-sm text-gray-500">Chi phí dự kiến</div>
-              <div className="mt-2 text-sm text-gray-700">{totalAmount.toLocaleString()} đ</div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Ngày hết hạn</span>
+              <span className="font-medium">{contract.expiresAt ? formatDate(contract.expiresAt) : '-'}</span>
             </div>
-          </div>
-
-          <div className="flex gap-3">
-            <Button variant="white" onClick={() => navigate(-1)} className="w-full">Hủy</Button>
-            <Button onClick={handleConfirm} className="w-full" disabled={processing}>{processing ? 'Đang xử lý...' : `Gia hạn ${months} tháng & Thanh toán`}</Button>
           </div>
         </div>
-      </Section>
-    </div>
+
+        {/* Phần B: Form tạo mới - CHỈ HIỂN THỊ KHI KHÔNG CÓ PENDING REQUEST 
+            (Để tránh người dùng tạo 2 đơn gia hạn cùng lúc)
+        */}
+        {!pendingReq && (
+          <>
+            <div className="flex items-start gap-4 pt-4 border-t border-gray-100">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Thời gian gia hạn</label>
+                <Select value={months} onChange={(e) => setMonths(Number(e.target.value))}>
+                  <option value={6}>6 tháng</option>
+                  <option value={12}>12 tháng</option>
+                </Select>
+                <div className="mt-3 text-sm text-gray-600">{months} tháng</div>
+              </div>
+
+              <div className="w-52 bg-white border border-gray-100 rounded-md p-3">
+                <div className="text-sm text-gray-500">Chi phí dự kiến</div>
+                <div className="mt-2 text-sm text-gray-700">{totalAmount.toLocaleString()} đ</div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="white" onClick={() => navigate(-1)} className="w-full">Hủy</Button>
+              <Button onClick={handleConfirm} className="w-full" disabled={processing}>
+                {processing ? 'Đang xử lý...' : `Gia hạn ${months} tháng & Thanh toán`}
+              </Button>
+            </div>
+          </>
+        )}
+
+      </div>
+    </Section>
+  </div>
   )
 }
