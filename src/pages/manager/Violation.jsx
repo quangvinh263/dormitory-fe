@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
-import { getAllViolationsForManager, updateViolationResolution } from '../../services/violationApi';
+import { getAllViolationsForManager, updateViolationResolution, createViolationReport } from '../../services/violationApi';
 
 import ViolationStats from '../../components/features/manager/ViolationStats';
 import ViolationFilter from '../../components/features/manager/ViolationFilter';
@@ -25,50 +25,51 @@ export default function ViolationDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
 
   const accountId = localStorage.getItem('accountId');
 
   // Fetch violations from API
-  useEffect(() => {
-    const fetchViolations = async () => {
-      try {
-        setLoading(true);
-        setError('');
+  const fetchViolations = async () => {
+    try {
+      setLoading(true);
+      setError('');
 
-        const result = await getAllViolationsForManager(accountId);
+      const result = await getAllViolationsForManager(accountId);
 
-        if (!result.success) {
-          throw new Error(result.message || 'Không thể tải danh sách vi phạm');
-        }
-
-        const apiData = result.data || [];
-
-        // Map API response to component format
-        const mappedViolations = apiData.map(item => ({
-          id: item.violationId || `VIO-${Date.now()}-${Math.random()}`, // Tạo ID tạm nếu null
-          studentId: item.studentId,
-          studentName: item.studentName,
-          room: item.roomName,
-          type: item.violationAct,
-          date: item.violationTime === '0001-01-01T00:00:00' 
-            ? 'Chưa cập nhật' 
-            : new Date(item.violationTime).toLocaleString('vi-VN'),
-          description: item.description,
-          resolution: item.resolution || '',
-          totalViolations: item.totalViolationsOfStudent,
-          // Thêm thông tin gốc để dễ xử lý
-          originalData: item
-        }));
-
-        setViolations(mappedViolations);
-
-      } catch (err) {
-        setError(err.message || 'Đã xảy ra lỗi khi tải dữ liệu vi phạm');
-      } finally {
-        setLoading(false);
+      if (!result.success) {
+        throw new Error(result.message || 'Không thể tải danh sách vi phạm');
       }
-    };
 
+      const apiData = result.data || [];
+
+      // Map API response to component format
+      const mappedViolations = apiData.map(item => ({
+        id: item.violationId || `VIO-${Date.now()}-${Math.random()}`, // Tạo ID tạm nếu null
+        studentId: item.studentId,
+        studentName: item.studentName,
+        room: item.roomName,
+        type: item.violationAct,
+        date: item.violationTime === '0001-01-01T00:00:00' 
+          ? 'Chưa cập nhật' 
+          : new Date(item.violationTime).toLocaleString('vi-VN'),
+        description: item.description,
+        resolution: item.resolution || '',
+        totalViolations: item.totalViolationsOfStudent,
+        // Thêm thông tin gốc để dễ xử lý
+        originalData: item
+      }));
+
+      setViolations(mappedViolations);
+
+    } catch (err) {
+      setError(err.message || 'Đã xảy ra lỗi khi tải dữ liệu vi phạm');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (accountId) {
       fetchViolations();
     }
@@ -141,19 +142,39 @@ export default function ViolationDashboard() {
 
   const handleModalSubmit = async (formData, mode) => {
     if (mode === 'create') {
-      // --- Logic Tạo Mới ---
-      const newViolation = {
-        id: `VP-${Date.now()}`,
-        studentId: formData.studentId,
-        studentName: 'Sinh Viên Mới', // TODO: Tìm tên từ studentId
-        room: formData.room,
-        type: formData.violationType || 'Khác',
-        description: formData.description,
-        resolution: '',
-        date: new Date().toLocaleString('vi-VN'),
-        totalViolations: 1,
-      };
-      setViolations([newViolation, ...violations]);
+      // --- Logic Tạo Mới qua API ---
+      try {
+        setCreateLoading(true);
+
+        // Validation
+        if (!formData.studentId || !formData.violationType || !formData.description) {
+          throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc');
+        }
+
+        // Gọi API tạo vi phạm
+        const createResult = await createViolationReport({
+          studentId: formData.studentId,
+          accountId: accountId,
+          violationAct: formData.violationType,
+          description: formData.description
+        });
+
+        if (!createResult.success) {
+          throw new Error(createResult.message || 'Không thể tạo biên bản vi phạm');
+        }
+
+        // Refresh danh sách vi phạm sau khi tạo thành công
+        await fetchViolations();
+
+        // Hiển thị thông báo thành công
+        alert('Lập biên bản vi phạm thành công!');
+
+      } catch (err) {
+        alert(`Lỗi: ${err.message}`);
+        return; // Không đóng modal nếu có lỗi
+      } finally {
+        setCreateLoading(false);
+      }
     } 
     else if (mode === 'update') {
       // --- Logic Cập Nhật qua API ---
@@ -340,6 +361,7 @@ export default function ViolationDashboard() {
       initialData={selectedViolation}
       allViolations={violations}
       updateLoading={updateLoading}
+      createLoading={createLoading}
     />
   </div>
 );

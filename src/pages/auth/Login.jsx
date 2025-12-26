@@ -45,6 +45,7 @@ export default function Login() {
         result.role = userRole;
         console.log('result after decoding token:', result);
         login(result);
+        console.log('Login successful:', result);
         if (result.role === 'Admin') {
           navigate('/admin');
         } else if (result.role === 'Manager') {

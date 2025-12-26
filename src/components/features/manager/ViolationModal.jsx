@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 import { XMarkIcon, ExclamationTriangleIcon, ClockIcon, EyeIcon } from '@heroicons/react/24/outline';
 
-const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialData, allViolations = [], updateLoading = false }) => {
+const ViolationModal = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  mode = 'create', 
+  initialData, 
+  allViolations = [], 
+  updateLoading = false,
+  createLoading = false 
+}) => {
   
   // State mặc định
   const defaultState = {
@@ -38,6 +47,7 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
   const isCreate = mode === 'create';
   const isView = mode === 'view';
   const isUpdate = mode === 'update';
+  const isLoading = updateLoading || createLoading;
 
   // [LOGIC] Lọc lịch sử vi phạm
   const history = useMemo(() => {
@@ -67,6 +77,14 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    // Validation cho create mode
+    if (isCreate) {
+      if (!formData.studentId || !formData.violationType || !formData.description) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc: MSSV, Loại vi phạm, và Mô tả vi phạm!');
+        return;
+      }
+    }
+    
     // Validation cho update mode
     if (isUpdate && (!formData.resolution || formData.resolution.trim() === '')) {
       alert('Vui lòng nhập nội dung xử lý!');
@@ -75,8 +93,8 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
 
     onSubmit(formData, mode); 
     
-    // Không đóng modal ngay lập tức nếu đang update (sẽ đóng sau khi API thành công)
-    if (!isUpdate) {
+    // Không đóng modal ngay lập tức nếu đang loading (sẽ đóng sau khi API thành công)
+    if (!isLoading) {
       onClose();
     }
   };
@@ -97,12 +115,14 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
             <div>
               <h3 className="text-lg font-bold text-gray-900">{getTitle()}</h3>
               <p className="text-sm text-gray-500 mt-1">
-                {isView ? "Xem thông tin chi tiết biên bản" : "Nhập thông tin vi phạm và hướng xử lý"}
+                {isView ? "Xem thông tin chi tiết biên bản" : 
+                 isCreate ? "Nhập thông tin vi phạm để lập biên bản" :
+                 "Nhập thông tin vi phạm và hướng xử lý"}
               </p>
             </div>
             <button 
               onClick={onClose} 
-              disabled={updateLoading}
+              disabled={isLoading}
               className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
             >
               <XMarkIcon className="w-5 h-5" />
@@ -160,85 +180,104 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
               {/* Form Chính */}
               <form onSubmit={handleSubmit} className="space-y-6">
               
-              {/* Hàng 1: MSSV và Phòng */}
-              <div className="grid grid-cols-2 gap-4">
-                  <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">MSSV {!isView && <span className="text-red-500">*</span>}</label>
-                  <input 
-                      type="text" 
-                      value={formData.studentId}
-                      disabled={!isCreate || updateLoading}
-                      onChange={(e) => setFormData({...formData, studentId: e.target.value})}
-                      className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
-                      ${!isCreate || updateLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
-                      placeholder="Nhập MSSV"
-                  />
+              {/* Hàng 1: MSSV (và Phòng nếu không phải create) */}
+              <div className={isCreate ? "w-full" : "grid grid-cols-2 gap-4"}>
+                  {/* MSSV */}
+                  <div className={isCreate ? "w-full" : ""}>
+                    <label className="block text-sm font-semibold text-gray-900 mb-1.5">
+                      MSSV {isCreate && <span className="text-red-500">*</span>}
+                    </label>
+                    <input 
+                        type="text" 
+                        value={formData.studentId}
+                        disabled={!isCreate || isLoading}
+                        onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+                        className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
+                        ${!isCreate || isLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                        placeholder="Nhập MSSV"
+                        required={isCreate}
+                    />
                   </div>
-                  <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">Phòng {!isView && <span className="text-red-500">*</span>}</label>
-                  <input 
-                      type="text" 
-                      value={formData.room}
-                      disabled={!isCreate || updateLoading}
-                      onChange={(e) => setFormData({...formData, room: e.target.value})}
-                      className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
-                      ${!isCreate || updateLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
-                      placeholder="Số phòng"
-                  />
-                  </div>
+                  
+                  {/* Phòng - chỉ hiện khi không phải create */}
+                  {!isCreate && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-1.5">Phòng</label>
+                      <input 
+                          type="text" 
+                          value={formData.room}
+                          disabled={!isCreate || isLoading}
+                          onChange={(e) => setFormData({...formData, room: e.target.value})}
+                          className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
+                          ${!isCreate || isLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                          placeholder="Số phòng"
+                      />
+                    </div>
+                  )}
               </div>
 
               {/* Hàng 2: Loại vi phạm  */}
               <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">Loại vi phạm {!isView && <span className="text-red-500">*</span>}</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">
+                    Loại vi phạm {isCreate && <span className="text-red-500">*</span>}
+                  </label>
                   <input
                   type="text"
                   value={formData.violationType}
-                  disabled={!isCreate || updateLoading}
+                  disabled={!isCreate || isLoading}
                   onChange={(e) => setFormData({...formData, violationType: e.target.value})}
                   className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
-                      ${!isCreate || updateLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
-                  placeholder="Loại vi phạm"
+                      ${!isCreate || isLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                  placeholder="VD: Nấu ăn trong phòng, Đi về trễ, Gây ồn..."
+                  required={isCreate}
                   />
               </div>
 
               {/* Hàng 3: Mô tả vi phạm  */}
               <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">Mô tả vi phạm {!isView && <span className="text-red-500">*</span>}</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">
+                    Mô tả vi phạm {isCreate && <span className="text-red-500">*</span>}
+                  </label>
                   <textarea 
                   rows="3"
                   value={formData.description}
-                  disabled={!isCreate || updateLoading}
+                  disabled={!isCreate || isLoading}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none
-                      ${!isCreate || updateLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
-                  placeholder="Mô tả chi tiết hành vi vi phạm..."
+                      ${!isCreate || isLoading ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300'}`}
+                  placeholder="Mô tả chi tiết hành vi vi phạm, thời gian, địa điểm..."
+                  required={isCreate}
                   ></textarea>
               </div>
 
-              {/* Hàng 4: NỘI DUNG XỬ LÝ  */}
-              <div className="animate-fade-in-up">
-                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">
-                      Nội dung xử lý {isUpdate && <span className="text-red-500">*</span>}
-                  </label>
-                  <textarea 
-                      rows="3"
-                      value={formData.resolution}
-                      disabled={isView || updateLoading} 
-                      autoFocus={isUpdate} 
-                      onChange={(e) => setFormData({...formData, resolution: e.target.value})}
-                      className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none
-                      ${isView || updateLoading ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-white border-blue-500 ring-1 ring-blue-500'}`} 
-                      placeholder={isCreate ? "Chưa có nội dung xử lý..." : "Nhập hình thức xử lý, kỷ luật..."}
-                  ></textarea>
-              </div>
+              {/* Hàng 4: NỘI DUNG XỬ LÝ - chỉ hiện khi không phải create */}
+              {!isCreate && (
+                <div className="animate-fade-in-up">
+                    <label className="block text-sm font-semibold text-gray-900 mb-1.5">
+                        Nội dung xử lý {isUpdate && <span className="text-red-500">*</span>}
+                    </label>
+                    <textarea 
+                        rows="3"
+                        value={formData.resolution}
+                        disabled={isView || isLoading} 
+                        autoFocus={isUpdate} 
+                        onChange={(e) => setFormData({...formData, resolution: e.target.value})}
+                        className={`w-full text-sm px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none
+                        ${isView || isLoading ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-white border-blue-500 ring-1 ring-blue-500'}`} 
+                        placeholder="Nhập hình thức xử lý, kỷ luật..."
+                    ></textarea>
+                </div>
+              )}
 
               {/* Note cảnh báo */}
               <div className="flex items-start gap-3 bg-white border border-gray-200 rounded-md p-3">
                   <ExclamationTriangleIcon className="w-5 h-5 text-red-700 flex-shrink-0" />
                   <p className="text-sm text-gray-500 leading-tight">
-                  Sinh viên sẽ nhận được thông báo ngay sau khi biên bản được cập nhật.
-                  <span className="font-semibold text-gray-700"> Vi phạm lần thứ 3 sẽ tự động chấm dứt hợp đồng.</span>
+                    {isCreate 
+                      ? "Biên bản sẽ được tạo và sinh viên sẽ nhận được thông báo. Có thể cập nhật hướng xử lý sau khi lập biên bản."
+                      : "Sinh viên sẽ nhận được thông báo ngay sau khi biên bản được cập nhật."
+                    }
+                    <span className="font-semibold text-gray-700"> Vi phạm lần thứ 3 sẽ tự động chấm dứt hợp đồng.</span>
                   </p>
               </div>
 
@@ -247,7 +286,7 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   <button 
                   type="button" 
                   onClick={onClose}
-                  disabled={updateLoading}
+                  disabled={isLoading}
                   className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                   {isView ? "Đóng" : "Hủy"}
@@ -256,14 +295,16 @@ const ViolationModal = ({ isOpen, onClose, onSubmit, mode = 'create', initialDat
                   {!isView && (
                       <button 
                       type="submit" 
-                      disabled={updateLoading}
+                      disabled={isLoading}
                       className={`px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm flex items-center gap-2 transition-colors 
-                        ${updateLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                       >
-                      {updateLoading ? (
+                      {isLoading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Đang cập nhật...</span>
+                          <span>
+                            {createLoading ? 'Đang tạo biên bản...' : 'Đang cập nhật...'}
+                          </span>
                         </>
                       ) : (
                         <span>{isUpdate ? "Cập nhật xử lý" : "Lập biên bản"}</span>

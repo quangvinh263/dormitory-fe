@@ -49,3 +49,15 @@ export const updateViolationResolution = async (data) => {
         return { success: false, message: error.response?.data?.message || 'Error updating violation resolution' };
     }
 };
+
+export const createViolationReport = async (data) => {
+    try {
+        const response = await axios.post(`${API_URL}/Violation`, data);
+        if (response.status === 200 || response.data.success) {
+            return { success: true, message: response.data?.message || null };
+        }
+        return { success: false, message: response.data?.message || 'Failed to create violation report' };
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error creating violation report' };
+    }
+};
