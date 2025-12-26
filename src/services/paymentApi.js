@@ -25,7 +25,7 @@ export const createZaloPayLinkForRenewal = async (receiptId) => {
 
 export const createZaloPayLinkForUtility = async (utilityId, accountId) => {
   try {
-    const response = await axios.post(`${API_URL}/Payment/zalo/utility`, { utilityId, accountId })
+    const response = await axios.post(`${API_URL}/Payment/create-zalopay-link/utility`, { utilityId, accountId })
     if (response.status === 200 || response.data?.success) return { success: true, data: response.data }
     return { success: false, message: response.data?.message || 'Failed to create payment link for utility' }
   } catch (error) {
@@ -35,7 +35,7 @@ export const createZaloPayLinkForUtility = async (utilityId, accountId) => {
 
 export const createZaloPayLinkForHealthInsurance = async (insuranceId) => {
   try {
-    const response = await axios.post(`${API_URL}/Payment/zalo/insurance`, { insuranceId })
+    const response = await axios.post(`${API_URL}/Payment/create-zalopay-link/health-insurance/${insuranceId}`, { insuranceId })
     if (response.status === 200 || response.data?.success) return { success: true, data: response.data }
     return { success: false, message: response.data?.message || 'Failed to create payment link for insurance' }
   } catch (error) {
@@ -45,7 +45,7 @@ export const createZaloPayLinkForHealthInsurance = async (insuranceId) => {
 
 export const createZaloPayLinkForRoomChange = async (receiptId) => {
   try {
-    const response = await axios.post(`${API_URL}/Payment/zalo/room-change`, { receiptId })
+    const response = await axios.post(`${API_URL}/Payment/create-zalopay-link/room-change`, { receiptId })
     if (response.status === 200 || response.data?.success) return { success: true, data: response.data }
     return { success: false, message: response.data?.message || 'Failed to create payment link for room change' }
   } catch (error) {

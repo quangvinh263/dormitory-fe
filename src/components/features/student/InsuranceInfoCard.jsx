@@ -1,31 +1,51 @@
-import { CalendarDaysIcon, CurrencyDollarIcon, CheckCircleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { CalendarDaysIcon, CurrencyDollarIcon, CheckCircleIcon, DocumentTextIcon,ClockIcon } from '@heroicons/react/24/outline';
 import Button from '../../ui/Button';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
-export default function InsuranceInfoCard({ onRegister,price,year }) {
-  return (
+export default function InsuranceInfoCard({ onRegister,price,year,currentInsurance }) {
+   const isRegistered = currentInsurance?.status === 'Active';
+   const isPending = currentInsurance?.status === 'Pending';
+   const hasInsurance = isRegistered || isPending;
+   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      
-      {/* 1. Khối Thời gian (Time Block) */}
-      <div className="p-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-4">
-           <div className="p-2 bg-gray-50 rounded-lg text-gray-600">
-              <CalendarDaysIcon className="w-6 h-6"/>
-           </div>
-           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                 <p className="text-sm font-bold text-gray-500 mb-1">Thời gian đăng ký:</p>
-                 <p className="text-gray-900 font-medium">01/12/{year-1} - 31/12/{year-1}</p>
-              </div>
-              <div>
-                 <p className="text-sm font-bold text-gray-500 mb-1">Hiệu lực bảo hiểm:</p>
-                 <p className="text-gray-900 font-medium">01/01/{year} - 31/12/{year}</p>
-              </div>
-           </div>
-        </div>
-      </div>
+      {/* 1. Khối Thời gian & Trạng thái */}
+            <div className="p-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                    {/* Phần hiển thị ngày tháng */}
+                    <div className="flex items-start gap-4">
+                        <div className="p-2 bg-gray-50 rounded-lg text-gray-600">
+                            <CalendarDaysIcon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-sm font-bold text-gray-500 mb-1">Thời gian đăng ký:</p>
+                                <p className="text-gray-900 font-medium">01/12/{year - 1} - 31/12/{year - 1}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-500 mb-1">Hiệu lực bảo hiểm:</p>
+                                <p className="text-gray-900 font-medium">01/01/{year} - 31/12/{year}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* --- PHẦN MỚI: HIỂN THỊ TRẠNG THÁI (Nếu đã đăng ký) --- */}
+                    {hasInsurance && (
+                        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-4 animate-fade-in">
+                            <div className={`p-2 rounded-lg ${isRegistered ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                                {isRegistered ? <CheckCircleIcon className="w-6 h-6" /> : <ClockIcon className="w-6 h-6" />}
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-500 mb-1">Trạng thái hiện tại:</p>
+                                <p className={`font-bold text-base ${isRegistered ? 'text-green-700' : 'text-yellow-700'}`}>
+                                    {isRegistered ? 'ĐÃ ĐĂNG KÝ THÀNH CÔNG' : 'ĐANG CHỜ THANH TOÁN'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
 
       <div className="px-6 pb-6 space-y-6">
         
@@ -69,14 +89,17 @@ export default function InsuranceInfoCard({ onRegister,price,year }) {
         </div>
 
         {/* 5. Button Action */}
-        <div className="pt-2">
-            <Button 
-                onClick={onRegister}
-                className="w-full justify-center py-3 text-base bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200"
-            >
-                Bắt đầu đăng ký
-            </Button>
-        </div>
+        {!isRegistered && (
+                    <div className="pt-2">
+                        <Button
+                            onClick={onRegister}
+                            className="w-full justify-center py-3 text-base bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 text-white"
+                        >
+                            {/* Nếu là Pending thì hiện nút Thanh toán, còn không thì hiện Đăng ký */}
+                            {isPending ? 'Thanh toán ngay' : 'Bắt đầu đăng ký'}
+                        </Button>
+                    </div>
+                )}
 
       </div>
     </div>

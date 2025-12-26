@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { ExclamationTriangleIcon, BuildingOffice2Icon, CreditCardIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon, BuildingOffice2Icon, CreditCardIcon,ExclamationCircleIcon,ShieldCheckIcon } from '@heroicons/react/24/outline';
 import Button from '../../ui/Button';
-
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
