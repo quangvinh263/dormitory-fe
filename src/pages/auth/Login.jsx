@@ -45,14 +45,19 @@ export default function Login() {
         result.role = userRole;
         console.log('result after decoding token:', result);
         login(result);
+        console.log('Login successful:', result);
         if (result.role === 'Admin') {
           navigate('/admin');
         } else if (result.role === 'Manager') {
           navigate('/manager');
         } else if (result.role === 'Student') {
-          if (!result.hasActiveContract) {
+          if(result.hasTerminatedContract) {
+            navigate('/student');
+          }
+          else if (!result.hasActiveContract) {
             navigate('/student/registration');
-          } else {
+          }
+          else {
           navigate('/student');
           }
         } else {
