@@ -27,7 +27,7 @@ export default function MaintenanceDashboard() {
 
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requests,setRequests] = useState([]);
-    const [filter, setFilter] = useState({ keyword: '', status: '' });
+    const [filter, setFilter] = useState({ keyword: '', status: '',equipment:'  ' });
     
 
     const handleOpenModal = (request) => {
@@ -55,7 +55,7 @@ export default function MaintenanceDashboard() {
     { 
         label: 'Đã xác nhận', 
         value: requests.filter(r => r.status === 'Confirmed').length, // Sửa status
-        type: 'default', subtext: 'Đã xác nhận yêu cầu', 
+        type: 'confirm', subtext: 'Đã xác nhận yêu cầu', 
         icon: <CheckBadgeIcon className="w-6 h-6"/> 
     },
     { 
@@ -67,7 +67,7 @@ export default function MaintenanceDashboard() {
     { 
         label: 'Chờ thanh toán', 
         value: requests.filter(r => r.status === 'Wait Payment').length , // Sửa status
-        type: 'info', subtext: 'Đã sửa xong & chờ thanh toán', 
+        type: 'wait', subtext: 'Đã sửa xong & chờ thanh toán', 
         icon: <BanknotesIcon className="w-6 h-6"/> 
     },
     { 
@@ -130,7 +130,7 @@ export default function MaintenanceDashboard() {
         <p className="text-sm text-gray-500 mt-1">Xử lý các yêu cầu sửa chữa, bảo trì từ sinh viên</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsData.map((stat, index) => (
           <div key={index} className="h-full">
             <StatCard
@@ -156,7 +156,7 @@ export default function MaintenanceDashboard() {
 
         {/* Render List */}
         {requests.map((req) => (
-          <MaintenanceCard key={req.RequestID} request={req} onAction={handleOpenModal} />
+          <MaintenanceCard key={req.maintenanceID} request={req} onAction={handleOpenModal} />
         ))}
         
         {/* Empty State */}
