@@ -17,7 +17,7 @@ import MaintenanceFilter from '../../components/features/manager/MaintenanceFilt
 import MaintenanceCard from '../../components/features/manager/MaintenanceCard';
 import MaintenanceDetailModal from '../../components/features/manager/MaintenceDetailModal';
 
-import { getMaintenanceOverview,getMaintenanceDetail,getMaintenances } from '../../services/maintenanceApi';
+import { getMaintenances } from '../../services/maintenanceApi';
 
 export default function MaintenanceDashboard() {
 
@@ -56,7 +56,7 @@ export default function MaintenanceDashboard() {
     { 
         label: 'Đã xác nhận', 
         value: requests.filter(r => r.status === 'Confirmed').length, // Sửa status
-        type: 'confirm', subtext: 'Đã xác nhận yêu cầu', 
+        type: 'success', subtext: 'Đã xác nhận yêu cầu', 
         icon: <CheckBadgeIcon className="w-6 h-6"/> 
     },
     { 
@@ -68,7 +68,7 @@ export default function MaintenanceDashboard() {
     { 
         label: 'Chờ thanh toán', 
         value: requests.filter(r => r.status === 'Wait Payment').length , // Sửa status
-        type: 'wait', subtext: 'Đã sửa xong & chờ thanh toán', 
+        type: 'danger', subtext: 'Đã sửa xong & chờ thanh toán', 
         icon: <BanknotesIcon className="w-6 h-6"/> 
     },
     { 
@@ -85,7 +85,7 @@ export default function MaintenanceDashboard() {
                 ? total + (r.repairCost || 0) 
                 : total;
         }, 0).toLocaleString('vi-VN') + ' đ', 
-        type: 'default', subtext: 'Tổng chi phí sửa chữa', 
+        type: 'info', subtext: 'Tổng chi phí sửa chữa', 
         icon: <CurrencyDollarIcon className="w-6 h-6"/> 
     },
 ];

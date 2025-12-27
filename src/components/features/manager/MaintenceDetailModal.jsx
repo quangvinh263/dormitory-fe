@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { 
   WrenchScrewdriverIcon, 
   XMarkIcon, 
@@ -21,7 +21,6 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
   const [note, setNote] = useState(request.ManagerNote || '');
   const [cost, setCost] = useState(request.RepairCost || 0);
   const [isLoading, setIsLoading] = useState(false);
-  const [detail,setDetail] = useState(null);
   const [currentRequest, setCurrentRequest] = useState(request);
 
   const handleConfirm = async (status) => {
@@ -252,26 +251,26 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
 
           {/* Thông tin chính */}
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-gray-50 p-3 rounded-lg">
+            <div className="bg-gray-50 p-3 rounded-lg border border-black-500">
               <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><MapPinIcon className="w-3 h-3"/> Số Phòng</p>
               <p className="font-semibold text-gray-900">{currentRequest.roomName}</p>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
+            <div className="bg-gray-50 p-3 rounded-lg border border-black-500">
               <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><WrenchScrewdriverIcon className="w-3 h-3"/> Tên thiết bị</p>
               <p className="font-semibold text-gray-900 truncate" title={currentRequest.EquipmentID}>{currentRequest.equipmentName}</p>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-3 rounded-lg mb-4">
+          <div className="bg-gray-50 p-3 rounded-lg mb-4 border border-black-500">
             <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><UserIcon className="w-3 h-3"/> Người Báo Cáo</p>
             <p className="font-medium text-gray-900">{currentRequest.studentName} <span className="text-gray-400 font-normal"></span></p>
           </div>
 
           {/* Description */}
-          <div className="border border-gray-200 rounded-lg p-4 mb-4">
-            <h4 className="text-xs font-bold text-gray-500  mb-2">Mô tả </h4>
-            <p className="text-gray-800 text-sm italic">  {currentRequest.description}</p>
-            <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-400">
+          <div className=" rounded-lg p-4 mb-4 border border-black-500">
+            <h4 className="text-xs font-bold text-gray-500  mb-2 ">Mô tả </h4>
+            <p className="text-gray-800 text-sm italic font-bold">  {currentRequest.description}</p>
+            <div className="mt-3 pt-3 border-t border-black-100 flex items-center gap-2 text-xs text-black">
                <CalendarDaysIcon className="w-4 h-4"/> Ngày yêu cầu: {formatDate(currentRequest.issueDate)}
             </div>
           </div>
@@ -290,7 +289,7 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
                  </div>
               )}
               {currentRequest.resolvedDate && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-400">
+                  <div className="mt-3 pt-3 border-t border-black-100 flex items-center gap-2 text-xs text-black-400 ">
                     <CalendarDaysIcon className="w-4 h-4"/> Ngày sửa chữa hoàn tất: {formatDate(currentRequest.resolvedDate)}
                   </div>
               )}
@@ -299,7 +298,7 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
           
 
           {currentRequest.status === 'Processing' && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-black-500">
               <h4 className="text-sm font-bold text-gray-700 border-b pb-2">Cập nhật kết quả:</h4>
               
               <div>
