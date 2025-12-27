@@ -153,3 +153,22 @@ export const deleteRelative = async (relativeId) => {
     };
   }
 };
+
+export const getDashboardStats = async (accountId) => {
+  try {
+    const response = await axios.get(`${API_URL}/Student/dashboard/${accountId}`);
+    
+    console.log('Dashboard Stats Response:', response.data);    
+    if (response.status === 200) {
+        return { 
+          success: true,
+          data: response.data 
+        };
+    } 
+    return { success: false, message: response.data?.message || 'Failed to fetch dashboard stats' };
+  } catch (error) {
+    console.error('Dashboard Stats API Error:', error);
+    console.error('Error details:', error.response?.data);
+    return { success: false, message: error.response?.data?.message || 'Error fetching dashboard stats' };
+  }
+};

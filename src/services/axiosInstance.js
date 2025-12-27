@@ -19,28 +19,24 @@ function isTokenExpired(token) {
   }
 }
 
-// ⭐ HÀM MỚI: Logic lấy token hợp lệ (Dùng chung cho Axios và SignalR)
 export const getValidAccessToken = async () => {
-  let token = localStorage.getItem("accessToken"); // Hoặc "accessToken" tùy key bạn lưu
+  let token = localStorage.getItem("accessToken");
   const refreshToken = localStorage.getItem("refreshToken");
 
-  // Nếu không có token nào -> chịu thua
   if (!token) return null;
 
-  // Nếu token chưa hết hạn -> dùng luôn
   if (!isTokenExpired(token)) {
     return token;
   }
 
-  // Nếu hết hạn mà có refreshToken -> Thử refresh
   if (refreshToken) {
     try {
       console.log("🔄 Token expired. Refreshing...");
       const result = await refreshAccessToken(refreshToken);
       
       if (result?.success && result.token) {
-        // Lưu token mới
-        localStorage.setItem("token", result.token);
+        // ✅ Lưu vào đúng key "accessToken"
+        localStorage.setItem("accessToken", result.token);
         return result.token;
       }
     } catch (error) {
@@ -48,10 +44,9 @@ export const getValidAccessToken = async () => {
     }
   }
 
-  // Nếu refresh thất bại hoặc không có refreshToken -> Đăng xuất
   console.log("Session expired. Logging out...");
   localStorage.clear();
-  window.location.href = "/signin";
+  window.location.href = "/auth/login";
   return null;
 };
 
@@ -72,7 +67,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.clear();
-      window.location.href = "/signin";
+      window.location.href = "/auth/login";
     }
     return Promise.reject(error);
   }

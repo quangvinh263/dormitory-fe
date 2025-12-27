@@ -6,7 +6,22 @@ import Button from '../../ui/Button';
 import Input from '../../ui/Input'; 
 import Select from '../../ui/Select'; 
 
-export default function RoomFilter() {
+export default function RoomFilter({ filters = {}, onFilterChange, onClearFilters }) {
+  const handleInputChange = (field, value) => {
+    if (onFilterChange) {
+      onFilterChange({
+        ...filters,
+        [field]: value
+      });
+    }
+  };
+
+  const handleClearFilters = () => {
+    if (onClearFilters) {
+      onClearFilters();
+    }
+  };
+
   return (
     <Section className="mb-6">
       {/* Custom Header cho Filter */}
@@ -16,7 +31,10 @@ export default function RoomFilter() {
           Bộ lọc tìm kiếm
         </div>
         
-        <button className="text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition-colors cursor-pointer">
+        <button 
+          onClick={handleClearFilters}
+          className="text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+        >
           <XMarkIcon className="w-4 h-4" /> Xóa bộ lọc
         </button>
       </div>
@@ -29,13 +47,19 @@ export default function RoomFilter() {
           <Input 
             label="Tìm kiếm"
             placeholder="Tìm theo mã phòng, tòa nhà..." 
-            icon={<MagnifyingGlassIcon className="w-4 h-4" />} 
+            icon={<MagnifyingGlassIcon className="w-4 h-4" />}
+            value={filters.search || ''}
+            onChange={(e) => handleInputChange('search', e.target.value)}
           />
         </div>
 
         {/* Trạng thái */}
         <div>
-          <Select label="Trạng thái">
+          <Select 
+            label="Trạng thái"
+            value={filters.status || ''}
+            onChange={(e) => handleInputChange('status', e.target.value)}
+          >
             <option value="">Tất cả trạng thái</option>
             <option value="empty">Còn trống</option>
             <option value="full">Đã đầy</option>
@@ -45,11 +69,16 @@ export default function RoomFilter() {
 
          {/* Loại phòng */}
          <div>
-          <Select label="Loại phòng">
+          <Select 
+            label="Loại phòng"
+            value={filters.roomType || ''}
+            onChange={(e) => handleInputChange('roomType', e.target.value)}
+          >
             <option value="">Tất cả loại phòng</option>
             <option value="2">2 người</option>
             <option value="4">4 người</option>
             <option value="6">6 người</option>
+            <option value="8">8 người</option>
           </Select>
         </div>
 
@@ -57,8 +86,20 @@ export default function RoomFilter() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Sức chứa (Min - Max)</label>
           <div className="flex gap-2">
-             <Input type="number" placeholder="Min" className="w-full" />
-             <Input type="number" placeholder="Max" className="w-full" />
+             <Input 
+               type="number" 
+               placeholder="Min" 
+               className="w-full"
+               value={filters.minCapacity || ''}
+               onChange={(e) => handleInputChange('minCapacity', e.target.value)}
+             />
+             <Input 
+               type="number" 
+               placeholder="Max" 
+               className="w-full"
+               value={filters.maxCapacity || ''}
+               onChange={(e) => handleInputChange('maxCapacity', e.target.value)}
+             />
           </div>
         </div>
       </div>
