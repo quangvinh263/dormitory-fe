@@ -26,12 +26,10 @@ const AdminStats = () => {
       try {
         setLoading(true);
         // 3. Gọi qua Service đã tách biệt
-        const data = await getStatsOverviewForAdmin();
+        const overviewRes = await getStatsOverviewForAdmin();
         
-        // Kiểm tra dữ liệu trả về (dựa trên Controller bạn viết trước đó)
-        // Controller trả về: { success: true, data: { ... } }
-        if (data) {
-          setStats(data);
+        if (overviewRes.success && overviewRes.data) {
+          setStats(overviewRes.data);
         }
       } catch (error) {
         console.error("Lỗi khi tải thống kê:", error);
@@ -62,7 +60,7 @@ const AdminStats = () => {
         title="Tổng sinh viên"
         value={stats.totalStudents}
         subtext={`${formatRate(stats.rateStudent)} so với tháng trước`}
-        isIncrease={stats.rateStudent >= 0}
+        isIncrease={stats.rateStudent   >= 0}
         type="default"
         icon={<UserGroupIcon className="w-6 h-6"/>}
       />
