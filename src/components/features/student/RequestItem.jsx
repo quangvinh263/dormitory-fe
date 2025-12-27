@@ -14,7 +14,7 @@ export default function RequestItem({ request,handlePayment }) {
          case 'Confirmed':
             return { label: 'Đã xác nhận', color: 'success', text: 'text-green-700' };
          case 'Wait Payment':
-            return { label: 'Chờ thanh toán', color: 'success', text: 'text-green-700' };
+            return { label: 'Chờ thanh toán', color: 'warning', text: 'text-yellow-700' };
         default: 
             return { label: 'Khác', color: 'default', text: 'text-gray-700' };
     }
@@ -22,7 +22,20 @@ export default function RequestItem({ request,handlePayment }) {
 
   const statusInfo = renderStatus(request.status);
   const formattedCost = request.repairCost > 0 ? `${request.repairCost} ₫` : '0 ₫';
+  const formatDate = (dateString) => {
+    if (!dateString) return ''; // Trả về chuỗi rỗng nếu không có ngày
+    
+    const date = new Date(dateString);
+    
+    // Kiểm tra nếu ngày không hợp lệ
+    if (isNaN(date.getTime())) return '';
 
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  };
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 transition-all group">
        <div className="flex flex-col md:flex-row gap-4">
@@ -62,7 +75,7 @@ export default function RequestItem({ request,handlePayment }) {
                      {/* Ngày tháng */}
                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
                         <CalendarDaysIcon className="w-3.5 h-3.5"/>
-                        <span>Ngày tạo: {request.issueDate}</span>
+                        <span>Ngày tạo: {formatDate(request.issueDate)}</span>
                      </div>
 
                      {/* Chi phí */}
@@ -71,7 +84,7 @@ export default function RequestItem({ request,handlePayment }) {
                         <span>Chi phí: {formattedCost}</span>
                      </div>
                   </div>
-                  <div>
+                  <div className="flex justify-end" >
                      {request.repairCost > 0 && request.status === 'Wait Payment' && (
                            <button 
                               className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 flex items-center gap-2"
