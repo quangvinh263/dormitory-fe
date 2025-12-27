@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { BoltIcon } from '@heroicons/react/24/outline';
-import Input from '../../ui/Input';
 
 const UtilityConfig = () => {
   const [config, setConfig] = useState({ elec: 3500, water: 15000, maintain: 50000 });
@@ -11,7 +10,7 @@ const UtilityConfig = () => {
   return (
     <div className="w-full bg-white rounded-2xl border border-gray-200 p-6 shadow-sm animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-8 border-b border-gray-100 pb-5">
+      <div className="flex items-center gap-3 mb-8">
         <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
           <BoltIcon className="w-6 h-6" />
         </div>
@@ -25,18 +24,16 @@ const UtilityConfig = () => {
       <div className="flex flex-col gap-6">
         
         {/* Giá điện */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <label className="text-sm font-bold text-gray-700">Giá điện (đ/kWh)</label>
           <div className="relative flex items-center">
-            <Input
+            <input
               type="number"
+              className="block w-full pl-3 pr-12 py-2.5 border border-gray-300 rounded-lg leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
               value={config.elec}
               onChange={(e) => setConfig({ ...config, elec: Number(e.target.value) })}
-              className="w-full"
-              // pr-12 để text không đè lên chữ VND
-              inputClassName="bg-gray-50 h-10 pr-12 border-gray-200 focus:bg-white transition-all"
             />
-            <span className="absolute right-3 text-gray-400 text-xs font-bold pointer-events-none">
+            <span className="absolute right-3 text-gray-400 text-xs font-bold pointer-events-none whitespace-nowrap">
               VND
             </span>
           </div>
@@ -44,17 +41,16 @@ const UtilityConfig = () => {
         </div>
 
         {/* Giá nước */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <label className="text-sm font-bold text-gray-700">Giá nước (đ/m³)</label>
           <div className="relative flex items-center">
-            <Input
+            <input
               type="number"
+              className="block w-full pl-3 pr-12 py-2.5 border border-gray-300 rounded-lg leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
               value={config.water}
               onChange={(e) => setConfig({ ...config, water: Number(e.target.value) })}
-              className="w-full"
-              inputClassName="bg-gray-50 h-10 pr-12 border-gray-200 focus:bg-white transition-all"
             />
-            <span className="absolute right-3 text-gray-400 text-xs font-bold pointer-events-none">
+            <span className="absolute right-3 text-gray-400 text-xs font-bold pointer-events-none whitespace-nowrap">
               VND
             </span>
           </div>

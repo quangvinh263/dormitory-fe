@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 import UtilityConfig from '../../components/features/admin/UtilityConfig';
+import InsuranceConfig from '../../components/features/admin/InsuranceConfig';
 
 const SystemConfig = () => {
   const [activeTab, setActiveTab] = useState('utility');
@@ -49,11 +50,7 @@ const SystemConfig = () => {
         {activeTab === 'utility' ? (
           <UtilityConfig />
         ) : (
-          <div className="h-80 flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 border-dashed text-gray-400">
-            <p className="italic text-sm font-medium">
-              Chức năng cấu hình "{configTabs.find(t => t.id === activeTab).label}" đang được cập nhật...
-            </p>
-          </div>
+          <InsuranceConfig />
         )}
       </div>
     </div>
