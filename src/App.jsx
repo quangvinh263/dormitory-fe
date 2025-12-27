@@ -17,6 +17,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import ManagerManagement from './pages/admin/ManagerManagement';
 import BuildingManagement from './pages/admin/BuildingManagement';
 import Report from './pages/admin/Report';
+import SystemConfig from './pages/admin/SystemConfig';
 
 // Import Pages - Manager
 import ManagerDashboard from './pages/manager/Dashboard';
@@ -68,7 +69,7 @@ export default function App() {
             <Route path="managers" element={<ManagerManagement />} />
             <Route path="buildings" element={<BuildingManagement />} />
             <Route path="reports" element={<Report />} />
-            <Route path="settings" element={<div>Trang Cấu hình</div>} />
+            <Route path="settings" element={<SystemConfig />} />
           </Route>
           
           {/* --- MANAGER ROUTES (Trưởng tòa) --- */}
