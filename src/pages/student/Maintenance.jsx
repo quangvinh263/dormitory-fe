@@ -94,7 +94,7 @@ export default function Maintenance() {
     pending: requests.filter(r => r.status === 'Pending').length,
     confirmed: requests.filter(r => r.status === 'Confirmed').length,
     processing: requests.filter(r => r.status === 'Processing').length,
-    wait_payment : requests.filter(r=>r.status==="Wait-Payment").length,
+    wait_payment : requests.filter(r=>r.status==="Wait Payment").length,
     completed: requests.filter(r => r.status === 'Completed').length,
   };
   const handleCreateRequest = async (newData) => {

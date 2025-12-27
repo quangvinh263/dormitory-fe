@@ -1,20 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState,useContext, useEffect } from 'react';
 import { 
-  CalendarDaysIcon, 
   CurrencyDollarIcon, 
   WrenchScrewdriverIcon, 
-  UserIcon
+  ClipboardDocumentListIcon,
+  ClockIcon,
+  CheckBadgeIcon,
+  BanknotesIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 
 import StatCard from '../../components/shared/StatCard';
+
+import { AuthContext } from '../../context/AuthContext';
 
 import MaintenanceFilter from '../../components/features/manager/MaintenanceFilter';
 import MaintenanceCard from '../../components/features/manager/MaintenanceCard';
 import MaintenanceDetailModal from '../../components/features/manager/MaintenceDetailModal';
 
+import { getMaintenanceOverview,getMaintenanceDetail,getMaintenances } from '../../services/maintenanceApi';
 export default function MaintenanceDashboard() {
-  
+
+    const { auth } = useContext(AuthContext)
+
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
+
     const [selectedRequest, setSelectedRequest] = useState(null);
+    const [requests,setRequests] = useState([]);
+    const [filter, setFilter] = useState({ keyword: '', status: '' });
+    
 
     const handleOpenModal = (request) => {
     setSelectedRequest(request);
@@ -23,55 +37,90 @@ export default function MaintenanceDashboard() {
     const handleCloseModal = () => {
         setSelectedRequest(null);
     };
-    
-    const statsData = [
-        { label: 'Tổng yêu cầu', value: '24', type: 'default', subtext:'Tất cả yêu cầu' ,icon: <WrenchScrewdriverIcon className="w-6 h-6"/> },
-        { label: 'Chờ xử lý', value: '8', type: 'warning', subtext:'Cần xem xét', icon: <CalendarDaysIcon className="w-6 h-6"/> },
-        { label: 'Đang xử lý', value: '10', type: 'info', subtext:'Đang sửa chữa & vệ sinh', icon: <CurrencyDollarIcon className="w-6 h-6"/> },
-        { label: 'Hoàn thành', value: '6', type: 'success', subtext:'Yêu cầu đã hoàn thành', icon: <UserIcon className="w-6 h-6"/> },
-        { label: 'Tổng chi phí', value: '5,000,000 VND', type: 'default', subtext:'Tổng chi phí sửa chữa', icon: <CurrencyDollarIcon className="w-6 h-6"/> },
-    ];
-  // MOCK DATA
-  const [requests] = useState([
-    {
-      RequestID: 'MNT_001',
-      RoomID: 'A1.01',
-      StudentName: 'Trần Thị B',
-      StudentID: 'STU_001',
-      EquipmentID: 'Điều hòa Panasonic 2HP',
-      Description: 'Điều hòa không hoạt động, cần kiểm tra sửa chữa gấp',
-      RequestDate: '17/12/2025',
-      RepairCost: 0,
-      Status: 'Pending',
-      ManagerNote: ''
-    },
-    {
-      RequestID: 'MNT_002',
-      RoomID: 'A3.01',
-      StudentName: 'Nguyễn Văn A',
-      StudentID: 'STU_002',
-      EquipmentID: 'Vòi nước Lavabo',
-      Description: 'Vòi nước bị hỏng, nước chảy yếu',
-      RequestDate: '17/12/2025',
-      RepairCost: 150000,
-      Status: 'Processing',
-      ManagerNote: 'Đã gọi thợ sửa ống nước, hẹn chiều nay qua.'
-    },
-    {
-      RequestID: 'MNT_003',
-      RoomID: 'A1.01',
-      StudentName: 'Trần Thị B',
-      StudentID: 'STU_001',
-      EquipmentID: 'Bóng đèn LED 1.2m',
-      Description: 'Đèn trong phòng không sáng, nghi hỏng bóng đèn',
-      RequestDate: '07/12/2025',
-      RepairCost: 50000,
-      ResolvedDate: '08/12/2025',
-      Status: 'Done',
-      ManagerNote: 'Đã thay bóng mới.'
-    }
-  ]);
 
+
+    const statsData = [
+    { 
+        label: 'Tổng yêu cầu', 
+        value: requests.length, 
+        type: 'default', subtext: 'Tất cả yêu cầu', 
+        icon: <ClipboardDocumentListIcon className="w-6 h-6"/> 
+    },
+    { 
+        label: 'Chờ xác nhận', 
+        value: requests.filter(r => r.status === 'Pending').length, // Thêm .length
+        type: 'warning', subtext: 'Cần xem xét', 
+        icon: <ClockIcon className="w-6 h-6"/> 
+    },
+    { 
+        label: 'Đã xác nhận', 
+        value: requests.filter(r => r.status === 'Confirmed').length, // Sửa status
+        type: 'default', subtext: 'Đã xác nhận yêu cầu', 
+        icon: <CheckBadgeIcon className="w-6 h-6"/> 
+    },
+    { 
+        label: 'Đang xử lý', 
+        value: requests.filter(r => ['In Progress', 'Processing'].includes(r.status)).length, // Sửa status
+        type: 'info', subtext: 'Đang sửa chữa & vệ sinh', 
+        icon: <WrenchScrewdriverIcon className="w-6 h-6"/> 
+    },
+    { 
+        label: 'Chờ thanh toán', 
+        value: requests.filter(r => r.status === 'Wait Payment').length , // Sửa status
+        type: 'info', subtext: 'Đã sửa xong & chờ thanh toán', 
+        icon: <BanknotesIcon className="w-6 h-6"/> 
+    },
+    { 
+        label: 'Hoàn thành', 
+        value: requests.filter(r => r.status === 'Completed').length, // Sửa status
+        type: 'success', subtext: 'Yêu cầu đã hoàn thành', 
+        icon: <CheckCircleIcon className="w-6 h-6"/> 
+    },
+    { 
+        label: 'Tổng chi phí', 
+        // Logic tính tổng tiền
+        value: requests.reduce((total, r) => {
+            return (r.status === 'Completed' || r.status === 'Wait Payment') 
+                ? total + (r.repairCost || 0) 
+                : total;
+        }, 0).toLocaleString('vi-VN') + ' đ', 
+        type: 'default', subtext: 'Tổng chi phí sửa chữa', 
+        icon: <CurrencyDollarIcon className="w-6 h-6"/> 
+    },
+];
+  
+  useEffect(()=>{
+    let mounted = true
+    const accountId = auth?.accountId || localStorage.getItem('accountId')
+    if (!accountId) {
+      setError('Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.')
+      setLoading(false)
+      return
+    }
+    const fecth =async()=>{
+      setLoading(true)
+      try
+      {
+        const listRes = await getMaintenances(filter);   // API 1: Lấy danh sách     // API 2: Lấy số liệu tổng quan (Server tính sẵn)
+;
+        if (!mounted) return;
+        if (listRes.success) {
+            setRequests(Array.isArray(listRes.data) ? listRes.data : []);
+        }
+
+      }
+      catch (error) {
+          console.error("Lỗi tải dữ liệu Manager:", error);
+      }
+      finally 
+      {
+       if (mounted) setLoading(false);
+      }
+    }
+    fecth()
+    return () => { mounted = false }
+  },[auth])
+  
   return (
     <div className="animate-fade-in-up space-y-6">
       
