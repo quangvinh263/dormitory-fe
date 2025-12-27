@@ -31,3 +31,19 @@ export const changeStatus = async (dto) => {
         return { success: false, message: error.response?.data?.message || 'Error updating status' }
     }
 }
+
+/**
+ * GET: api/RoomEquipment/equipments
+ * Lấy tổng quan thống kê bảo trì
+ */
+export const getAllEquipment = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/equipments`)
+        if (response.status === 200 || response.data?.success) {
+            return { success: true, data: response.data?.data ?? response.data?.list ?? response.data }
+        }
+        return { success: false, message: response.data?.message || 'Failed to fetch overview' }
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error fetching overview' }
+    }
+}
