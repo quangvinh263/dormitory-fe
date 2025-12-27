@@ -18,12 +18,25 @@ const ManagerFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => 
     DateOfBirth: '',
     Address: '',
     Password: '', 
-    ConfirmPassword :'',     
-    BuildingId: ''
+    ConfirmPassword: '',     
+    BuildingName: '' // Chỉ để hiển thị, không để edit
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Helper function để format date từ API thành YYYY-MM-DD cho input
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    try {
+      // Tách ngày từ string ISO, chỉ lấy phần date (YYYY-MM-DD)
+      const isoDatePart = dateString.split('T')[0];
+      return isoDatePart;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -33,16 +46,24 @@ const ManagerFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => 
           Email: initialData.email || '',
           PhoneNumber: initialData.phone || '',
           CitizenID: initialData.citizenId || '',
-          DateOfBirth: initialData.dob || '',
+          DateOfBirth: formatDateForInput(initialData.dateOfBirth),
           Address: initialData.address || '',
-          BuildingId: initialData.building || '',
+          BuildingName: initialData.building || '', // Chỉ lấy tên tòa nhà để hiển thị
           Password: '',
           ConfirmPassword: ''
         });
       } else {
         // CREATE MODE: Reset form
         setFormData({
-          FullName: '', Email: '', PhoneNumber: '', CitizenID: '', DateOfBirth: '', Address: '', Password: '', ConfirmPassword: '', BuildingId: ''
+          FullName: '', 
+          Email: '', 
+          PhoneNumber: '', 
+          CitizenID: '', 
+          DateOfBirth: '', 
+          Address: '', 
+          BuildingName: '',
+          Password: '', 
+          ConfirmPassword: ''
         });
       }
       setShowPassword(false);
@@ -65,7 +86,22 @@ const ManagerFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => 
        alert("Vui lòng nhập mật khẩu khởi tạo cho tài khoản!");
        return;
     }
-    onSubmit(formData);
+    // Kiểm tra confirm password khi tạo mới
+    if (!initialData && formData.Password !== formData.ConfirmPassword) {
+       alert("Mật khẩu xác nhận không khớp!");
+       return;
+    }
+    
+    // Loại bỏ BuildingName khỏi data submit vì không cần gửi lên server
+    const { BuildingName, ...submitData } = formData;
+    
+    // Format lại DateOfBirth thành ISO string nếu có
+    const finalSubmitData = {
+      ...submitData,
+      DateOfBirth: formData.DateOfBirth ? new Date(formData.DateOfBirth + 'T00:00:00.000Z').toISOString() : ''
+    };
+    
+    onSubmit(finalSubmitData);
   };
 
   if (!isOpen) return null;
@@ -132,7 +168,7 @@ const ManagerFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => 
                                 </div>
                             </div>
 
-                            {/* 👇 3. Xác nhận mật khẩu */}
+                            {/* Xác nhận mật khẩu */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
                                 <div className="relative">
@@ -190,20 +226,28 @@ const ManagerFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => 
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Ngày sinh</label>
-                        <input type="date" name="DateOfBirth" value={formData.DateOfBirth} onChange={handleChange}
-                        className="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm p-2.5 border" />
+                        <input 
+                            type="date" 
+                            name="DateOfBirth" 
+                            value={formData.DateOfBirth}
+                            onChange={handleChange}
+                            className="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm p-2.5 border" 
+                        />
                     </div>
 
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Tòa nhà phụ trách</label>
-                        <select name="BuildingId" value={formData.BuildingId} onChange={handleChange}
-                        className="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm p-2.5 border bg-white">
-                            <option value="">-- Chọn tòa nhà --</option>
-                            <option value="Tòa A">Tòa A</option>
-                            <option value="Tòa B">Tòa B</option>
-                            <option value="Tòa C">Tòa C</option>
-                        </select>
-                    </div>
+                    {/* Tòa nhà phụ trách - chỉ hiển thị khi edit */}
+                    {isEditMode && formData.BuildingName && (
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tòa nhà phụ trách</label>
+                            <input 
+                                type="text" 
+                                value={formData.BuildingName} 
+                                disabled
+                                className="w-full border-gray-300 rounded-lg text-sm p-2.5 border bg-gray-100 text-gray-600 cursor-not-allowed" 
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Thông tin tòa nhà không thể chỉnh sửa từ đây.</p>
+                        </div>
+                    )}
 
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ thường trú</label>

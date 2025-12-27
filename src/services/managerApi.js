@@ -24,3 +24,16 @@ export const getReceiptsForManager = async (data) => {
         return { success: false, message: error.response?.data?.message || 'Error fetching receipts for manager' };
     }
 };
+
+export const getAllManagers = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/BuildingManager`);
+        if (response.status === 200 || response.data.success) {
+            return { success: true, data: response.data?.data || [] };
+        }
+        return { success: false, message: response.data?.message || 'Failed to fetch managers' };
+    }
+    catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error fetching managers' };
+    }
+};
