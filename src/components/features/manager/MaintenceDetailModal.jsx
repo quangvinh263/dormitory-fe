@@ -21,14 +21,14 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
   const [cost, setCost] = useState(request.RepairCost || 0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (status) => {
     // 1. Bật trạng thái loading để chặn click nhiều lần
     setIsLoading(true);
 
     // 2. Chuẩn bị dữ liệu theo đúng DTO của C#
     const payload = {
         requestId: request.maintenanceID, // Map với DTO: RequestId
-        newStatus: 'Confirmed',           // Map với DTO: NewStatus
+        newStatus: status,           // Map với DTO: NewStatus
         managerNote: 'Đã xác nhận yêu cầu, đang điều phối thợ tới sửa.', // Map với DTO: ManagerNote (Có thể để null)
         repairCost: 0                     // Map với DTO: RepairCost (Mặc định 0 khi mới xác nhận)
     };
@@ -215,26 +215,26 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
           </div>
 
           {/* Input Fields */}
-          {request.Status === 'Completed' && (
+          {request.status === 'Completed' && (
             <div className="bg-green-50 border border-green-100 rounded-lg p-4 space-y-2">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600 flex items-center gap-1"><CurrencyDollarIcon className="w-4 h-4"/> Chi phí:</span>
-                <span className="font-bold text-green-700 text-lg">{formatCurrency(request.RepairCost)}</span>
+                <span className="font-bold text-green-700 text-lg">{formatCurrency(request.repairCost)}</span>
               </div>
               {request.ManagerNote && (
                  <div className="text-sm">
                    <span className="text-gray-600 flex items-center gap-1 mb-1"><PencilSquareIcon className="w-4 h-4"/> Ghi chú:</span>
-                   <p className="text-gray-800 bg-white p-2 rounded border border-green-100">{request.ManagerNote}</p>
+                   <p className="text-gray-800 bg-white p-2 rounded border border-green-100">{request.managerNote}</p>
                  </div>
               )}
               {request.ResolvedDate && (
-                 <div className="text-xs text-gray-500 text-right mt-1">ResolvedDate: {request.ResolvedDate}</div>
+                 <div className="text-xs text-gray-500 text-right mt-1">ResolvedDate: {request.resolveDate}</div>
               )}
             </div>
           )}
           
 
-          {request.Status === 'Processing' && (
+          {request.status === 'Processing' && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
               <h4 className="text-sm font-bold text-gray-700 border-b pb-2">Cập nhật kết quả:</h4>
               
@@ -273,7 +273,7 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
             <div>
               {/* Nút Xác nhận yêu cầu (Yêu cầu của bạn) */}
               <button 
-                onClick={handleConfirm} 
+                onClick={() => handleConfirm("Confirmed")}
                 disabled={isLoading}
                 className="ml-auto px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm cursor-pointer flex items-start gap-2"
               >
@@ -282,14 +282,21 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
               </button>
             </div>
           )}
-          
-          {request.Status === 'Processing' && (
+          {request.status === 'Confirmed' && (
+            <button 
+              onClick={() => handleConfirm("Processing")}
+              disabled={isLoading}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm flex items-center gap-2 cursor-pointer">
+              <CheckCircleIcon className="w-4 h-4"/> Xác nhận bắt đầu sửa chữa
+            </button>
+          )}
+          {request.status === 'Processing' && (
             <button className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm flex items-center gap-2 cursor-pointer">
               <CheckCircleIcon className="w-4 h-4"/> Xác nhận Hoàn thành
             </button>
           )}
 
-          <button onClick={onClose} className="flex-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
+          <button onClick={onClose} className="ml-auto flex-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
             Đóng
           </button>
         </div>

@@ -28,7 +28,7 @@ export default function MaintenanceCard({ request, onAction }) {
       case 'Completed': 
         return { type: 'success', label: 'Hoàn thành' }; // Xanh lá
       case 'Wait Payment': 
-        return { type: 'warning', label: 'Chờ thanh toán' }; // Xanh lá
+        return { type: 'success', label: 'Chờ thanh toán' }; // Xanh lá
       default: 
         return { type: 'default', label: 'Khác' };
     }
