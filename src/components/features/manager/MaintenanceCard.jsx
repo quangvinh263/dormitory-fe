@@ -79,12 +79,12 @@ export default function MaintenanceCard({ request, onAction }) {
 
         {/* Ngày tháng + Chi phí (Dòng 3) */}
         <div className="flex items-center gap-4 text-xs text-gray-500 pt-1">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <CalendarDaysIcon className="w-3.5 h-3.5" />
             <span>{request.issueDate}</span>
           </div>
-          <div className="flex items-center gap-1 text-blue-600 font-medium">
-            <CurrencyDollarIcon className="w-3.5 h-3.5" />
+          <div className="pt-1 flex items-center gap-1.5 text-blue-600 font-medium">
+            <CurrencyDollarIcon className="w-3.5 h-3.5 gap-1.5" />
             <span>{request.repairCost > 0 ? formatMoney(request.repairCost) : '0 ₫'}</span>
           </div>
         </div>
@@ -96,10 +96,9 @@ export default function MaintenanceCard({ request, onAction }) {
           variant="white" 
           size="sm" 
           className="border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
-          icon={<WrenchScrewdriverIcon className="w-4 h-4 text-gray-500" />}
           onClick={() => onAction(request)}
         >
-          Xử lý
+          Cập nhật
         </Button>
       </div>
 

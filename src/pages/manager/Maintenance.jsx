@@ -31,8 +31,8 @@ export default function MaintenanceDashboard() {
     const [filter, setFilter] = useState({ keyword: '', status: '',equipment:'  ' });
     
 
-    const handleOpenModal = (request) => {
-    setSelectedRequest(request);
+    const handleOpenModal = async (request) => {
+      setSelectedRequest(request);
     };
 
     const handleCloseModal = () => {
@@ -98,9 +98,9 @@ export default function MaintenanceDashboard() {
       setLoading(false)
       return
     }
-    setLoading(true);
+    
     const fecth =async()=>{
-
+      setLoading(true);
       try
       {
         const listRes = await getMaintenances(filter);   // API 1: Lấy danh sách     // API 2: Lấy số liệu tổng quan (Server tính sẵn)
