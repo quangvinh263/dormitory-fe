@@ -19,7 +19,7 @@ import {
   getRoomsResponseByManager 
 } from '../../services/buildingApi';
 import { getRoomTypesInRegistration } from '../../services/roomTypeApi';
-import { updateRoom } from '../../services/roomApi';
+import { updateRoom, createRoom } from '../../services/roomApi';
 
 const BuildingManagement = () => {
   // --- STATE ---
@@ -225,9 +225,35 @@ const BuildingManagement = () => {
           alert(`Lỗi: ${response.message}`);
         }
       } else {
-        // CREATE MODE: Placeholder - API chưa có
-        console.log("Create New Room Data:", formData);
-        alert("Chức năng tạo phòng mới đang được phát triển!");
+        // CREATE MODE: Gọi API Create Room
+        if (!selectedBuildingID) {
+          alert("Vui lòng chọn tòa nhà trước khi tạo phòng!");
+          return;
+        }
+
+        const createData = {
+          buildingId: selectedBuildingID,
+          roomTypeId: formData.RoomTypeID,
+          gender: formData.Gender === 'Nam' ? 'Male' : 'Female', // Convert Vietnamese to English
+          isUnderMaintenance: formData.IsUnderMaintenance,
+          isBeingCleaned: formData.IsBeingCleaned,
+          roomName: formData.RoomName
+        };
+
+        console.log("Create New Room Data:", createData);
+        
+        const response = await createRoom(createData);
+        
+        if (response.success) {
+          alert("Tạo phòng mới thành công!");
+          setIsRoomModalOpen(false);
+          // Reload rooms để hiển thị phòng mới
+          if (selectedManagerID) {
+            await loadRoomsByManager(selectedManagerID);
+          }
+        } else {
+          alert(`Lỗi: ${response.message}`);
+        }
       }
     } catch (error) {
       console.error('Error submitting room form:', error);
@@ -448,7 +474,7 @@ const BuildingManagement = () => {
         isOpen={isBuildingModalOpen} 
         onClose={() => setIsBuildingModalOpen(false)} 
         initialData={editingItem}
-        buildings={buildings} // Truyền danh sách tòa nhà
+        buildings={buildings}
       />
       
       <RoomModal 
@@ -457,16 +483,16 @@ const BuildingManagement = () => {
         initialData={editingItem}
         currentBuildingID={selectedBuildingID}
         currentBuildingName={currentBuilding?.buildingName}
-        roomTypes={roomTypes} // Truyền room types đã fetch
-        isEditMode={!!editingItem} // Truyền flag để biết là edit hay create
-        onSubmit={handleRoomSubmit} // Truyền handler để xử lý submit
+        roomTypes={roomTypes}
+        isEditMode={!!editingItem}
+        onSubmit={handleRoomSubmit}
       />
 
       <RoomTypeModal 
         isOpen={isRoomTypeModalOpen}
         onClose={() => setIsRoomTypeModalOpen(false)}
-        roomTypes={roomTypes} // Truyền room types đã fetch
-        onUpdateRoomTypes={(updatedRoomTypes) => setRoomTypes(updatedRoomTypes)} // Callback để update state
+        roomTypes={roomTypes}
+        onUpdateRoomTypes={(updatedRoomTypes) => setRoomTypes(updatedRoomTypes)}
       />
 
     </div>

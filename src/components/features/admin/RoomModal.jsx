@@ -13,7 +13,7 @@ const RoomModal = ({
   const [formData, setFormData] = useState({
     RoomName: '',
     RoomTypeID: '',
-    Capacity: '',
+    Capacity: '', // Chỉ dùng để hiển thị khi edit
     Gender: 'Nam',
     RoomStatus: '',
     IsUnderMaintenance: false,
@@ -41,7 +41,7 @@ const RoomModal = ({
         setFormData({
           RoomName: '',
           RoomTypeID: roomTypes[0]?.roomTypeID || '',
-          Capacity: roomTypes[0]?.capacity || '',
+          Capacity: '', // Không cần capacity khi create
           Gender: 'Nam',
           RoomStatus: '',
           IsUnderMaintenance: false,
@@ -51,16 +51,14 @@ const RoomModal = ({
     }
   }, [initialData, isOpen, roomTypes, isEditMode]);
 
-  // Khi đổi loại phòng -> Tự động điền Capacity mặc định của loại đó (chỉ khi create)
+  // Khi đổi loại phòng -> Chỉ hiển thị info, không fill capacity
   const handleTypeChange = (e) => {
     const typeId = e.target.value;
-    const type = roomTypes.find(t => t.roomTypeID === typeId);
     
     setFormData(prev => ({
       ...prev,
-      RoomTypeID: typeId,
-      // Chỉ auto-fill capacity khi create mode
-      Capacity: (!isEditMode && type) ? type.capacity || prev.Capacity : prev.Capacity
+      RoomTypeID: typeId
+      // Không auto-fill capacity nữa
     }));
   };
 
@@ -98,10 +96,10 @@ const RoomModal = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
           {/* Tên Phòng */}
-          <div className="col-span-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tên phòng <span className="text-red-500">*</span>
             </label>
@@ -122,7 +120,7 @@ const RoomModal = ({
           </div>
           
           {/* Loại Phòng (Select từ RoomTypes) */}
-          <div className="col-span-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Loại phòng <span className="text-red-500">*</span>
             </label>
@@ -147,60 +145,55 @@ const RoomModal = ({
             )}
           </div>
 
-          {/* Sức chứa */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sức chứa tối đa <span className="text-red-500">*</span>
-            </label>
-            <input 
-              type="number" 
-              required
-              min="1"
-              disabled={isEditMode} // Không cho sửa capacity khi edit
-              className={`w-full border rounded-lg p-2.5 focus:ring-blue-500 border-gray-300 ${
-                isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
-              }`}
-              value={formData.Capacity} 
-              onChange={e => setFormData({...formData, Capacity: e.target.value})}
-            />
-            {isEditMode && (
-              <p className="text-xs text-gray-500 mt-1">Sức chứa không thể thay đổi</p>
-            )}
-          </div>
-
-          {/* Giới tính */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Dành cho</label>
-            <select 
-              className="w-full border rounded-lg p-2.5 focus:ring-blue-500 border-gray-300 bg-white" 
-              value={formData.Gender} 
-              onChange={e => setFormData({...formData, Gender: e.target.value})}
-            >
-              <option value="Nam">Nam</option>
-              <option value="Nữ">Nữ</option>
-            </select>
-          </div>
-
-          {/* Room Status - chỉ hiện khi edit */}
+          {/* Sức chứa - chỉ hiển thị khi EDIT */}
           {isEditMode && (
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái phòng</label>
-              <select 
-                className="w-full border rounded-lg p-2.5 focus:ring-blue-500 border-gray-300 bg-white" 
-                value={formData.RoomStatus} 
-                onChange={e => setFormData({...formData, RoomStatus: e.target.value})}
-              >
-                <option value="">-- Chọn trạng thái --</option>
-                <option value="Available">Có sẵn</option>
-                <option value="Full">Đã đầy</option>
-                <option value="Maintenance">Bảo trì</option>
-                <option value="Closed">Đóng cửa</option>
-              </select>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sức chứa tối đa
+              </label>
+              <input 
+                type="number" 
+                disabled
+                className="w-full border rounded-lg p-2.5 bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300"
+                value={formData.Capacity} 
+                readOnly
+              />
+              <p className="text-xs text-gray-500 mt-1">Sức chứa không thể thay đổi</p>
             </div>
           )}
 
+          <div className="grid grid-cols-2 gap-4">
+            {/* Giới tính */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Dành cho</label>
+              <select 
+                className="w-full border rounded-lg p-2.5 focus:ring-blue-500 border-gray-300 bg-white" 
+                value={formData.Gender} 
+                onChange={e => setFormData({...formData, Gender: e.target.value})}
+              >
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+              </select>
+            </div>
+
+            {/* Room Status - chỉ hiện khi edit và DISABLE */}
+            {isEditMode && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái phòng</label>
+                <input 
+                  type="text"
+                  disabled
+                  className="w-full border rounded-lg p-2.5 bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300"
+                  value={formData.RoomStatus || 'N/A'}
+                  readOnly
+                />
+                <p className="text-xs text-gray-500 mt-1">Trạng thái được tự động cập nhật</p>
+              </div>
+            )}
+          </div>
+
           {/* Checkbox Trạng thái đặc biệt */}
-          <div className="col-span-2 mt-2 space-y-3 border-t border-gray-100 pt-3">
+          <div className="space-y-3 border-t border-gray-100 pt-3">
             <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
               <input 
                 type="checkbox" 
@@ -230,9 +223,14 @@ const RoomModal = ({
 
           {/* Thông tin loại phòng được chọn */}
           {selectedType && (
-            <div className="col-span-2 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="text-sm font-medium text-blue-800 mb-1">Thông tin loại phòng:</h4>
               <p className="text-sm text-blue-600">{selectedType.typeName}</p>
+              {!isEditMode && (
+                <p className="text-xs text-blue-500 mt-1">
+                  Sức chứa sẽ được tự động thiết lập theo loại phòng này
+                </p>
+              )}
             </div>
           )}
 
