@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { useNavigate } from 'react-router-dom';
 const SystemOverviewChart = () => {
   // Mockup: Doanh thu so sánh giữa các tòa nhà
   const buildings = [
@@ -8,7 +8,7 @@ const SystemOverviewChart = () => {
     { name: 'Tòa C', fill: 60, revenue: 90, color: 'bg-purple-500' },
     { name: 'Tòa D', fill: 45, revenue: 60, color: 'bg-pink-500' },
   ];
-
+  const navigate = useNavigate();
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 h-full flex flex-col">
       <div className="mb-6">
@@ -38,7 +38,9 @@ const SystemOverviewChart = () => {
       </div>
       
       <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
-        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+        <button 
+          onClick={() => navigate("/admin/reports")}
+          className="text-sm text-blue-600 hover:text-blue-800 font-medium">
           Xem báo cáo chi tiết →
         </button>
       </div>
