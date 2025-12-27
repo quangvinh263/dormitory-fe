@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { ArrowDownTrayIcon, BellAlertIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 import ContractStats from '../../components/features/manager/ContractStats';
@@ -7,15 +7,86 @@ import ContractTable from '../../components/features/manager/ContractTable';
 import RoomChangeModal from '../../components/features/manager/RoomChangeModal';
 import Button from '../../components/ui/Button';
 
+import { getContractFiltered } from '../../services/contractApi';
 export default function ContractPage() {
 
   const [isRoomChangeModalOpen, setIsRoomChangeModalOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
 
+  const [contracts, setContracts] = useState([]);        
+  const [globalContract, setGlobalContract] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilterParams] = useState({
+    keyword: '',
+    buildingName: '',
+    status: ''
+  });
+  useEffect(() => {
+    const fetchContracts = async () =>
+    {
+        try
+        {
+          const contractRes = await getContractFiltered(filters);
+          if (contractRes.success && contractRes.data )
+          {
+            setGlobalContract(contractRes.data.data);
+            setContracts(Array.isArray(contractRes.data.data)?contractRes.data.data:[]);
+            setLoading(false);
+          }
+          else
+          {
+            console.log("Không thể tải được dữ liệu hợp đồng",contractRes.data.data);
+          }
+        }
+        catch (err)
+        {
+          console.log("Lỗi",err);
+          
+        }
+        finally
+        {
+          setLoading(false);
+        }
+    }
+    fetchContracts()
+  }, []);
+
+  useEffect(() => {
+    const fetchContractsForTable = async () => {
+      setLoading(true);
+      try {
+        const res = await getContractFiltered(filters); // Có truyền filter
+        if (res.success && Array.isArray(res.data)) {
+          setContracts(res.data);
+        } else {
+          setContracts([]);
+        }
+      } catch (err) {
+        console.log(err)
+        setContracts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContractsForTable();
+  }, [filters]);
   const handleOpenRoomChange = (contract) => {
     setSelectedContract(contract);
     setIsRoomChangeModalOpen(true);
   };
+  
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-500">Đang tải hợp đồng...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="animate-fade-in-up space-y-6 pb-10">
@@ -39,13 +110,16 @@ export default function ContractPage() {
       </div>
 
       {/* 2. Thống kê */}
-      <ContractStats />
+      <ContractStats contracts={globalContract} />
 
       {/* 3. Bộ lọc */}
-      <ContractFilter />
+      <ContractFilter 
+        filters={filters}
+        setFilterParams={setFilterParams}
+      />
 
       {/* 4. Bảng dữ liệu */}
-      <ContractTable onRoomChange={handleOpenRoomChange} />
+      <ContractTable contracts={contracts} onRoomChange={handleOpenRoomChange} />
 
       {/* 5. Footer Info Alert (Màu xanh dương) */}
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start">
