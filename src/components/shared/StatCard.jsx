@@ -2,9 +2,10 @@ import clsx from 'clsx';
 
 const THEMES = {
   default: { text: 'text-gray-900', sub: 'text-gray-500' },
-  success: { text: 'text-green-600', sub: 'text-gray-500' },
-  warning: { text: 'text-orange-600', sub: 'text-gray-500' },
+  success: { text: 'text-green-600', sub: 'text-green-500' },
+  warning: { text: 'text-orange-600', sub: 'text-orange-500' },
   danger:  { text: 'text-red-600', sub: 'text-red-400' },
+  info:   { text: 'text-blue-600', sub: 'text-blue-500' },
 };
 
 export default function StatCard({ title, icon, value, subtext, type = 'default', action }) {
