@@ -58,10 +58,11 @@ const ReceiptDetailModal = ({ isOpen, onClose, data }) => {
             <InfoItem label="Trạng thái">
                 {data.status === 'completed' && <Badge type="success">Đã thanh toán</Badge>}
                 {data.status === 'pending' && <Badge type="warning">Chờ thanh toán</Badge>}
+                {data.status === 'failed' && <Badge type="danger">Bị từ chối</Badge>}
             </InfoItem>
           </div>
 
-          {/* Block thông tin giao dịch (Màu xám) */}
+          {/* Block thông tin giao dịch (Màu xám)
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-100 space-y-3">
             <InfoItem label="Phương thức thanh toán" value="Chuyển khoản ngân hàng" />
             
@@ -71,7 +72,7 @@ const ReceiptDetailModal = ({ isOpen, onClose, data }) => {
                   VNPAY_{data.id}_{data.studentId}
                </div>
             </div>
-          </div>
+          </div> */}
 
         </div>
         

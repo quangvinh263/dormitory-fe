@@ -1,17 +1,73 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ViolationStatusCard from '../../components/features/student/ViolationStatusCard';
 import ViolationRulesCard from '../../components/features/student/ViolationRulesCard';
 import ViolationStats from '../../components/features/student/ViolationStats';
-
-// MOCK DATA
-const MOCK_VIOLATIONS = [
-  //{ id: 1, date: '10/12/2024', reason: 'Gây ồn ào sau 23h', status: 'confirmed' } 
-  // Để trống để test trường hợp "Không vi phạm" giống thiết kế
-];
+import { getViolationsByStudentAccount } from '../../services/violationApi';
 
 export default function Violations() {
-  const [violations] = useState(MOCK_VIOLATIONS);
+  const [violations, setViolations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const violationCount = violations.length;
+  const accountId = localStorage.getItem('accountId');
+
+  useEffect(() => {
+    const fetchViolations = async () => {
+      try {
+        setLoading(true);
+        const response = await getViolationsByStudentAccount(accountId);
+        console.log('API Response:', response);
+        
+        // Lấy data từ response và map sang format component cần
+        const violationsData = response.data || [];
+        const mappedViolations = violationsData.map(violation => ({
+          id: violation.violationId,
+          reason: violation.violationAct,
+          date: new Date(violation.violationTime).toLocaleDateString('vi-VN'),
+          description: violation.description,
+          resolution: violation.resolution,
+          reportingManager: violation.reportingManagerName
+        }));
+        
+        setViolations(mappedViolations);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching violations:', err);
+        setError('Không thể tải dữ liệu vi phạm');
+        setViolations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (accountId) {
+      fetchViolations();
+    } else {
+      setError('Không tìm thấy thông tin tài khoản');
+      setLoading(false);
+    }
+  }, [accountId]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6 w-full mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6 w-full mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 w-full mx-auto">
@@ -35,16 +91,28 @@ export default function Violations() {
        {violationCount > 0 && (
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
              <div className="p-4 bg-gray-50 border-b border-gray-200">
-                <h3 className="font-bold text-gray-900">Chi tiết vi phạm</h3>
+                <h3 className="font-bold text-gray-900">Chi tiết vi phạm ({violationCount})</h3>
              </div>
              <div className="divide-y divide-gray-100">
                 {violations.map((v) => (
-                   <div key={v.id} className="p-4 hover:bg-gray-50 flex justify-between items-center">
-                      <div>
-                         <p className="font-medium text-gray-900">{v.reason}</p>
-                         <p className="text-xs text-gray-500">{v.date}</p>
+                   <div key={v.id} className="p-4 hover:bg-gray-50">
+                      <div className="flex justify-between items-start">
+                         <div className="flex-1">
+                            <p className="font-medium text-gray-900">{v.reason}</p>
+                            <p className="text-sm text-gray-600 mt-1">{v.description}</p>
+                            <div className="flex items-center gap-4 mt-2">
+                               <p className="text-xs text-gray-500">Ngày: {v.date}</p>
+                               <p className="text-xs text-gray-500">Báo cáo bởi: {v.reportingManager}</p>
+                            </div>
+                         </div>
+                         <span className={`px-2 py-1 text-xs rounded ${
+                            v.resolution === 'Đang chờ' 
+                              ? 'bg-yellow-100 text-yellow-700' 
+                              : 'bg-red-100 text-red-700'
+                         }`}>
+                            {v.resolution}
+                         </span>
                       </div>
-                      <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Đã ghi nhận</span>
                    </div>
                 ))}
              </div>

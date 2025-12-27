@@ -1,4 +1,4 @@
-import { ClipboardDocumentListIcon, ClockIcon, WrenchScrewdriverIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { ClipboardDocumentListIcon, ClockIcon, WrenchScrewdriverIcon, CheckCircleIcon, BanknotesIcon,CheckBadgeIcon } from '@heroicons/react/24/outline';
 
 export default function RequestStats({ stats }) {
   const items = [
@@ -11,12 +11,20 @@ export default function RequestStats({ stats }) {
       borderColor: 'border-gray-200'
     },
     { 
-      label: 'Đang chờ', 
+      label: 'Đang chờ xác nhận', 
       value: stats.pending, 
-      sub: 'Chờ xử lý', 
+      sub: 'Chờ xác nhận', 
       icon: <ClockIcon className="w-5 h-5 text-yellow-600"/>,
       color: 'text-yellow-600',
       borderColor: 'border-yellow-200'
+    },
+    { 
+      label: 'Đã xác nhận', 
+      value: stats.confirmed, 
+      sub: 'Trưởng toà đã xác nhận', 
+      icon: <CheckBadgeIcon className="w-5 h-5 text-blue-600"/>,
+      color: 'text-blue-600',
+      borderColor: 'border-blue-200'
     },
     { 
       label: 'Đang xử lý', 
@@ -26,14 +34,24 @@ export default function RequestStats({ stats }) {
       color: 'text-blue-600',
       borderColor: 'border-blue-200'
     },
+    
+    { 
+      label: 'Chờ thanh toán', 
+      value: stats.wait_payment, 
+      sub: 'Chờ thanh toán', 
+      icon: <BanknotesIcon className="w-5 h-5 text-green-600"/>,
+      color: 'text-green-600',
+      borderColor: 'border-green-200'
+    },
     { 
       label: 'Hoàn thành', 
-      value: stats.done, 
+      value: stats.completed, 
       sub: 'Đã xử lý', 
       icon: <CheckCircleIcon className="w-5 h-5 text-green-600"/>,
       color: 'text-green-600',
       borderColor: 'border-green-200'
     },
+    
   ];
 
   return (

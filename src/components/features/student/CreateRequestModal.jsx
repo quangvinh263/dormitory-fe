@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Button from '../../ui/Button'; //
 
-export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
+export default function CreateRequestModal({ isOpen, onClose, onSubmit,equipments }) {
   const [formData, setFormData] = useState({
     room: 'A1.01', // Mặc định lấy từ profile user
     device: '',
@@ -59,18 +59,26 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
                 <span className="text-red-500 text-sm">*</span>
              </div>
              <div className="relative">
-                <select 
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700 appearance-none focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"
-                  value={formData.device}
-                  onChange={(e) => setFormData({...formData, device: e.target.value})}
-                >
-                   <option value="" disabled>Chọn thiết bị cần sửa chữa</option>
-                   <option value="Điều hòa">Điều hòa</option>
-                   <option value="Bóng đèn">Bóng đèn</option>
-                   <option value="Vòi nước">Vòi nước</option>
-                   <option value="Giường tủ">Giường tủ</option>
-                   <option value="Khác">Khác</option>
-                </select>
+                  <select className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700 appearance-none focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                     value={formData.device}
+                     onChange={(e) => setFormData({ ...formData, device: e.target.value })}
+                  >
+                  <option value="" disabled>Chọn thiết bị cần sửa chữa</option>
+
+                  {/* --- PHẦN SỬA ĐỔI: Render động từ mảng equipments --- */}
+                  {equipments && equipments.length > 0 ? (
+                     equipments.map((item) => (
+                        <option key={item.equipmentID} value={item.equipmentID}>
+                              {item.equipmentName} {/* Tên thiết bị hiển thị ra */}
+                        </option>
+                     ))
+                  ) : (
+                     <option value="" disabled>Không tìm thấy thiết bị nào</option>
+                  )}
+
+               {/* Nếu bạn vẫn muốn giữ tùy chọn "Khác" thủ công thì để ở dưới cùng */}
+               <option value="other">Khác</option>
+         </select>
                 <ChevronDownIcon className="w-3 h-3 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"/>
              </div>
           </div>

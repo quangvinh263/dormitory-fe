@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 //Import  Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -41,6 +42,68 @@ import PaymentSuccess from './pages/student/UbilityPaymentSuccess';
 import Insurance from './pages/student/Insurance';
 import Violations from './pages/student/Violations';
 import UtilityPayment from './pages/student/UtilityPayment';
+import PaymentResult from './pages/student/PaymentResult';
+
+// Component để xử lý redirect dựa trên authentication
+function AuthRedirect() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [redirectPath, setRedirectPath] = useState('/auth/login');
+
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        // ✅ Sửa: Kiểm tra đúng key 'accessToken' thay vì 'token'
+        const token = localStorage.getItem('accessToken');
+        const role = localStorage.getItem('role');
+        const accountId = localStorage.getItem('accountId');
+
+        if (token && role && accountId) {
+          // Có đủ thông tin auth, điều hướng theo role
+          switch (role.toLowerCase()) {
+            case 'admin':
+              setRedirectPath('/admin');
+              break;
+            case 'manager':
+              setRedirectPath('/manager');
+              break;
+            case 'student':
+              setRedirectPath('/student');
+              break;
+            default:
+              // Role không hợp lệ, xóa localStorage và về login
+              localStorage.clear();
+              setRedirectPath('/auth/login');
+          }
+        } else {
+          // Thiếu thông tin auth, về trang login
+          setRedirectPath('/auth/login');
+        }
+      } catch (error) {
+        // Lỗi khi đọc localStorage, về trang login
+        console.error('Error checking auth:', error);
+        setRedirectPath('/auth/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  if (isLoading) {
+    // Hiển thị loading spinner khi đang kiểm tra
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang kiểm tra thông tin đăng nhập...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <Navigate to={redirectPath} replace />;
+}
 
 export default function App() {
   return (
@@ -60,8 +123,8 @@ export default function App() {
 
         <Route element={<MainLayout />}>
           
-          {/* Mặc định vào trang login nếu gõ domain gốc */}
-          <Route path="/" element={<Navigate to="/auth/login" replace />} />
+          {/* Điều hướng thông minh từ root path */}
+          <Route path="/" element={<AuthRedirect />} />
 
           {/* --- ADMIN ROUTES --- */}
           <Route path="/admin">
@@ -81,9 +144,6 @@ export default function App() {
             <Route path="violations" element={<ViolationDashboard />} />
             <Route path="contracts" element={<ContractManagement />} />
             <Route path="bills" element={<BillManagement />} />
-
-
-            {/* Các route khác sẽ thêm sau */}
           </Route>
           
           {/* --- STUDENT ROUTES (Sinh viên) --- */}
@@ -100,6 +160,7 @@ export default function App() {
              <Route path="insurance" element={<Insurance />} />
              <Route path="violations" element={<Violations />} />
              <Route path="utility/payment" element={<UtilityPayment />} />
+             <Route path="/student/payment-result" element={<PaymentResult />} />
           </Route>
 
         </Route>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WrenchScrewdriverIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import Section from '../../shared/Section'; 
 import Button from '../../ui/Button';
@@ -7,51 +7,93 @@ import Button from '../../ui/Button';
 import ViolationDetailModal from './ViolationDetailModal';
 import MaintenceDetailModal from './MaintenceDetailModal';
 
+// Import API
+import { getViolationStatsForManager, getViolationsByStudent } from '../../../services/violationApi';
+
 export default function OperationalPanel() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  
+  // State cho violation data
+  const [violationData, setViolationData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Mock Data
-  const violationData = [
-    {
-      id: 'SV02',
-      name: 'Trần Văn B',
-      room: '102',
-      violationCount: 2,
-      violations: [
-        {
-          title: 'Gây ồn ào quá giờ',
-          date: '20/12/2024',
-          time: '23:45',
-          description: 'Hát karaoke loa kẹo kéo gây ảnh hưởng phòng bên cạnh dù đã được nhắc nhở.',
-          reporter: 'Nguyễn Văn A (Trưởng tòa)'
-        },
-        {
-          title: 'Hút thuốc trong phòng',
-          date: '10/11/2024',
-          time: '20:15',
-          description: 'Hút thuốc lá trong phòng máy lạnh, vi phạm quy định PCCC.',
-          reporter: 'Nguyễn Văn A (Trưởng tòa)'
+  const accountId = localStorage.getItem('accountId');
+
+  // Fetch violation data khi component mount
+  useEffect(() => {
+    const fetchViolationData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const result = await getViolationStatsForManager(accountId);
+
+        if (!result.success) {
+          throw new Error(result.message || 'Không thể tải danh sách vi phạm');
         }
-      ]
-    },
-    {
-      id: 'SV05',
-      name: 'Lê Thị C',
-      room: '201',
-      violationCount: 1,
-      violations: [
-        {
-          title: 'Nấu ăn trong phòng',
-          date: '18/12/2024',
-          time: '18:30',
-          description: 'Sử dụng bếp gas mini nấu lẩu trong phòng ở.',
-          reporter: 'Trần Thị M (QL KTX)'
-        }
-      ]
+
+        const apiData = result.data || [];
+
+        // Map dữ liệu API sang format hiển thị
+        const mappedData = apiData.map(item => ({
+          id: item.studentId,
+          name: item.studentName,
+          room: item.roomName,
+          violationCount: item.totalViolations,
+          violations: [] // Sẽ được load khi click xem chi tiết
+        }));
+
+        setViolationData(mappedData);
+      } catch (err) {
+        setError(err.message || 'Đã xảy ra lỗi khi tải dữ liệu vi phạm');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (accountId) {
+      fetchViolationData();
     }
-  ];
+  }, [accountId]);
 
+  // Function để load chi tiết vi phạm của student
+  const handleViewViolationDetail = async (student) => {
+    try {
+      const result = await getViolationsByStudent(student.id);
+      
+      if (result.success) {
+        const violations = result.data.map(violation => ({
+          title: violation.violationAct,
+          date: new Date(violation.violationTime).toLocaleDateString('vi-VN'),
+          time: new Date(violation.violationTime).toLocaleTimeString('vi-VN', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          description: violation.description,
+          reporter: violation.reportingManagerName,
+          resolution: violation.resolution
+        }));
+
+        // Update student với violations đã load
+        const updatedStudent = {
+          ...student,
+          violations
+        };
+
+        setSelectedStudent(updatedStudent);
+      } else {
+        // Nếu không load được, vẫn hiện modal với violations rỗng
+        setSelectedStudent(student);
+      }
+    } catch (err) {
+      // Nếu có lỗi, vẫn hiện modal với violations rỗng
+      setSelectedStudent(student);
+    }
+  };
+
+  // Mock Data cho repair requests (giữ nguyên vì chưa có API)
   const repairRequests = [
     { 
       RequestID: 'REQ001',
@@ -73,7 +115,7 @@ export default function OperationalPanel() {
       Description: 'Cháy bóng đèn chính trong nhà vệ sinh', 
       RequestDate: '2025-12-22 14:00:00', 
       ResolvedDate: null,
-      Status: 'Processing', // Đang sửa -> Click vào sẽ hiện form nhập Cost
+      Status: 'Processing',
       RepairCost: 0,
       ManagerNote: 'Đã gọi thợ điện, hẹn chiều nay đến.'
     },
@@ -97,47 +139,69 @@ export default function OperationalPanel() {
         
         {/* 1. SỔ ĐEN VI PHẠM */}
         <Section title="Sổ Đen Vi Phạm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-500">
-              <thead className="text-sm text-gray-700 bg-sky-100">
-                <tr>
-                  <th className="px-3 py-2">Sinh viên</th>
-                  <th className="px-3 py-2">Phòng</th>
-                  <th className="px-3 py-2">Vi phạm</th>
-                  <th className="px-3 py-2">Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {violationData.map((student) => (
-                  <tr key={student.id} className="bg-white border-b hover:bg-gray-50">
-                    <td className="px-3 py-3 font-medium text-gray-900">
-                      {student.name} <span className="text-gray-400 font-normal">({student.id})</span>
-                    </td>
-                    <td className="px-3 py-3">{student.room}</td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                          student.violationCount >= 2 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {student.violationCount}/3 lần
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-2 py-2">
-                      <Button
-                        onClick={() => setSelectedStudent(student)}
-                        className="text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 px-2 py-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
-                      >
-                        Xem chi tiết
-                      </Button>
-                    </td>
+          {loading && (
+            <div className="text-center py-4 text-gray-500">
+              Đang tải dữ liệu vi phạm...
+            </div>
+          )}
+          
+          {error && (
+            <div className="text-center py-4 text-red-500">
+              Lỗi: {error}
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-500">
+                <thead className="text-sm text-gray-700 bg-sky-100">
+                  <tr>
+                    <th className="px-3 py-2">Sinh viên</th>
+                    <th className="px-3 py-2">Phòng</th>
+                    <th className="px-3 py-2">Vi phạm</th>
+                    <th className="px-3 py-2">Hành động</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {violationData.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="px-3 py-6 text-center text-gray-500">
+                        Không có dữ liệu vi phạm
+                      </td>
+                    </tr>
+                  ) : (
+                    violationData.map((student) => (
+                      <tr key={student.id} className="bg-white border-b hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium text-gray-900">
+                          {student.name} <span className="text-gray-400 font-normal">({student.id})</span>
+                        </td>
+                        <td className="px-3 py-3">{student.room}</td>
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                              student.violationCount >= 2 
+                                ? 'bg-red-100 text-red-800' 
+                                : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              {student.violationCount}/3 lần
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-2 py-2">
+                          <Button
+                            onClick={() => handleViewViolationDetail(student)}
+                            className="text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 px-2 py-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
+                          >
+                            Xem chi tiết
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Section>
 
         {/* 2. YÊU CẦU SỬA CHỮA */}
