@@ -8,15 +8,15 @@ const ManagerReport = () => {
 
   return (
     <div className="bg-white border rounded-xl overflow-hidden shadow-sm animate-fade-in">
-      <div className="p-4 border-b bg-gray-50"><h3 className="font-bold text-gray-800 text-sm">Danh sách Nhân sự BQL</h3></div>
+      <div className="p-4 border-b bg-gray-50"><h3 className="font-bold text-gray-800 text-md">Danh sách Nhân sự BQL</h3></div>
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-white">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Mã NV</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Họ và tên</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Phụ trách</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">SĐT</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Email</th>
+            <th className="px-6 py-3 text-left text-sm font-bold text-gray-500">Mã trưởng tòa</th>
+            <th className="px-6 py-3 text-left text-sm font-bold text-gray-500">Họ và tên</th>
+            <th className="px-6 py-3 text-left text-sm font-bold text-gray-500">Phụ trách</th>
+            <th className="px-6 py-3 text-left text-sm font-bold text-gray-500">SĐT</th>
+            <th className="px-6 py-3 text-left text-sm font-bold text-gray-500">Email</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
