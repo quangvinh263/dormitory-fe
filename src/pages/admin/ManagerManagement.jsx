@@ -1,25 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 import ManagerTable from '../../components/features/admin/ManagerTable';
 import DeleteManagerModal from '../../components/features/admin/DeleteManagerModal';
 import ManagerFormModal from '../../components/features/admin/ManagerFormModal';
+import { getAllManagers, updateManager, createManager, deleteManager } from '../../services/managerApi';
 
 const ManagerManagement = () => {
-  // Mock Data (Dữ liệu giả lập)
-  const [managers, setManagers] = useState([
-    { code: 'TT001', name: 'Nguyễn Văn A', email: 'manager.a@dorm.vn', phone: '0912345678', building: 'Tòa A'},
-    { code: 'TT002', name: 'Trần Thị B', email: 'manager.b@dorm.vn', phone: '0923456789', building: 'Tòa B'},
-    { code: 'TT003', name: 'Lê Văn C', email: 'manager.c@dorm.vn', phone: '0934567890', building: 'Tòa C'},
-  ]);
-
+  const [managers, setManagers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingManager, setEditingManager] = useState(null); // null = Create Mode, object = Edit Mode
+  const [editingManager, setEditingManager] = useState(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingManager, setDeletingManager] = useState(null);
+
+  // Fetch managers data from API
+  useEffect(() => {
+    fetchManagers();
+  }, []);
+
+  const fetchManagers = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllManagers();
+      console.log('Managers API Response:', response);
+      
+      if (response.success) {
+        // Map API data to component format with new fields
+        const mappedManagers = response.data.map(manager => ({
+          id: manager.managerID,
+          code: manager.managerID,
+          name: manager.fullName,
+          email: manager.email,
+          phone: manager.phoneNumber,
+          address: manager.address,
+          citizenId: manager.citizenId,
+          dateOfBirth: manager.dateOfBirth ? new Date(manager.dateOfBirth).toISOString().split('T')[0] : '',
+          building: manager.buildingDto?.buildingName || 'Chưa phân công',
+          buildingId: manager.buildingDto?.buildingID
+        }));
+        
+        setManagers(mappedManagers);
+        setError(null);
+      } else {
+        setError(response.message || 'Không thể tải dữ liệu trưởng tòa');
+      }
+    } catch (err) {
+      console.error('Error fetching managers:', err);
+      setError('Không thể tải dữ liệu trưởng tòa');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenCreate = () => {
     setEditingManager(null);
@@ -33,18 +69,60 @@ const ManagerManagement = () => {
   };
 
   // Xử lý Submit Form (Create & Update)
-  const handleFormSubmit = (formData) => {
-    if (editingManager) {
-      // Logic gọi API Update
-      console.log("Update Manager ID:", editingManager.id, "Data:", formData);
-      alert("Đã cập nhật thành công!");
-    } else {
-      // Logic gọi API Create
-      console.log("Create New Manager Data:", formData);
-      alert("Đã thêm mới thành công!");
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (editingManager) {
+        // UPDATE MODE: Gọi API Update
+        const updateData = {
+          managerID: editingManager.id,
+          fullName: formData.FullName,
+          citizenId: formData.CitizenID,
+          dateOfBirth: formData.DateOfBirth,
+          phoneNumber: formData.PhoneNumber,
+          address: formData.Address
+        };
+
+        console.log("Update Manager Data:", updateData);
+        
+        const response = await updateManager(updateData);
+        
+        if (response.success) {
+          alert("Cập nhật thông tin trưởng tòa thành công!");
+          setIsFormModalOpen(false);
+          // Reload danh sách managers
+          fetchManagers();
+        } else {
+          alert(`Lỗi: ${response.message}`);
+        }
+      } else {
+        // CREATE MODE: Gọi API Create
+        const createData = {
+          email: formData.Email,
+          password: formData.Password,
+          fullName: formData.FullName,
+          phoneNumber: formData.PhoneNumber,
+          address: formData.Address,
+          citizenId: formData.CitizenID,
+          dateOfBirth: formData.DateOfBirth
+        };
+
+        console.log("Create New Manager Data:", createData);
+        
+        const response = await createManager(createData);
+        
+        if (response.success) {
+          alert("Tạo tài khoản trưởng tòa thành công!");
+          setIsFormModalOpen(false);
+          // Reload danh sách managers
+          fetchManagers();
+        } else {
+          alert(`Lỗi: ${response.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Có lỗi xảy ra khi xử lý yêu cầu!');
     }
-    setIsFormModalOpen(false);
-    // Sau khi API thành công thì gọi reload data...
   };
 
   // Mở modal xóa
@@ -54,9 +132,14 @@ const ManagerManagement = () => {
   };
 
   // Xác nhận xóa
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     console.log("Delete Manager ID:", deletingManager.id);
-    // Gọi API Delete...
+    const response = await deleteManager(deletingManager.id);
+    if (!response.success) {
+      alert(`Lỗi: ${response.message}`);
+      return;
+    }
+    window.location.reload();
     alert(`Đã xóa trưởng tòa ${deletingManager.name}`);
     setIsDeleteModalOpen(false);
     setDeletingManager(null);
@@ -66,8 +149,35 @@ const ManagerManagement = () => {
   const filteredManagers = managers.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.building.toLowerCase().includes(searchTerm.toLowerCase())
+    item.building.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-7xl mx-auto space-y-6 animate-fade-in-up">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full max-w-7xl mx-auto space-y-6 animate-fade-in-up">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 animate-fade-in-up">
@@ -76,7 +186,9 @@ const ManagerManagement = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Quản Lý Trưởng Tòa</h1>
-          <p className="text-sm text-gray-500 mt-1">Tạo và quản lý tài khoản trưởng tòa</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Tạo và quản lý tài khoản trưởng tòa ({managers.length} trưởng tòa)
+          </p>
         </div>
         
         <button 
@@ -96,7 +208,7 @@ const ManagerManagement = () => {
           <input
             type="text"
             className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-            placeholder="Tìm kiếm theo tên, email, tòa nhà..."
+            placeholder="Tìm kiếm theo tên, email, tòa nhà, địa chỉ..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -112,7 +224,9 @@ const ManagerManagement = () => {
       
       {/* 4. Pagination (Optional) */}
       <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-          <p className="text-sm text-gray-500">Hiển thị <span className="font-medium">{filteredManagers.length}</span> kết quả</p>
+          <p className="text-sm text-gray-500">
+            Hiển thị <span className="font-medium">{filteredManagers.length}</span> / <span className="font-medium">{managers.length}</span> kết quả
+          </p>
           <div className="flex gap-2">
               <button className="px-3 py-1 border rounded hover:bg-gray-50 text-sm disabled:opacity-50" disabled>Trước</button>
               <button className="px-3 py-1 border rounded hover:bg-gray-50 text-sm">Sau</button>

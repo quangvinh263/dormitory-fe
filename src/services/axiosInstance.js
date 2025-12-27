@@ -8,7 +8,6 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
-// 🧠 Hàm kiểm tra token hết hạn (Giữ nguyên)
 function isTokenExpired(token) {
   if (!token) return true;
   try {
@@ -35,7 +34,6 @@ export const getValidAccessToken = async () => {
       const result = await refreshAccessToken(refreshToken);
       
       if (result?.success && result.token) {
-        // ✅ Lưu vào đúng key "accessToken"
         localStorage.setItem("accessToken", result.token);
         return result.token;
       }
