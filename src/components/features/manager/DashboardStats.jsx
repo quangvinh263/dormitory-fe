@@ -8,40 +8,48 @@ import {
 
 import StatCard from '../../shared/StatCard'; 
 
-export default function DashboardStats() {
+export default function DashboardStats({ data }) {
+  if (!data) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="animate-pulse bg-gray-200 h-24 rounded-lg"></div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {/* Thay đổi: Đơn chờ duyệt -> Báo hỏng (Ưu tiên sửa chữa) */}
       <StatCard 
-        title="Báo sửa chữa & vệ sinh" 
-        value="4" 
-        subtext="2 việc khẩn cấp" 
-        icon={<WrenchScrewdriverIcon className="w-5 h-5"/>} 
-        type="warning" 
+        title="Tổng sinh viên" 
+        value={data.totalStudents?.toString() || "0"} 
+        subtext="Đang sinh sống tại KTX" 
+        icon={<ExclamationTriangleIcon className="w-5 h-5"/>} 
+        type="success" 
       />
       
       <StatCard 
         title="Phòng trống" 
-        value="18" 
-        subtext="Tổng sức chứa: 200" 
+        value={data.availableRooms?.toString() || "0"} 
+        subtext={`Tổng phòng: ${data.countRooms || 0}`} 
         icon={<UserGroupIcon className="w-5 h-5"/>} 
       />
       
-      {/* Thay đổi: Thanh toán chờ xác nhận -> Hóa đơn quá hạn (Rủi ro tài chính) */}
       <StatCard 
         title="Hóa đơn quá hạn" 
-        value="5" 
-        subtext="Tổng nợ: 2.500.000đ" 
+        value={data.unpaidUtilityBills?.toString() || "0"} 
+        subtext={`Tổng nợ: ${(data.totalUnpaidAmount || 0).toLocaleString('vi-VN')}đ`} 
         icon={<CurrencyDollarIcon className="w-5 h-5"/>} 
         type="danger" 
       />
       
       <StatCard 
-        title="Cảnh báo vi phạm" 
-        value="2" 
-        subtext="Sắp bị chấm dứt HĐ" 
-        icon={<ExclamationTriangleIcon className="w-5 h-5"/>} 
-        type="danger" 
+        title="Yêu cầu sửa chữa" 
+        value={data.unResolveRequests?.toString() || "0"} 
+        subtext="Chưa được xử lý" 
+        icon={<WrenchScrewdriverIcon className="w-5 h-5"/>} 
+        type="warning" 
       />
     </div>
   );

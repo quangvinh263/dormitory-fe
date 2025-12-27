@@ -4,8 +4,8 @@ export const ROLE_MENUS = {
   [ROLES.ADMIN]: [
     { path: '/admin', label: 'Tổng quan' },
     { path: '/admin/managers', label: 'Trưởng tòa' },
+    { path: '/admin/buildings', label: 'Tòa nhà/phòng' },
     { path: '/admin/reports', label: 'Báo cáo' },
-    { path: '/admin/logs', label: 'Nhật ký' },
     { path: '/admin/settings', label: 'Cấu hình' },
   ],
   [ROLES.MANAGER]: [
