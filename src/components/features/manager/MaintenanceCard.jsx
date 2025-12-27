@@ -73,7 +73,7 @@ export default function MaintenanceCard({ request, onAction }) {
             {/* Icon cho mô tả (nhớ import) */}
             <DocumentTextIcon className="w-4 h-4 text-gray-400 mt-0.5" /> 
             <span className="font-bold ">Mô tả:</span>
-            <span> {request.Description}</span>
+            <span> {request.description}</span>
           </div>
         </div>
 

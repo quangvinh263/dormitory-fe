@@ -18,6 +18,7 @@ import MaintenanceCard from '../../components/features/manager/MaintenanceCard';
 import MaintenanceDetailModal from '../../components/features/manager/MaintenceDetailModal';
 
 import { getMaintenanceOverview,getMaintenanceDetail,getMaintenances } from '../../services/maintenanceApi';
+
 export default function MaintenanceDashboard() {
 
     const { auth } = useContext(AuthContext)
@@ -97,8 +98,9 @@ export default function MaintenanceDashboard() {
       setLoading(false)
       return
     }
+    setLoading(true);
     const fecth =async()=>{
-      setLoading(true)
+
       try
       {
         const listRes = await getMaintenances(filter);   // API 1: Lấy danh sách     // API 2: Lấy số liệu tổng quan (Server tính sẵn)
@@ -119,7 +121,7 @@ export default function MaintenanceDashboard() {
     }
     fecth()
     return () => { mounted = false }
-  },[auth])
+  },[auth,filter])
   
   return (
     <div className="animate-fade-in-up space-y-6">
@@ -145,7 +147,11 @@ export default function MaintenanceDashboard() {
       </div>
 
       {/* 2. Bộ lọc */}
-      <MaintenanceFilter />
+      <MaintenanceFilter 
+        filter={filter} 
+        setFilter={setFilter}
+        onClear={() => setFilter({ keyword: '', status: '', equipmentName: '' })}
+        />
 
       {/* 3. Danh sách yêu cầu */}
       <div className="space-y-4">

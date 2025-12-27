@@ -8,9 +8,13 @@ import Select from '../../ui/Select';
 import Button from '../../ui/Button';
 import { getAllEquipment } from '../../../services/equipmentApi'
 
-export default function MaintenanceFilter() {
+export default function MaintenanceFilter({ filter, setFilter,onClear }) {
   const[equipments,setEquipments] = useState([]);
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
+
+  const handleChange = (field, value) => {
+    setFilter(prev => ({ ...prev, [field]: value }));
+  };
   useEffect( ()=>{
     let mounted = true;
     const fetch = async () => {
@@ -43,7 +47,8 @@ export default function MaintenanceFilter() {
           <FunnelIcon className="w-5 h-5 text-gray-500" />
           Bộ lọc tìm kiếm
         </div>
-        <button className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition-colors cursor-pointer">
+        <button className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+          onClick={onClear}>
           <XMarkIcon className="w-3 h-3" /> Xóa bộ lọc
         </button>
       </div>
@@ -54,15 +59,22 @@ export default function MaintenanceFilter() {
         {/* Search Input (Chiếm nhiều không gian hơn) */}
         <div className="lg:col-span-6">
           <Input 
-            label="Tìm kiếm"
-            placeholder="Tìm theo mã yêu cầu, phòng, sinh viên, thiết bị..." 
+            label="Tìm kiếm"  
+            placeholder="Tìm theo mã yêu cầu, phòng, sinh viên" 
             icon={<MagnifyingGlassIcon className="w-4 h-4" />} 
+            value={filter.keyword} // 1. Gán giá trị từ state
+            onChange={(e) => setFilter({ ...filter, keyword: e.target.value })}
           />
+          
         </div>
 
         {/* Trạng thái */}
         <div className="lg:col-span-3">
-          <Select label="Trạng thái">
+          <Select 
+            label="Trạng thái"
+            value={filter.status}
+            onChange={(e) => setFilter({ ...filter, status: e.target.value })}
+          >
             <option value="">Tất cả trạng thái</option>
             <option value="pending">Chờ xác nhận </option>
             <option value="confirmed">Đã xác nhận</option>
@@ -76,9 +88,8 @@ export default function MaintenanceFilter() {
         <div className="lg:col-span-3">
           <Select 
               label="Thiết bị"
-              // Nhớ thêm props value và onChange vào đây nếu chưa có
-              // value={filter.equipmentName}
-              // onChange={(e) => setFilter({...filter, equipmentName: e.target.value})}
+              value={filter.equipmentName}
+              onChange={(e) => setFilter({ ...filter, equipmentName: e.target.value })}
           >
             <option value="">Tất cả thiết bị</option>
 
