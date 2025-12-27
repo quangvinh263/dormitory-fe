@@ -8,7 +8,20 @@ export default function RequestDetailModal({ isOpen, onClose, request }) {
   const [maintenanceDetail, setMaitenanceDetail] = useState(null);
   const [loading, setLoading] = useState(false); // Sửa mặc định là false, khi nào fetch mới true
   const [error, setError] = useState('');
+  const formatDate = (dateString) => {
+    if (!dateString) return ''; // Trả về chuỗi rỗng nếu không có ngày
+    
+    const date = new Date(dateString);
+    
+    // Kiểm tra nếu ngày không hợp lệ
+    if (isNaN(date.getTime())) return '';
 
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  };
   // 2. Fetch Data
   useEffect(() => {
     // Nếu modal không mở hoặc không có request thì không fetch
@@ -50,6 +63,8 @@ export default function RequestDetailModal({ isOpen, onClose, request }) {
       case 'Pending': return <Badge type="warning">Đang chờ</Badge>;
       case 'Processing': return <Badge type="info">Đang xử lý</Badge>;
       case 'Completed': return <Badge type="success">Hoàn thành</Badge>;
+      case 'Wait Payment': return <Badge type="warning">Đang chờ thanh toán</Badge>;
+      case 'Confirmed': return <Badge type="info">Đã xác nhận</Badge>;
       default: return <Badge type="default">Khác</Badge>;
     }
   };
@@ -109,8 +124,8 @@ export default function RequestDetailModal({ isOpen, onClose, request }) {
 
             {/* Ngày gửi */}
             <div>
-              <label className="text-sm font-medium text-gray-500 block mb-1">Ngày gửi</label>
-              <p className="text-sm font-medium text-gray-900">{request.issueDate}</p>
+              <label className="text-sm font-medium text-gray-500 block mb-1">Ngày tạo yêu cầu</label>
+              <p className="text-sm font-medium text-gray-900">{formatDate(request.issueDate)}</p>
             </div>
 
             {/* --- ĐIỀU KIỆN 1: Ngày giải quyết (Chỉ hiện nếu có dữ liệu) --- */}
