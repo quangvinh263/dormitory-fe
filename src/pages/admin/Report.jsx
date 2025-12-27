@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { CalendarDaysIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 // 1. Imports Components Chung
 import ReportStats from '../../components/features/admin/ReportStats';
 import ReportMenu from '../../components/features/admin/ReportMenu'; 
+import FinanceReport from '../../components/features/admin/FinanceReport';
 
 // 2. Imports 6 Báo cáo con
 import EmptyRoomsReport from '../../components/features/admin/contents/EmptyRoomsReport';
@@ -14,11 +15,10 @@ import EquipmentReport from '../../components/features/admin/contents/EquipmentR
 import ManagerReport from '../../components/features/admin/contents/ManagerReport';
 
 const SystemReport = () => {
-  const [activeTab, setActiveTab] = useState('capacity'); // Tab chính (Công suất/Tài chính)
+  const [activeTab, setActiveTab] = useState('capacity'); // 'capacity' hoặc 'finance'
   const [currentReport, setCurrentReport] = useState('empty_rooms'); // Tab con (Phòng trống, HĐ...)
-  const [selectedYear, setSelectedYear] = useState('2024');
 
-  // Hàm render nội dung tương ứng với menu con
+  // Hàm render nội dung tương ứng với menu con (Chỉ dùng cho Công suất)
   const renderDetailReport = () => {
     switch (currentReport) {
       case 'empty_rooms': return <EmptyRoomsReport />;
@@ -34,7 +34,7 @@ const SystemReport = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-fade-in-up">
       
-      {/* 1. HEADER & TAB CHÍNH */}
+      {/* 1. HEADER & TAB CHÍNH (Phần chung) */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Báo Cáo Hệ Thống</h1>
@@ -42,7 +42,7 @@ const SystemReport = () => {
         </div>
       </div>
 
-      {/* Tabs Chính */}
+      {/* Tabs Switcher */}
       <div className="bg-gray-100 p-1 rounded-xl inline-flex">
         {['capacity', 'finance'].map((tab) => (
            <button key={tab} onClick={() => setActiveTab(tab)}
@@ -52,45 +52,42 @@ const SystemReport = () => {
         ))}
       </div>
 
-      {/* 2. STATS CARDS (Chỉ hiện ở Tab Công Suất) */}
-      {activeTab === 'capacity' && <ReportStats />}
+      {/* 2. NỘI DUNG THAY ĐỔI THEO TAB */}
+      {activeTab === 'capacity' ? (
+        <>
+            {/* Stats Cards (Chỉ hiện ở Công Suất) */}
+            <ReportStats />
 
-      {/* 3. CONTAINER BÁO CÁO CHI TIẾT */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 min-h-[500px]">
-        
-        {/* Header của Container */}
-        <div className="mb-6 pb-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h2 className="text-lg font-bold text-gray-900">Báo Cáo & Xuất Dữ Liệu</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                    {activeTab === 'capacity' 
-                      ? 'Tạo và xuất các loại báo cáo hệ thống (chỉ dành cho Quản lý và Admin)' 
-                      : 'Báo cáo chi tiết về doanh thu và công nợ'}
-                </p>
-            </div>
-            <button className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition shadow-sm">
-                <ArrowDownTrayIcon className="w-4 h-4"/> <span>Xuất báo cáo</span>
-            </button>
-        </div>
-
-        {/* Nội dung bên trong */}
-        {activeTab === 'capacity' ? (
-            <div>
-                {/* Menu Con */}
-                <ReportMenu activeTab={currentReport} onChange={setCurrentReport} />
+            {/* Container Báo cáo & Xuất dữ liệu (Khung trắng bao quanh) */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 min-h-[500px]">
                 
-                {/* Bảng Dữ Liệu */}
-                <div className="mt-4">
-                    {renderDetailReport()}
+                {/* Header của Container */}
+                <div className="mb-6 pb-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-900">Báo Cáo & Xuất Dữ Liệu</h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Tạo và xuất các loại báo cáo hệ thống (chỉ dành cho Quản lý và Admin)
+                        </p>
+                    </div>
+                    <button className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition shadow-sm">
+                        <ArrowDownTrayIcon className="w-4 h-4"/> <span>Xuất báo cáo</span>
+                    </button>
+                </div>
+
+                {/* Nội dung bên trong khung trắng */}
+                <div>
+                    <ReportMenu activeTab={currentReport} onChange={setCurrentReport} />
+                    <div className="mt-4">
+                        {renderDetailReport()}
+                    </div>
                 </div>
             </div>
-        ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                <p>Nội dung báo cáo Tài Chính đang được phát triển...</p>
-            </div>
-        )}
-
-      </div>
+        </>
+      ) : (
+        <div className="mt-2">
+            <FinanceReport />
+        </div>
+      )}
 
     </div>
   );

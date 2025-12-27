@@ -34,9 +34,8 @@ const PaymentTable = ({ data, onViewDetail }) => {
               <th className="px-6 py-3 whitespace-nowrap">Họ và tên</th>
               <th className="px-6 py-3 whitespace-nowrap">Phòng</th>
               <th className="px-6 py-3 whitespace-nowrap">Loại</th>
-              <th className="px-6 py-3 whitespace-nowrap">Tháng</th>
               <th className="px-6 py-3 whitespace-nowrap">Số tiền</th>
-              <th className="px-6 py-3 whitespace-nowrap">Ngày thanh toán</th>
+              <th className="px-6 py-3 whitespace-nowrap">Ngày tạo</th>
               <th className="px-6 py-3 whitespace-nowrap text-center">Thao tác</th>
             </tr>
           </thead>
@@ -47,9 +46,7 @@ const PaymentTable = ({ data, onViewDetail }) => {
                 <td className="px-6 py-4 text-gray-500">{item.studentId}</td>
                 <td className="px-6 py-4 font-medium text-gray-900">{item.name}</td>
                 <td className="px-6 py-4 text-gray-500">{item.room}</td>
-                <td className="px-6 py-4">{renderTypeBadge(item.type)}</td>
-                <td className="px-6 py-4 text-gray-500">{item.month || '-'}</td>
-                <td className="px-6 py-4 font-semibold text-gray-900">{item.amount}</td>
+                <td className="px-6 py-4">{renderTypeBadge(item.type)}</td>                <td className="px-6 py-4 font-semibold text-gray-900">{item.amount}</td>
                 <td className="px-6 py-4 text-gray-500 text-sm">{item.date}</td>
                 <td className="px-6 py-4 text-center">
                   <button 
