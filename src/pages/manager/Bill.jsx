@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { getReceiptsForManager } from '../../services/managerApi';
 
 // Import Modules
 import ReceiptStatusTabs from '../../components/features/manager/ReceiptStatusTabs';
@@ -8,32 +9,149 @@ import ReceiptDetailModal from '../../components/features/manager/ReceiptDetailM
 import Input from '../../components/ui/Input';
 
 export default function BillManagement() {
-  const [currentTab, setCurrentTab] = useState('completed'); 
+  const [currentTab, setCurrentTab] = useState('pending'); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [receiptsData, setReceiptsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    pageIndex: 1,
+    pageSize: 10,
+    totalPages: 0,
+    totalItems: 0
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const accountId = localStorage.getItem('accountId');
+
+  // Fetch receipts data
+  useEffect(() => {
+    const fetchReceipts = async () => {
+      try {
+        setLoading(true);
+        const requestBody = {
+          accountId: accountId,
+          pageIndex: pagination.pageIndex,
+          pageSize: pagination.pageSize
+        };
+
+        console.log('Fetching receipts with request body:', requestBody);
+        
+        const response = await getReceiptsForManager(requestBody);
+        console.log('Receipts API Response:', response);
+        
+        if (response.success) {
+          // Map API data to component format
+          const mappedData = response.data.items.map(receipt => ({
+            id: receipt.receiptId,
+            studentId: receipt.studentId,
+            name: receipt.studentName,
+            room: receipt.roomName,
+            type: receipt.paymentType === 'Utility' ? 'Điện nước' : 
+                  receipt.paymentType === 'MaintenanceFee' ? 'Bảo trì' : 
+                  receipt.paymentType === 'RenewalContract' ? 'Gia hạn hợp đồng' :
+                  receipt.paymentType === 'HealthInsurance' ? 'Bảo hiểm y tế' :
+                  receipt.paymentType === 'RoomChangeCharge' ? 'Phí đổi phòng' :  
+                  receipt.paymentType === 'Registration' ? 'Đăng ký ở' : receipt.paymentType,
+            month: receipt.paymentType === 'Utility' ? 
+                   new Date(receipt.createdDate).toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' }) : '-',
+            amount: `₫${receipt.amount.toLocaleString('vi-VN')}`,
+            date: new Date(receipt.createdDate).toLocaleDateString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            }).replace(',', ''),
+            status: receipt.status.toLowerCase() === 'pending' ? 'pending' : 
+                   receipt.status.toLowerCase() === 'completed' ? 'completed' : 'rejected'
+          }));
+          
+          setReceiptsData(mappedData);
+          setPagination(prev => ({
+            ...prev,
+            totalPages: response.data.totalPages,
+            totalItems: response.data.totalItems
+          }));
+          setError(null);
+        } else {
+          setError(response.message || 'Không thể tải dữ liệu hóa đơn');
+        }
+      } catch (err) {
+        console.error('Error fetching receipts:', err);
+        setError('Không thể tải dữ liệu hóa đơn');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (accountId) {
+      fetchReceipts();
+    } else {
+      setError('Không tìm thấy thông tin tài khoản');
+      setLoading(false);
+    }
+  }, [accountId, pagination.pageIndex, pagination.pageSize]);
 
   const handleViewDetail = (paymentItem) => {
     setSelectedPayment(paymentItem);
     setIsModalOpen(true);
   };
 
-  // Mock Data (Dựa trên hình ảnh)
-  const allData = [
-    { id: 'TT001', studentId: 'SV2024001', name: 'Nguyễn Văn A', room: 'A301', type: 'Điện nước', month: '08/2024', amount: '₫425.000', date: '10:30:00 15/8/2024', status: 'completed' },
-    { id: 'TT002', studentId: 'SV2024002', name: 'Trần Thị B', room: 'A205', type: 'Gia hạn', month: '-', amount: '₫1.200.000', date: '14:20:00 14/8/2024', status: 'completed' },
-    { id: 'TT003', studentId: 'SV2024003', name: 'Lê Văn C', room: 'A402', type: 'Bảo hiểm', month: '-', amount: '₫250.000', date: '09:15:00 13/8/2024', status: 'completed' },
-    { id: 'TT004', studentId: 'SV2024004', name: 'Phạm Thị D', room: 'A101', type: 'Điện nước', month: '08/2024', amount: '₫380.000', date: '16:45:00 12/8/2024', status: 'completed' },
-  ];
-
-  // Tính toán số lượng cho Badge và Tabs
-  const counts = {
-    pending: 0,
-    completed: allData.filter(i => i.status === 'completed').length,
-    rejected: 0
+  const handlePageChange = (newPageIndex) => {
+    setPagination(prev => ({
+      ...prev,
+      pageIndex: newPageIndex
+    }));
   };
 
-  // Lọc dữ liệu theo tab
-  const filteredData = allData.filter(item => item.status === currentTab);
+  const handleTabChange = (newTab) => {
+    setCurrentTab(newTab);
+    setPagination(prev => ({
+      ...prev,
+      pageIndex: 1 // Reset to first page when changing tab
+    }));
+  };
+
+  // Tính toán số lượng cho Badge và Tabs từ dữ liệu thực
+  const counts = {
+    pending: receiptsData.filter(i => i.status === 'pending').length,
+    completed: receiptsData.filter(i => i.status === 'completed').length,
+    rejected: receiptsData.filter(i => i.status === 'rejected').length
+  };
+
+  // Lọc dữ liệu theo tab và search term
+  const filteredData = receiptsData.filter(item => {
+    const matchesTab = item.status === currentTab;
+    const matchesSearch = searchTerm === '' || 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.room.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesTab && matchesSearch;
+  });
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in-up space-y-6 pb-10">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="animate-fade-in-up space-y-6 pb-10">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in-up space-y-6 pb-10">
@@ -44,7 +162,10 @@ export default function BillManagement() {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-gray-900">Xác Nhận Thanh Toán</h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">Xác nhận và quản lý các khoản thanh toán của sinh viên</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Xác nhận và quản lý các khoản thanh toán của sinh viên 
+            ({pagination.totalItems} tổng cộng)
+          </p>
         </div>
       </div>
 
@@ -55,7 +176,9 @@ export default function BillManagement() {
           <Input 
             placeholder="Tìm kiếm theo tên, MSSV, phòng..." 
             icon={<MagnifyingGlassIcon className="w-4 h-4" />}
-            className="bg-gray-50 border-gray-100" // Style nhẹ nhàng như thiết kế
+            className="bg-gray-50 border-gray-100"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
@@ -63,7 +186,7 @@ export default function BillManagement() {
         <div className="flex justify-start">
             <ReceiptStatusTabs 
                 currentTab={currentTab} 
-                onTabChange={setCurrentTab} 
+                onTabChange={handleTabChange} 
                 counts={counts}
             />
         </div>
@@ -74,6 +197,31 @@ export default function BillManagement() {
         data={filteredData}
         onViewDetail={handleViewDetail}
       />
+
+      {/* 4. Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            onClick={() => handlePageChange(pagination.pageIndex - 1)}
+            disabled={pagination.pageIndex === 1}
+            className="px-3 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            Trước
+          </button>
+          
+          <span className="px-4 py-2 text-sm text-gray-600">
+            Trang {pagination.pageIndex} / {pagination.totalPages}
+          </span>
+          
+          <button
+            onClick={() => handlePageChange(pagination.pageIndex + 1)}
+            disabled={pagination.pageIndex === pagination.totalPages}
+            className="px-3 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            Sau
+          </button>
+        </div>
+      )}
 
       {/* Modal Chi tiết */}
       <ReceiptDetailModal 

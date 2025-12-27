@@ -8,8 +8,11 @@ const PaymentTable = ({ data, onViewDetail }) => {
   const renderTypeBadge = (type) => {
     const typeStyles = {
       'Điện nước': 'bg-blue-50 text-blue-700 border-blue-100',
-      'Gia hạn': 'bg-purple-50 text-purple-700 border-purple-100',
-      'Bảo hiểm': 'bg-green-50 text-green-700 border-green-100',
+      'Đăng ký ở': 'bg-purple-50 text-purple-700 border-purple-100',
+      'Bảo hiểm y tế': 'bg-green-50 text-green-700 border-green-100',
+      'Phí đổi phòng': 'bg-yellow-50 text-yellow-700 border-yellow-100',
+      'Bảo trì': 'bg-red-50 text-red-700 border-red-100',
+      'Gia hạn hợp đồng': 'bg-indigo-50 text-indigo-700 border-indigo-100',
     };
     
     // Sử dụng custom class cho Badge nếu component Badge hỗ trợ className
