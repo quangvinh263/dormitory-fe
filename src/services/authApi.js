@@ -50,7 +50,7 @@ export const signIn = async(data) => {
             refreshtoken: response.data.refreshToken, 
             accountId: response.data.userId,
             hasActiveContract: response.data.hasActiveContract,
-            hasActiveContract: response.data.hasTerminatedContract,
+            hasTerminatedContract: response.data.hasTerminatedContract,
          };
     }
     return { success: false, message: response.data?.message || 'Sign in failed' };

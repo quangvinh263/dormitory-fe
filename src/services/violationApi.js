@@ -61,3 +61,15 @@ export const createViolationReport = async (data) => {
         return { success: false, message: error.response?.data?.message || 'Error creating violation report' };
     }
 };
+
+export const getViolationsByStudentAccount = async (accountId) => {
+    try {
+        const response = await axios.get(`${API_URL}/Violation/student/account/${accountId}`);
+        if (response.status === 200 || response.data.success) {
+            return { success: true, data: response.data?.data || [] };
+        }
+        return { success: false, message: response.data?.message || 'Failed to fetch violations for student account' };
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error fetching violations for student account' };
+    }
+};
