@@ -27,7 +27,7 @@ export default function Maintenance() {
   const [error, setError] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-
+  const [roomName,setRoomName] = useState(null);
   
   useEffect(() => {
         let mounted = true;
@@ -65,6 +65,7 @@ export default function Maintenance() {
 
                 if (contractRes.success && contractRes.data)
                 {
+                  setRoomName(contractRes.data.roomName);
                   const listThietBi = contractRes.data.equipments;
                   if (Array.isArray(listThietBi)) {
                       setEquipments(listThietBi); // Gán đúng dữ liệu vào
@@ -109,19 +110,10 @@ export default function Maintenance() {
     };
     setLoading(true);
     try
-    {
+    {   
+        console.log(roomName);
         const res = await createMaintenanceRequest(payload);
         if (res.success) {
-          const newRequestForUI = {
-          maintenanceID: res.data?.maintenanceID || res.data?.id || Date.now(), // Lấy ID từ server hoặc tạo tạm
-          studentId: studentId,
-          equipmentName: "Đang cập nhật...", // Hoặc map từ mảng equipments nếu muốn hiển thị ngay tên
-          description: payload.description,
-          status: 'Pending', // Mặc định là đang chờ
-          issueDate: new Date().toLocaleDateString('en-GB'),
-          repairCost: 0
-          };
-          setRequests(prev => [newRequestForUI, ...prev]);
           setIsCreateModalOpen(false);
           alert("Gửi yêu cầu thành công!");
         } else {
