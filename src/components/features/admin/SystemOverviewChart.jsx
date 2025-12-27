@@ -31,7 +31,6 @@ const SystemOverviewChart = () => {
           const mappedData = result.data.map((item, index) => ({
             name: item.buildingName,
             fill: item.occupancyRate, // % Lấp đầy
-            // Chia cho 1 triệu để hiển thị gọn (VD: 120000000 -> 120)
             revenue: (item.monthlyRevenue / 1000000).toFixed(1), // Giữ 1 số thập phân nếu cần
             // Gán màu theo thứ tự index, dùng toán tử % để vòng lặp lại màu
             color: COLORS[index % COLORS.length]
