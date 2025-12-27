@@ -7,8 +7,8 @@ const BuildingModal = ({ isOpen, onClose, initialData }) => {
   useEffect(() => {
     if (initialData) {
       setFormData({ 
-          BuildingName: initialData.BuildingName, 
-          ManagerID: initialData.ManagerID 
+          BuildingName: initialData.buildingName, 
+          ManagerID: initialData.managerID 
       });
     } else {
       setFormData({ BuildingName: '', ManagerID: '' });

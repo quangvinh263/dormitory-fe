@@ -18,12 +18,15 @@ import {
   getBuildingsWithManager, 
   getRoomsResponseByManager 
 } from '../../services/buildingApi';
+import { getRoomTypesInRegistration } from '../../services/roomTypeApi';
+import { updateRoom } from '../../services/roomApi';
 
 const BuildingManagement = () => {
   // --- STATE ---
   const [buildings, setBuildings] = useState([]);
   const [buildingsWithManager, setBuildingsWithManager] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [roomTypes, setRoomTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBuildingID, setSelectedBuildingID] = useState(null);
@@ -33,13 +36,7 @@ const BuildingManagement = () => {
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isRoomTypeModalOpen, setIsRoomTypeModalOpen] = useState(false);
-
-  // Mock room types (vì API chưa có)
-  const [roomTypes] = useState([
-    { RoomTypeID: 'RT-08', TypeName: 'Phòng 8 người', Capacity: 8, Price: 800000, Description: 'Phòng tiêu chuẩn' },
-    { RoomTypeID: 'RT-06', TypeName: 'Phòng 6 người', Capacity: 6, Price: 1200000, Description: 'Phòng dịch vụ' },
-    { RoomTypeID: 'RT-04', TypeName: 'Phòng 4 người', Capacity: 4, Price: 1800000, Description: 'Phòng VIP' },
-  ]);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // --- LOAD DATA FROM API ---
   useEffect(() => {
@@ -126,6 +123,24 @@ const BuildingManagement = () => {
     }
   };
 
+  const loadRoomTypes = async () => {
+    try {
+      const roomTypesResponse = await getRoomTypesInRegistration();
+      console.log('Room Types Response:', roomTypesResponse);
+      
+      if (roomTypesResponse.success) {
+        setRoomTypes(roomTypesResponse.data);
+        return roomTypesResponse.data;
+      } else {
+        console.error('Failed to load room types:', roomTypesResponse.message);
+        return [];
+      }
+    } catch (err) {
+      console.error('Error loading room types:', err);
+      return [];
+    }
+  };
+
   // --- HANDLERS ---
   const handleBuildingSelect = async (buildingData) => {
     setSelectedBuildingID(buildingData.buildingID);
@@ -145,9 +160,79 @@ const BuildingManagement = () => {
     setIsBuildingModalOpen(true);
   };
 
-  const handleEditRoom = (room) => {
+  const handleOpenBuildingModal = () => {
+    setEditingItem(null);
+    setIsBuildingModalOpen(true);
+  };
+
+  const handleEditRoom = async (room) => {
+    setModalLoading(true);
+    
+    // Load room types trước khi mở modal
+    await loadRoomTypes();
+    
     setEditingItem(room);
     setIsRoomModalOpen(true);
+    setModalLoading(false);
+  };
+
+  const handleOpenRoomModal = async () => {
+    setModalLoading(true);
+    
+    // Load room types trước khi mở modal
+    await loadRoomTypes();
+    
+    setEditingItem(null);
+    setIsRoomModalOpen(true);
+    setModalLoading(false);
+  };
+
+  const handleOpenRoomTypeModal = async () => {
+    setModalLoading(true);
+    
+    // Load room types trước khi mở modal
+    await loadRoomTypes();
+    
+    setIsRoomTypeModalOpen(true);
+    setModalLoading(false);
+  };
+
+  // Handle Room Form Submit (Create/Update)
+  const handleRoomSubmit = async (formData) => {
+    try {
+      if (editingItem) {
+        // UPDATE MODE: Gọi API Update Room
+        const updateData = {
+          roomID: editingItem.roomID,
+          gender: formData.Gender === 'Nam' ? 'Male' : 'Female', // Convert Vietnamese to English
+          roomStatus: formData.RoomStatus || "",
+          isUnderMaintenance: formData.IsUnderMaintenance,
+          isBeingCleaned: formData.IsBeingCleaned
+        };
+
+        console.log("Update Room Data:", updateData);
+        
+        const response = await updateRoom(updateData);
+        
+        if (response.success) {
+          alert("Cập nhật phòng thành công!");
+          setIsRoomModalOpen(false);
+          // Reload rooms để hiển thị data mới
+          if (selectedManagerID) {
+            await loadRoomsByManager(selectedManagerID);
+          }
+        } else {
+          alert(`Lỗi: ${response.message}`);
+        }
+      } else {
+        // CREATE MODE: Placeholder - API chưa có
+        console.log("Create New Room Data:", formData);
+        alert("Chức năng tạo phòng mới đang được phát triển!");
+      }
+    } catch (error) {
+      console.error('Error submitting room form:', error);
+      alert('Có lỗi xảy ra khi xử lý yêu cầu!');
+    }
   };
 
   // Filter Data
@@ -155,7 +240,7 @@ const BuildingManagement = () => {
   const currentBuilding = buildingsWithManager.find(b => b.buildingID === selectedBuildingID);
 
   // Helpers
-  const getRoomType = (id) => roomTypes.find(t => t.RoomTypeID === id);
+  const getRoomType = (id) => roomTypes.find(t => t.roomTypeID === id);
   const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
   // Helper render status
@@ -217,8 +302,9 @@ const BuildingManagement = () => {
               <BuildingOffice2Icon className="w-5 h-5"/> Danh sách Tòa ({buildingsWithManager.length})
             </h3>
             <button 
-              onClick={() => { setEditingItem(null); setIsBuildingModalOpen(true); }}
+              onClick={handleOpenBuildingModal}
               className="p-1.5 bg-white border hover:bg-gray-100 rounded-lg text-blue-600 transition"
+              disabled={modalLoading}
             >
               <PlusIcon className="w-5 h-5"/>
             </button>
@@ -243,9 +329,7 @@ const BuildingManagement = () => {
                     <p className="text-xs text-gray-500 mt-1">
                       Quản lý: {b.managerName}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      {rooms.length} phòng
-                    </p>
+
                   </div>
                   <div className={`flex gap-1 ${selectedBuildingID === b.buildingID ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                     <button onClick={(e) => handleEditBuilding(e, b)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md">
@@ -272,19 +356,29 @@ const BuildingManagement = () => {
              </div>
             <div className="flex gap-3">
                  <button 
-                    onClick={() => setIsRoomTypeModalOpen(true)}
+                    onClick={handleOpenRoomTypeModal}
                     className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition"
                     title="Cấu hình giá và loại phòng"
+                    disabled={modalLoading}
                  >
-                   <SwatchIcon className="w-5 h-5 text-green-600"/> 
+                   {modalLoading ? (
+                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                   ) : (
+                     <SwatchIcon className="w-5 h-5 text-green-600"/>
+                   )}
                    <span className="hidden sm:inline">QL Loại phòng</span>
                  </button>
 
                  <button 
-                    onClick={() => { setEditingItem(null); setIsRoomModalOpen(true); }}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
+                    onClick={handleOpenRoomModal}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                    disabled={modalLoading}
                  >
-                   <PlusIcon className="w-5 h-5"/> 
+                   {modalLoading ? (
+                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                   ) : (
+                     <PlusIcon className="w-5 h-5"/>
+                   )}
                    <span className="hidden sm:inline">Thêm phòng</span>
                  </button>
              </div>
@@ -331,7 +425,11 @@ const BuildingManagement = () => {
                               </td>
 
                               <td className="px-6 py-4 text-center">
-                                  <button onClick={() => handleEditRoom(room)} className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-md">
+                                  <button 
+                                    onClick={() => handleEditRoom(room)} 
+                                    className="text-blue-600 hover:bg-blue-50 p-1.5 rounded-md disabled:opacity-50"
+                                    disabled={modalLoading}
+                                  >
                                       <PencilSquareIcon className="w-5 h-5"/>
                                   </button>
                               </td>
@@ -349,21 +447,26 @@ const BuildingManagement = () => {
       <BuildingModal 
         isOpen={isBuildingModalOpen} 
         onClose={() => setIsBuildingModalOpen(false)} 
-        initialData={editingItem} 
+        initialData={editingItem}
+        buildings={buildings} // Truyền danh sách tòa nhà
       />
+      
       <RoomModal 
         isOpen={isRoomModalOpen} 
         onClose={() => setIsRoomModalOpen(false)} 
-        initialData={editingItem} 
+        initialData={editingItem}
+        currentBuildingID={selectedBuildingID}
         currentBuildingName={currentBuilding?.buildingName}
-        roomTypes={roomTypes}
+        roomTypes={roomTypes} // Truyền room types đã fetch
+        isEditMode={!!editingItem} // Truyền flag để biết là edit hay create
+        onSubmit={handleRoomSubmit} // Truyền handler để xử lý submit
       />
 
       <RoomTypeModal 
         isOpen={isRoomTypeModalOpen}
         onClose={() => setIsRoomTypeModalOpen(false)}
-        roomTypes={roomTypes}
-        onUpdateRoomTypes={() => {}} // Placeholder vì roomTypes là mock data
+        roomTypes={roomTypes} // Truyền room types đã fetch
+        onUpdateRoomTypes={(updatedRoomTypes) => setRoomTypes(updatedRoomTypes)} // Callback để update state
       />
 
     </div>
