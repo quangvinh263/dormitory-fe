@@ -13,11 +13,11 @@ const EquipmentReport = () => {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-white">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Mã TB</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Tên thiết bị</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Vị trí</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Tình trạng</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Ghi chú</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Mã TB</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Tên thiết bị</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Vị trí</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Tình trạng</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Ghi chú</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">

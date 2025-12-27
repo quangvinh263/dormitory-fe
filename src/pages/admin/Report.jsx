@@ -32,19 +32,13 @@ const SystemReport = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in-up">
+    <div className="max-w-7xl mx-auto space-y-6 animate-fade-in-up">
       
       {/* 1. HEADER & TAB CHÍNH */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Báo Cáo Hệ Thống</h1>
           <p className="text-sm text-gray-500 mt-1">Phân tích và thống kê tổng quan</p>
-        </div>
-        <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700">
-              <CalendarDaysIcon className="w-4 h-4 text-gray-500"/>
-              <span>Năm {selectedYear}</span>
-            </div>
         </div>
       </div>
 
@@ -75,7 +69,7 @@ const SystemReport = () => {
                 </p>
             </div>
             <button className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition shadow-sm">
-                <ArrowDownTrayIcon className="w-4 h-4"/> <span>Xuất toàn bộ</span>
+                <ArrowDownTrayIcon className="w-4 h-4"/> <span>Xuất báo cáo</span>
             </button>
         </div>
 

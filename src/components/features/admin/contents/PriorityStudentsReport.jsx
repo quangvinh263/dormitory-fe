@@ -13,11 +13,11 @@ const PriorityStudentsReport = () => {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-white">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">MSSV</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Họ tên</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Phòng</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Diện ưu tiên</th>
-            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Chính sách</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">MSSV</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Họ tên</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Phòng</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Diện ưu tiên</th>
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Chính sách</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
