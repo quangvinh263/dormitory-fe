@@ -4,103 +4,125 @@ import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import ManagerTable from '../../components/features/admin/ManagerTable';
 import DeleteManagerModal from '../../components/features/admin/DeleteManagerModal';
 import ManagerFormModal from '../../components/features/admin/ManagerFormModal';
-import { getAllManagers } from '../../services/managerApi';
-import { getBuildingsForRegistration } from '../../services/buildingApi';
+import { getAllManagers, updateManager, createManager, deleteManager } from '../../services/managerApi';
 
 const ManagerManagement = () => {
   const [managers, setManagers] = useState([]);
-  const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingManager, setEditingManager] = useState(null); // null = Create Mode, object = Edit Mode
+  const [editingManager, setEditingManager] = useState(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingManager, setDeletingManager] = useState(null);
 
   // Fetch managers data from API
   useEffect(() => {
-    const fetchManagers = async () => {
-      try {
-        setLoading(true);
-        const response = await getAllManagers();
-        console.log('Managers API Response:', response);
-        
-        if (response.success) {
-          // Map API data to component format with new fields
-          const mappedManagers = response.data.map(manager => ({
-            id: manager.managerID,
-            code: manager.managerID,
-            name: manager.fullName,
-            email: manager.email,
-            phone: manager.phoneNumber,
-            address: manager.address,
-            citizenId: manager.citizenId,
-            dateOfBirth: manager.dateOfBirth ? new Date(manager.dateOfBirth).toISOString().split('T')[0] : '', // Format for input date
-            building: manager.buildingDto?.buildingName || 'Chưa phân công',
-            buildingId: manager.buildingDto?.buildingID
-          }));
-          
-          setManagers(mappedManagers);
-          setError(null);
-        } else {
-          setError(response.message || 'Không thể tải dữ liệu trưởng tòa');
-        }
-      } catch (err) {
-        console.error('Error fetching managers:', err);
-        setError('Không thể tải dữ liệu trưởng tòa');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchManagers();
   }, []);
 
-  // Fetch buildings for dropdown when opening modal
-  const fetchBuildings = async () => {
+  const fetchManagers = async () => {
     try {
-      const response = await getBuildingsForRegistration();
-      console.log('Buildings API Response:', response);
+      setLoading(true);
+      const response = await getAllManagers();
+      console.log('Managers API Response:', response);
       
       if (response.success) {
-        setBuildings(response.data || []);
+        // Map API data to component format with new fields
+        const mappedManagers = response.data.map(manager => ({
+          id: manager.managerID,
+          code: manager.managerID,
+          name: manager.fullName,
+          email: manager.email,
+          phone: manager.phoneNumber,
+          address: manager.address,
+          citizenId: manager.citizenId,
+          dateOfBirth: manager.dateOfBirth ? new Date(manager.dateOfBirth).toISOString().split('T')[0] : '',
+          building: manager.buildingDto?.buildingName || 'Chưa phân công',
+          buildingId: manager.buildingDto?.buildingID
+        }));
+        
+        setManagers(mappedManagers);
+        setError(null);
       } else {
-        console.error('Failed to fetch buildings:', response.message);
+        setError(response.message || 'Không thể tải dữ liệu trưởng tòa');
       }
     } catch (err) {
-      console.error('Error fetching buildings:', err);
+      console.error('Error fetching managers:', err);
+      setError('Không thể tải dữ liệu trưởng tòa');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleOpenCreate = async () => {
+  const handleOpenCreate = () => {
     setEditingManager(null);
-    await fetchBuildings(); // Load buildings before opening modal
     setIsFormModalOpen(true);
   };
 
   // Mở modal sửa
-  const handleOpenEdit = async (manager) => {
+  const handleOpenEdit = (manager) => {
     setEditingManager(manager);
-    await fetchBuildings(); // Load buildings before opening modal
     setIsFormModalOpen(true);
   };
 
   // Xử lý Submit Form (Create & Update)
-  const handleFormSubmit = (formData) => {
-    if (editingManager) {
-      // Logic gọi API Update
-      console.log("Update Manager ID:", editingManager.id, "Data:", formData);
-      alert("Đã cập nhật thành công!");
-    } else {
-      // Logic gọi API Create
-      console.log("Create New Manager Data:", formData);
-      alert("Đã thêm mới thành công!");
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (editingManager) {
+        // UPDATE MODE: Gọi API Update
+        const updateData = {
+          managerID: editingManager.id,
+          fullName: formData.FullName,
+          citizenId: formData.CitizenID,
+          dateOfBirth: formData.DateOfBirth,
+          phoneNumber: formData.PhoneNumber,
+          address: formData.Address
+        };
+
+        console.log("Update Manager Data:", updateData);
+        
+        const response = await updateManager(updateData);
+        
+        if (response.success) {
+          alert("Cập nhật thông tin trưởng tòa thành công!");
+          setIsFormModalOpen(false);
+          // Reload danh sách managers
+          fetchManagers();
+        } else {
+          alert(`Lỗi: ${response.message}`);
+        }
+      } else {
+        // CREATE MODE: Gọi API Create
+        const createData = {
+          email: formData.Email,
+          password: formData.Password,
+          fullName: formData.FullName,
+          phoneNumber: formData.PhoneNumber,
+          address: formData.Address,
+          citizenId: formData.CitizenID,
+          dateOfBirth: formData.DateOfBirth
+        };
+
+        console.log("Create New Manager Data:", createData);
+        
+        const response = await createManager(createData);
+        
+        if (response.success) {
+          alert("Tạo tài khoản trưởng tòa thành công!");
+          setIsFormModalOpen(false);
+          // Reload danh sách managers
+          fetchManagers();
+        } else {
+          alert(`Lỗi: ${response.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Có lỗi xảy ra khi xử lý yêu cầu!');
     }
-    setIsFormModalOpen(false);
-    // Sau khi API thành công thì gọi reload data...
   };
 
   // Mở modal xóa
@@ -110,9 +132,14 @@ const ManagerManagement = () => {
   };
 
   // Xác nhận xóa
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     console.log("Delete Manager ID:", deletingManager.id);
-    // Gọi API Delete...
+    const response = await deleteManager(deletingManager.id);
+    if (!response.success) {
+      alert(`Lỗi: ${response.message}`);
+      return;
+    }
+    window.location.reload();
     alert(`Đã xóa trưởng tòa ${deletingManager.name}`);
     setIsDeleteModalOpen(false);
     setDeletingManager(null);
@@ -212,7 +239,6 @@ const ManagerManagement = () => {
         onClose={() => setIsFormModalOpen(false)}
         onSubmit={handleFormSubmit}
         initialData={editingManager}
-        buildings={buildings} // Pass buildings for dropdown
       />
 
       {/* Delete Confirmation Modal */}
