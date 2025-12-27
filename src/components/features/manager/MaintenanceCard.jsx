@@ -5,7 +5,8 @@ import {
   WrenchScrewdriverIcon, 
   UserIcon,
   HomeModernIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  BanknotesIcon 
 } from '@heroicons/react/24/outline';
 
 // Import UI Components
@@ -15,7 +16,20 @@ import Button from '../../ui/Button';
 export default function MaintenanceCard({ request, onAction }) {
   const formatMoney = (amount) => 
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const formatDate = (dateString) => {
+    if (!dateString) return ''; // Trả về chuỗi rỗng nếu không có ngày
+    
+    const date = new Date(dateString);
+    
+    // Kiểm tra nếu ngày không hợp lệ
+    if (isNaN(date.getTime())) return '';
 
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  };
   // Helper: Chọn Badge Type và Label
   const getStatusConfig = (status) => {
     switch (status) {
@@ -81,7 +95,7 @@ export default function MaintenanceCard({ request, onAction }) {
         <div className="flex items-center gap-4 text-xs text-gray-500 pt-1">
           <div className="flex items-center gap-1.5">
             <CalendarDaysIcon className="w-3.5 h-3.5" />
-            <span>{request.issueDate}</span>
+            <span>{formatDate(request.issueDate)}</span>
           </div>
           <div className="pt-1 flex items-center gap-1.5 text-blue-600 font-medium">
             <CurrencyDollarIcon className="w-3.5 h-3.5 gap-1.5" />
@@ -95,10 +109,10 @@ export default function MaintenanceCard({ request, onAction }) {
         <Button 
           variant="white" 
           size="sm" 
-          className="border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
+          className="border-gray-200 text-blue-700 hover:bg-blue-50 shadow-sm"
           onClick={() => onAction(request)}
         >
-          Cập nhật
+          Xem chi tiết & Chỉnh sửa
         </Button>
       </div>
 

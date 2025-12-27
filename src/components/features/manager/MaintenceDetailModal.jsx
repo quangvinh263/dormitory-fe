@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react'
 import { 
   WrenchScrewdriverIcon, 
   XMarkIcon, 
@@ -9,7 +9,8 @@ import {
   ClockIcon,
   CurrencyDollarIcon,
   PencilSquareIcon,
-  CheckBadgeIcon
+  CheckBadgeIcon,
+  BanknotesIcon 
 } from '@heroicons/react/24/outline';
 
 import { getMaintenanceDetail,updateMaintenanceStatus } from '../../../services/maintenanceApi';
@@ -20,17 +21,34 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
   const [note, setNote] = useState(request.ManagerNote || '');
   const [cost, setCost] = useState(request.RepairCost || 0);
   const [isLoading, setIsLoading] = useState(false);
+  const [detail,setDetail] = useState(null);
+  const [currentRequest, setCurrentRequest] = useState(request);
 
   const handleConfirm = async (status) => {
     // 1. Bật trạng thái loading để chặn click nhiều lần
     setIsLoading(true);
 
+    let submitNote = '';
+    let submitCost = 0;
+
+    if (status === 'Wait Payment') {
+        submitNote = note; // State 'note'
+        submitCost = Number(cost); // State 'cost' (Chuyển string sang number)
+    } 
+    else if (status === 'Confirmed') {
+        submitNote = 'Đã xác nhận yêu cầu, đang điều phối thợ.';
+        submitCost = 0;
+    }
+    else if (status === 'Processing') {
+        submitNote = 'Bắt đầu tiến hành sửa chữa.';
+        submitCost = 0;
+    }
     // 2. Chuẩn bị dữ liệu theo đúng DTO của C#
     const payload = {
         requestId: request.maintenanceID, // Map với DTO: RequestId
         newStatus: status,           // Map với DTO: NewStatus
-        managerNote: 'Đã xác nhận yêu cầu, đang điều phối thợ tới sửa.', // Map với DTO: ManagerNote (Có thể để null)
-        repairCost: 0                     // Map với DTO: RepairCost (Mặc định 0 khi mới xác nhận)
+        managerNote: submitNote,
+        repairCost: submitCost                     // Map với DTO: RepairCost (Mặc định 0 khi mới xác nhận)
     };
 
     try {
@@ -143,9 +161,53 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
       };
   }
 };
+  const formatDate = (dateString) => {
+    if (!dateString) return ''; // Trả về chuỗi rỗng nếu không có ngày
+    
+    const date = new Date(dateString);
+    
+    // Kiểm tra nếu ngày không hợp lệ
+    if (isNaN(date.getTime())) return '';
 
-  const statusInfo = getStatusStyle(request.status);
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  };
 
+  const statusInfo = getStatusStyle(currentRequest.status);
+  useEffect(() => {
+    const fetchData = async () => {
+        if (!request?.maintenanceID) return;
+
+        try {
+            const detailRes = await getMaintenanceDetail(request.maintenanceID);
+            
+            if (detailRes.data) {
+                const freshData = detailRes.data;
+                
+                // 1. Cập nhật dữ liệu hiển thị chính
+                setCurrentRequest(freshData);
+
+                // 2. QUAN TRỌNG: Cập nhật luôn các ô input (Note, Cost) 
+                // để hiển thị đúng những gì đã lưu trong Database
+                setNote(freshData.ManagerNote || '');
+                setCost(freshData.RepairCost || 0);
+            }
+        } catch (error) {
+            console.error("Lỗi lấy chi tiết:", error);
+        }
+    };
+
+    fetchData();
+
+    // Reset lại dữ liệu khi ID thay đổi (tránh hiện dữ liệu của request cũ)
+    setCurrentRequest(request);
+    setNote(request.ManagerNote || '');
+    setCost(request.RepairCost || 0);
+
+}, [request.maintenanceID]); // Chạy lại khi ID thay đổi
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
@@ -166,7 +228,7 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
               Chi tiết Yêu cầu Sửa chữa
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Mã yêu cầu: <span className="font-medium text-gray-900">{request.maintenanceID}</span>
+              Mã yêu cầu: <span className="font-medium text-gray-900">{currentRequest.maintenanceID}</span>
             </p>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 cursor-pointer">
@@ -180,7 +242,7 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
           {/* Trạng thái hiện tại */}
           <div className={`flex items-center gap-4 p-4 rounded-lg border ${statusInfo.bg} ${statusInfo.border} mb-6`}>
             <div className={`p-2 rounded-full bg-white/60 ${statusInfo.text}`}>
-              {getStatusIcon(request.status)}
+              {getStatusIcon(currentRequest.status)}
             </div>
             <div>
               <p className={`font-bold text-sm tracking-wide ${statusInfo.text}`}>{statusInfo.label}</p>
@@ -192,49 +254,51 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><MapPinIcon className="w-3 h-3"/> Số Phòng</p>
-              <p className="font-semibold text-gray-900">{request.roomName}</p>
+              <p className="font-semibold text-gray-900">{currentRequest.roomName}</p>
             </div>
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><WrenchScrewdriverIcon className="w-3 h-3"/> Tên thiết bị</p>
-              <p className="font-semibold text-gray-900 truncate" title={request.EquipmentID}>{request.equipmentName}</p>
+              <p className="font-semibold text-gray-900 truncate" title={currentRequest.EquipmentID}>{currentRequest.equipmentName}</p>
             </div>
           </div>
 
           <div className="bg-gray-50 p-3 rounded-lg mb-4">
             <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><UserIcon className="w-3 h-3"/> Người Báo Cáo</p>
-            <p className="font-medium text-gray-900">{request.studentName} <span className="text-gray-400 font-normal"></span></p>
+            <p className="font-medium text-gray-900">{currentRequest.studentName} <span className="text-gray-400 font-normal"></span></p>
           </div>
 
           {/* Description */}
           <div className="border border-gray-200 rounded-lg p-4 mb-4">
             <h4 className="text-xs font-bold text-gray-500  mb-2">Mô tả </h4>
-            <p className="text-gray-800 text-sm italic">  {request.description}</p>
+            <p className="text-gray-800 text-sm italic">  {currentRequest.description}</p>
             <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-400">
-               <CalendarDaysIcon className="w-4 h-4"/> Ngày yêu cầu: {request.issueDate}
+               <CalendarDaysIcon className="w-4 h-4"/> Ngày yêu cầu: {formatDate(currentRequest.issueDate)}
             </div>
           </div>
 
           {/* Input Fields */}
-          {request.status === 'Completed' && (
+          {currentRequest.status === 'Completed' && (
             <div className="bg-green-50 border border-green-100 rounded-lg p-4 space-y-2">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600 flex items-center gap-1"><CurrencyDollarIcon className="w-4 h-4"/> Chi phí:</span>
-                <span className="font-bold text-green-700 text-lg">{formatCurrency(request.repairCost)}</span>
+                <span className="font-bold text-green-700 text-lg">{formatCurrency(currentRequest.repairCost)}</span>
               </div>
-              {request.ManagerNote && (
+              {currentRequest.managerNote && (
                  <div className="text-sm">
-                   <span className="text-gray-600 flex items-center gap-1 mb-1"><PencilSquareIcon className="w-4 h-4"/> Ghi chú:</span>
-                   <p className="text-gray-800 bg-white p-2 rounded border border-green-100">{request.managerNote}</p>
+                   <span className="text-gray-600 flex items-center gap-1 mb-1"><PencilSquareIcon className="w-4 h-4"/> Ghi chú từ quản lý :</span>
+                   <p className="text-gray-800 bg-white p-2 rounded border border-green-100">{currentRequest.managerNote}</p>
                  </div>
               )}
-              {request.ResolvedDate && (
-                 <div className="text-xs text-gray-500 text-right mt-1">ResolvedDate: {request.resolveDate}</div>
+              {currentRequest.resolvedDate && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-400">
+                    <CalendarDaysIcon className="w-4 h-4"/> Ngày sửa chữa hoàn tất: {formatDate(currentRequest.resolvedDate)}
+                  </div>
               )}
             </div>
           )}
           
 
-          {request.status === 'Processing' && (
+          {currentRequest.status === 'Processing' && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
               <h4 className="text-sm font-bold text-gray-700 border-b pb-2">Cập nhật kết quả:</h4>
               
@@ -269,7 +333,7 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
         <div className="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-between gap-3 shrink-0">
           
           
-          {request.status === 'Pending' && (
+          {currentRequest.status === 'Pending' && (
             <div>
               {/* Nút Xác nhận yêu cầu (Yêu cầu của bạn) */}
               <button 
@@ -282,7 +346,7 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
               </button>
             </div>
           )}
-          {request.status === 'Confirmed' && (
+          {currentRequest.status === 'Confirmed' && (
             <button 
               onClick={() => handleConfirm("Processing")}
               disabled={isLoading}
@@ -290,9 +354,12 @@ export default function RepairDetailModal({ request, onClose,onRefresh }) {
               <CheckCircleIcon className="w-4 h-4"/> Xác nhận bắt đầu sửa chữa
             </button>
           )}
-          {request.status === 'Processing' && (
-            <button className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm flex items-center gap-2 cursor-pointer">
-              <CheckCircleIcon className="w-4 h-4"/> Xác nhận Hoàn thành
+          {currentRequest.status === 'Processing' && (
+            <button 
+              onClick={() => handleConfirm("Wait Payment",)}
+              disabled={isLoading}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm flex items-center gap-2 cursor-pointer">
+              <CheckCircleIcon className="w-4 h-4"/> Xác nhận sửa chữa thành công.
             </button>
           )}
 

@@ -188,6 +188,7 @@ export default function MaintenanceDashboard() {
         <MaintenanceDetailModal 
           request={selectedRequest} 
           onClose={handleCloseModal} 
+          
           onRefresh={() => setRefreshKey(old => old + 1)}
         />
       )} 
