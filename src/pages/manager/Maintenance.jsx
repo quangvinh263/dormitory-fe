@@ -25,7 +25,7 @@ export default function MaintenanceDashboard() {
 
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-
+    const [refreshKey, setRefreshKey] = useState(0);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requests,setRequests] = useState([]);
     const [filter, setFilter] = useState({ keyword: '', status: '',equipment:'  ' });
@@ -121,8 +121,19 @@ export default function MaintenanceDashboard() {
     }
     fecth()
     return () => { mounted = false }
-  },[auth,filter])
-  
+  },[auth,filter,refreshKey])
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-500">Đang tải dữ liệu...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="animate-fade-in-up space-y-6">
       
@@ -177,6 +188,7 @@ export default function MaintenanceDashboard() {
         <MaintenanceDetailModal 
           request={selectedRequest} 
           onClose={handleCloseModal} 
+          onRefresh={() => setRefreshKey(old => old + 1)}
         />
       )} 
 

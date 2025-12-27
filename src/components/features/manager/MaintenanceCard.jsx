@@ -24,11 +24,11 @@ export default function MaintenanceCard({ request, onAction }) {
       case 'Processing': 
         return { type: 'info', label: 'Đang xử lý' }; // Xanh dương
       case 'Confirmed':
-        return { type: 'confirm', label: 'Đã xác nhận' }; // Xanh dương
+        return { type: 'info', label: 'Đã xác nhận' }; // Xanh dương
       case 'Completed': 
         return { type: 'success', label: 'Hoàn thành' }; // Xanh lá
       case 'Wait Payment': 
-        return { type: 'wait', label: 'Chờ thanh toán' }; // Xanh lá
+        return { type: 'warning', label: 'Chờ thanh toán' }; // Xanh lá
       default: 
         return { type: 'default', label: 'Khác' };
     }

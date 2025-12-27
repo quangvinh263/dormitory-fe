@@ -9,38 +9,69 @@ import {
   ClockIcon,
   CurrencyDollarIcon,
   PencilSquareIcon,
-  CheckBadgeIcon 
+  CheckBadgeIcon
 } from '@heroicons/react/24/outline';
 
-import { getMaintenanceDetail } from '../../../services/maintenanceApi';
-export default function RepairDetailModal({ request, onClose }) {
+import { getMaintenanceDetail,updateMaintenanceStatus } from '../../../services/maintenanceApi';
+export default function RepairDetailModal({ request, onClose,onRefresh }) {
   if (!request) return null;
 
   // State nhập liệu
   const [note, setNote] = useState(request.ManagerNote || '');
   const [cost, setCost] = useState(request.RepairCost || 0);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    // 1. Bật trạng thái loading để chặn click nhiều lần
+    setIsLoading(true);
+
+    // 2. Chuẩn bị dữ liệu theo đúng DTO của C#
+    const payload = {
+        requestId: request.maintenanceID, // Map với DTO: RequestId
+        newStatus: 'Confirmed',           // Map với DTO: NewStatus
+        managerNote: 'Đã xác nhận yêu cầu, đang điều phối thợ tới sửa.', // Map với DTO: ManagerNote (Có thể để null)
+        repairCost: 0                     // Map với DTO: RepairCost (Mặc định 0 khi mới xác nhận)
+    };
+
+    try {
+        // 3. Gọi API
+        // Lưu ý: request.maintenanceID là id trên URL, payload là body
+        const result = await updateMaintenanceStatus(request.maintenanceID, payload);
+        if (result.success) {
+            alert('Cập nhật yêu cầu sửa chữa thành công');
+            onRefresh(); 
+            onClose();
+        } else {
+            console.log ('Cập nhật thất bại')
+        }
+    } catch (error) {
+        console.error(error);
+    } finally {
+        setIsLoading(false);  
+    }
+};
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'Completed':
-        return <CheckCircleIcon className="w-6 h-6 text-green-500" />;
+        return <CheckCircleIcon className="w-6 h-6 " />;
       
       case 'Processing':
       case 'In Progress':
-        return <WrenchScrewdriverIcon className="w-6 h-6 text-blue-500" />;
+        return <WrenchScrewdriverIcon className="w-6 h-6 " />;
       
       case 'Wait Payment':
-        return <BanknotesIcon className="w-6 h-6 text-orange-500" />;
+        return <BanknotesIcon className="w-6 h-6 " />;
       
       case 'Confirmed':
-        return <CheckBadgeIcon className="w-6 h-6 text-indigo-500" />;
+        return <CheckBadgeIcon className="w-6 h-6 " />;
         
       case 'Cancelled':
-        return <XMarkIcon className="w-6 h-6 text-red-500" />;
+        return <XMarkIcon className="w-6 h-6 " />;
 
       case 'Pending':
       default:
-        return <ClockIcon className="w-6 h-6 text-gray-400" />;
+        return <ClockIcon className="w-6 h-6 " />;
   }
 };
   // Helper style
@@ -201,18 +232,7 @@ export default function RepairDetailModal({ request, onClose }) {
               )}
             </div>
           )}
-          {request.status === 'Pending' && (
-            <div>
-              {/* Nút Xác nhận yêu cầu (Yêu cầu của bạn) */}
-              <button 
-                // onClick={() => onConfirm(request.maintenanceID)} 
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm cursor-pointer flex items-center gap-2"
-              >
-                <CheckBadgeIcon className="w-4 h-4"/>
-                Xác nhận yêu cầu
-              </button>
-            </div>
-          )}
+          
 
           {request.Status === 'Processing' && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
@@ -246,15 +266,21 @@ export default function RepairDetailModal({ request, onClose }) {
         </div>
 
         {/* Footer Actions */}
-        <div className="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-end gap-3 shrink-0">
-          <button onClick={onClose} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
-            Đóng
-          </button>
+        <div className="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-between gap-3 shrink-0">
           
-          {request.Status === 'Pending' && (
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm cursor-pointer">
-              Tiếp nhận & Gọi thợ
-            </button>
+          
+          {request.status === 'Pending' && (
+            <div>
+              {/* Nút Xác nhận yêu cầu (Yêu cầu của bạn) */}
+              <button 
+                onClick={handleConfirm} 
+                disabled={isLoading}
+                className="ml-auto px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm cursor-pointer flex items-start gap-2"
+              >
+                <CheckBadgeIcon className="w-4 h-4"/>
+                Xác nhận yêu cầu
+              </button>
+            </div>
           )}
           
           {request.Status === 'Processing' && (
@@ -262,6 +288,10 @@ export default function RepairDetailModal({ request, onClose }) {
               <CheckCircleIcon className="w-4 h-4"/> Xác nhận Hoàn thành
             </button>
           )}
+
+          <button onClick={onClose} className="flex-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
+            Đóng
+          </button>
         </div>
       </div>
     </div>
