@@ -153,9 +153,7 @@ export default function StudentInsurance() {
         }
 
         // --- BƯỚC 2: LẤY INSURANCE ID ---
-        // Backend trả về data, ta cần tìm đúng field ID của bảo hiểm vừa tạo
         const regData = regRes.data || {};
-        // Tìm ID (Check kỹ console log xem backend trả về key là 'id', 'insuranceId' hay gì)
         const newInsuranceId = regData.insuranceId || regData.id || regData.healthInsuranceId;
 
         if (!newInsuranceId) {

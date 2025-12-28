@@ -87,7 +87,7 @@ export default function Maintenance() {
         fetchData();
 
         return () => { mounted = false; };
-    }, [auth]);
+    }, [auth,studentId]);
 
   // Tính toán số liệu thống kê
   const stats = {
