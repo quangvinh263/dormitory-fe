@@ -12,7 +12,7 @@ export default function Select({ label, error, children, className, ...props }) 
       <select
         className={`
           w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg 
-          focus:ring-2 focus:ring-primary focus:border-primary block p-2.5 transition-colors
+          focus:outline-none focus:ring-0 focus:border-gray-300 block p-2.5 transition-colors
           disabled:bg-gray-100 disabled:text-gray-500
           ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}
         `}

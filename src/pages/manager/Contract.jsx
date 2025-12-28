@@ -72,7 +72,6 @@ export default function ContractPage() {
   useEffect(() => {
     if (!filters.buildingId) return;
     const fetchContracts = async () => {
-      setLoading(true);
       try {
         console.log("Đang gọi API với filters:", filters);
       
