@@ -1,6 +1,6 @@
-import { useState,useEffect } from 'react';
+import { useState,useEffect, useContext } from 'react';
 import { ArrowDownTrayIcon, BellAlertIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
-
+import { AuthContext } from '../../context/AuthContext';
 import ContractStats from '../../components/features/manager/ContractStats';
 import ContractFilter from '../../components/features/manager/ContractFilter';
 import ContractTable from '../../components/features/manager/ContractTable';
@@ -8,68 +8,95 @@ import RoomChangeModal from '../../components/features/manager/RoomChangeModal';
 import Button from '../../components/ui/Button';
 
 import { getContractFiltered } from '../../services/contractApi';
+import { getManagerInfo } from '../../services/managerApi';
 export default function ContractPage() {
+
+  const {auth} = useContext(AuthContext);
 
   const [isRoomChangeModalOpen, setIsRoomChangeModalOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
 
-  const [contracts, setContracts] = useState([]);        
+  
+  const [contracts, setContracts] = useState([]);      
   const [globalContract, setGlobalContract] = useState([]);
+
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
   const [filters, setFilterParams] = useState({
     keyword: '',
-    buildingName: '',
-    status: ''
+    buildingId: '',
+    status: '',
+    startDate: '',
+    endDate: ''
   });
   useEffect(() => {
-    const fetchContracts = async () =>
-    {
-        try
-        {
-          const contractRes = await getContractFiltered(filters);
-          console.log(contractRes);
-          if (contractRes.success && contractRes.data )
-          {
-            setGlobalContract(contractRes.data.data);
-            setContracts(Array.isArray(contractRes.data.data)?contractRes.data.data:[]);
-            setLoading(false);
-          }
-          else
-          {
-            console.log("Không thể tải được dữ liệu hợp đồng",contractRes.data.data);
-          }
-        }
-        catch (err)
-        {
-          console.log("Lỗi",err);
-          
-        }
-        finally
-        {
-          setLoading(false);
-        }
-    }
-    fetchContracts()
-  }, []);
+    let mounted = true;
+    const accountId = auth?.accountId || localStorage.getItem('accountId');
 
-  useEffect(() => {
-    const fetchContractsForTable = async () => {
+    if (!accountId) return;
+
+    const fetchManagerData = async () => {
       try {
-        const res = await getContractFiltered(filters); // Có truyền filter
-        if (res.success && Array.isArray(res.data)) {
-          setContracts(res.data);
+        const res = await getManagerInfo(accountId);
+        
+        if (!mounted) return;
+
+        if (res.success && res.data) {
+            const managerData = res.data; 
+            const buildingData = managerData.buildingDto;
+            const foundId = buildingData?.buildingID || '';
+            console.log("Check ID tìm thấy:", foundId);
+            if (foundId) {
+                setFilterParams(prev => ({
+                    ...prev,
+                    buildingId: foundId
+                }));
+            } else {
+                setError("Tài khoản quản lý chưa được gán vào tòa nhà nào.");
+
+            }
         } else {
-          setContracts([]);
+            console.error("Lỗi lấy thông tin quản lý:", res.message);
         }
       } catch (err) {
-        console.log(err)
+        console.error("Lỗi fetchManagerData:", err);
+      }
+    };
+
+    fetchManagerData();
+
+    return () => { mounted = false; };
+  }, [auth]);
+
+  useEffect(() => {
+    if (!filters.buildingId) return;
+    const fetchContracts = async () => {
+      setLoading(true);
+      try {
+        console.log("Đang gọi API với filters:", filters);
+      
+        const res = await getContractFiltered(filters);
+        
+        if (res.success && Array.isArray(res.data)) {
+           setContracts(res.data);
+           if (!filters.keyword && !filters.status && !filters.startDate) {
+               setGlobalContract(res.data);
+           }
+        } else {
+           setContracts([]);
+        }
+      } catch (err) {
+        console.error("Lỗi fetchContracts:", err);
         setContracts([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchContractsForTable();
+
+    fetchContracts();
   }, [filters]);
+
   const handleOpenRoomChange = (contract) => {
     setSelectedContract(contract);
     setIsRoomChangeModalOpen(true);

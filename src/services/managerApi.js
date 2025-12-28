@@ -80,7 +80,7 @@ export const getManagerInfo = async (accountId) => {
     try {
         const response = await axios.get(`${API_URL}/BuildingManager/account/${accountId}`);
         if (response.status === 200 || response.data.success) {
-            return { success: true, message: response.data?.message || null };
+            return { success: true, data: response.data?.data || null };
         }
         return { success: false, message: response.data?.message || 'Failed to retrived data manager' };
     }
