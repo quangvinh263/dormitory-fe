@@ -30,7 +30,7 @@ export default function StudentDropdown() {
           setUser({
             name: result.data.fullName || result.data.name,
             email: result.data.email,
-            code: result.data.studentId || result.data.studentCode
+            code: result.data.studentID || result.data.studentCode
           });
         } else {
           console.error('Failed to fetch student info:', result.message);

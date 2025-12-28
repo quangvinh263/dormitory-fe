@@ -38,6 +38,7 @@ export const getRoomsResponseByManager = async (managerId) => {
     catch (error) {
         return { success: false, message: error.response?.data?.message || 'Error fetching rooms by manager' };
     }
+    
 };
 
 export const createBuilding = async (data) => {
