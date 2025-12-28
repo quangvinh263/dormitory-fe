@@ -353,7 +353,7 @@ const BuildingManagement = () => {
                         {b.buildingName}
                     </h4>
                     <p className="text-xs text-gray-500 mt-1">
-                      Quản lý: {b.managerName}
+                      Quản lý: {b.managerName ?? 'Chưa có quản lý'}
                     </p>
 
                   </div>
