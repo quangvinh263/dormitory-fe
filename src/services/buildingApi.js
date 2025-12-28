@@ -38,4 +38,41 @@ export const getRoomsResponseByManager = async (managerId) => {
     catch (error) {
         return { success: false, message: error.response?.data?.message || 'Error fetching rooms by manager' };
     }
+    
+};
+
+export const createBuilding = async (data) => {
+    try {
+        const response = await axios.post(`${API_URL}/Building`, data);
+        if (response.status === 200 || response.data.success) {
+            return { success: true, message: response.data?.message || null };
+        }
+        return { success: false, message: response.data?.message || 'Failed to create building' };
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error creating building' };
+    }
+};
+
+export const updateBuilding = async (data) => {
+    try {
+        const response = await axios.put(`${API_URL}/Building`, data);
+        if (response.status === 200 || response.data.success) {
+            return { success: true, message: response.data?.message || null };
+        }
+        return { success: false, message: response.data?.message || 'Failed to update building' };
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error updating building' };
+    }
+};
+
+export const buildingsStats = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/Building/stats/admin`);
+        if (response.status === 200 || response.data.success) {
+            return { success: true, data: response.data?.data || [] };
+        }
+        return { success: false, message: response.data?.message || 'Failed to fetch building stats' };
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error fetching building stats' };
+    }
 };

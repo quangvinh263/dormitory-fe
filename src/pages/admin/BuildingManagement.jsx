@@ -316,7 +316,7 @@ const BuildingManagement = () => {
       </div>
 
       <div className='shrink-0'>
-        <BuildingStats rooms={rooms} />
+        <BuildingStats stats={stats} />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
