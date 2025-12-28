@@ -119,7 +119,7 @@ export const getContractOverview = async () => {
     try {
         const response = await axios.get(`${API_URL}/Contract/overview`)
         if (response.status === 200 || response.data?.success) {
-            return { success: true, data: response.data?.stat ?? response.data }
+            return { success: true, data: response.data?.data ?? response.data }
         }
         return { success: false, message: response.data?.message || 'Failed to fetch overview' }
     } catch (error) {
@@ -151,6 +151,23 @@ export const getPendingRequest = async (studentId) => {
     }
 }
 
+export const getAllContracts = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/Contract`)
+        if (response.status === 200 || response.data?.success) {
+            return { 
+                success: true, 
+                data: response.data.dto ?? response.data.data ?? response.data
+            }
+        }
+        return { success: false, message: response.data?.message || 'Failed to fetch all contracts' }
+    } catch (error) {
+        return { 
+            success: false, 
+            message: error.response?.data?.message || 'Error fetching all contracts' 
+        }
+    }
+}
 
 // alias
 export const getContractDetailById = getStudentContractDetail

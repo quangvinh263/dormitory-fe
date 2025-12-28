@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { ArrowDownTrayIcon, BellAlertIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
-
+import { toast } from 'react-hot-toast';
+import * as contractApi from '../../services/contractApi'
 import ContractStats from '../../components/features/manager/ContractStats';
 import ContractFilter from '../../components/features/manager/ContractFilter';
 import ContractTable from '../../components/features/manager/ContractTable';
@@ -9,8 +10,38 @@ import Button from '../../components/ui/Button';
 
 export default function ContractPage() {
 
+  const [contracts, setContracts] = useState([]); // Chứa danh sách hợp đồng từ API
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
   const [isRoomChangeModalOpen, setIsRoomChangeModalOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [contractsRes, statsRes] = await Promise.all([
+        contractApi.getAllContracts(),
+        contractApi.getContractOverview()
+      ]);
+
+      if (contractsRes.success) {
+        setContracts(contractsRes.data || []);
+      }
+      
+      if (statsRes.success) {
+        console.log("Dữ liệu Stat nhận được:", statsRes.data);
+        setStats(statsRes.data);
+      }
+    } catch (error) {
+      toast.error('Không thể tải dữ liệu hợp đồng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const handleOpenRoomChange = (contract) => {
     setSelectedContract(contract);
@@ -39,13 +70,17 @@ export default function ContractPage() {
       </div>
 
       {/* 2. Thống kê */}
-      <ContractStats />
+      <ContractStats stats={stats} />
 
       {/* 3. Bộ lọc */}
       <ContractFilter />
 
       {/* 4. Bảng dữ liệu */}
-      <ContractTable onRoomChange={handleOpenRoomChange} />
+      <ContractTable 
+        contracts={contracts}
+        loading={loading}
+        onRoomChange={handleOpenRoomChange} 
+      />
 
       {/* 5. Footer Info Alert (Màu xanh dương) */}
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start">

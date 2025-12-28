@@ -2,34 +2,27 @@ import React from 'react';
 import { BellAlertIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Badge from '../../ui/Badge'; 
 
-const ContractTable = ({ onRoomChange }) => {
+const ContractTable = ({ contracts, onRoomChange, loading }) => {
 
-  const contracts = [
-    { id: 'SV2024001', name: 'Nguyễn Văn A', room: 'A301 (Tòa A)', endDate: '20/08/2024', daysLeft: 5, status: 'warning' },
-    { id: 'SV2024005', name: 'Trần Thị B', room: 'A302 (Tòa A)', endDate: '10/08/2024', daysLeft: -5, status: 'danger' }, // Âm là quá hạn
-    { id: 'SV2024009', name: 'Lê Văn C', room: 'A303 (Tòa A)', endDate: '25/08/2024', daysLeft: 10, status: 'warning' },
-    { id: 'SV2024017', name: 'Hoàng Văn E', room: 'B201 (Tòa B)', endDate: '01/09/2024', daysLeft: 17, status: 'success' },
-    { id: 'SV2024021', name: 'Đỗ Thị F', room: 'B202 (Tòa B)', endDate: '18/08/2024', daysLeft: 3, status: 'warning' },
-    { id: 'SV2024025', name: 'Phạm Thị G', room: 'B205 (Tòa B)', endDate: '30/08/2024', daysLeft: 15, status: 'success' },
-  ];
-
-  // Helper render Badge
-  const renderStatus = (status) => {
-    const map = {
-      danger: { type: 'danger', label: 'Đã hết hạn' },
-      warning: { type: 'warning', label: 'Sắp hết hạn' },
-      success: { type: 'success', label: 'Còn hạn' },
-    };
-    const config = map[status] || map.success;
-    return <Badge type={config.type}>{config.label}</Badge>;
+  // Quyết định trạng thái dựa trên số ngày còn lại (remainingDays) từ API
+  const renderStatus = (daysLeft) => {
+    if (daysLeft < 0) return <Badge type="danger">Đã hết hạn</Badge>;
+    if (daysLeft <= 14) return <Badge type="warning">Sắp hết hạn</Badge>;
+    return <Badge type="success">Còn hạn</Badge>;
   };
 
-  // Helper render text ngày còn lại
   const renderDaysText = (days) => {
       if (days < 0) return <span className="text-red-600 font-bold">Quá hạn {Math.abs(days)} ngày</span>;
-      if (days <= 7) return <span className="text-orange-600 font-bold">{days} ngày</span>;
-      if (days <= 14) return <span className="text-orange-500 font-medium">{days} ngày</span>;
+      if (days <= 14) return <span className="text-orange-600 font-bold">{days} ngày</span>;
       return <span className="text-green-600 font-medium">{days} ngày</span>;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   return (
@@ -48,29 +41,43 @@ const ContractTable = ({ onRoomChange }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {contracts.map((item, index) => (
-              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-bold text-gray-900">{item.id}</td>
-                <td className="px-6 py-4 font-medium">{item.name}</td>
-                <td className="px-6 py-4 text-gray-500">{item.room}</td>
-                <td className="px-6 py-4">{item.endDate}</td>
-                <td className="px-6 py-4">{renderDaysText(item.daysLeft)}</td>
-                <td className="px-6 py-4">{renderStatus(item.status)}</td>
-                <td className="px-6 py-4 text-center gap-2 flex justify-center">
-                  <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm">
-                    <BellAlertIcon className="w-3.5 h-3.5" />
-                    Nhắc nhở
-                  </button>
-                  <button 
+            {contracts && contracts.length > 0 ? (
+              contracts.map((item) => (
+                <tr key={item.contractID} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-900">{item.studentID}</td>
+                  <td className="px-6 py-4 font-medium">{item.studentName}</td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {item.roomName} <span className="text-xs">({item.buildingName})</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {item.endDate ? new Date(item.endDate).toLocaleDateString('vi-VN') : '---'}
+                  </td>
+                  <td className="px-6 py-4">{renderDaysText(item.remainingDays)}</td>
+                  <td className="px-6 py-4">{renderStatus(item.remainingDays)}</td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center gap-2">
+                      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+                        <BellAlertIcon className="w-3.5 h-3.5" />
+                        Nhắc nhở
+                      </button>
+                      <button 
                         onClick={() => onRoomChange(item)}
-                        className="inline-flex items-center p-1.5 bg-orange-50 border border-orange-100 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-100 hover:border-orange-200 transition-colors shadow-sm"
-                    >
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-100 transition-colors shadow-sm"
+                      >
                         <ArrowPathIcon className="w-4 h-4" />
                         Đổi phòng
-                    </button>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="px-6 py-10 text-center text-gray-400 italic">
+                  Không có dữ liệu hợp đồng nào được tìm thấy.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
