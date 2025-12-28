@@ -21,7 +21,7 @@ export default function StudentInsurance() {
   
   // Data State
   const [studentId, setStudentId] = useState(null);
-  const [insuranceYear, setInsuranceYear] = useState(new Date().getFullYear() + 1);
+  const {insuranceYear} = useState(new Date().getFullYear() + 1);
   const [insurancePrice, setInsurancePrice] = useState(0);
   const [hospitalList, setHospitalList] = useState([]);
   const [currentInsurance, setCurrentInsurance] = useState(null);

@@ -101,6 +101,7 @@ export default function Maintenance() {
   const handleCreateRequest = async (newData) => {
     if (!studentId) {
       alert("Không tìm thấy thông tin sinh viên. Vui lòng tải lại trang.");
+      
       return;
     }
     const payload = {
@@ -117,10 +118,12 @@ export default function Maintenance() {
           setIsCreateModalOpen(false);
           alert("Gửi yêu cầu thành công!");
         } else {
+
           alert(res.message || "Gửi yêu cầu thất bại.");
       }
 
-    } catch (error) {
+    } catch (err) {
+      setError(err)
       console.error("Lỗi tạo yêu cầu:", error);
       alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
