@@ -1,8 +1,8 @@
 // src/pages/admin/RoomTypeManagementModal.jsx
 
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, PencilSquareIcon, CheckIcon, SwatchIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { getRoomTypesInRegistration, updateRoomType, createRoomType } from '../../../services/roomTypeApi';
+import { XMarkIcon, PencilSquareIcon, CheckIcon, SwatchIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { getRoomTypesInRegistration, updateRoomType, createRoomType, deleteRoomType } from '../../../services/roomTypeApi';
 
 const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
   const [roomTypes, setRoomTypes] = useState([]);
@@ -17,6 +17,7 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
     price: 0
   });
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -79,6 +80,37 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
       capacity: 0,
       price: 0
     });
+  };
+
+  const handleDelete = async (e, roomType) => {
+    e.stopPropagation(); // Prevent triggering select
+    
+    if (!confirm(`Bạn có chắc chắn muốn xóa loại phòng "${roomType.typeName}"?\n\nLưu ý: Chỉ có thể xóa nếu không có phòng nào đang sử dụng loại phòng này.`)) {
+      return;
+    }
+
+    try {
+      setDeleting(roomType.roomTypeID);
+      const response = await deleteRoomType(roomType.roomTypeID);
+
+      if (response.success) {
+        alert('Xóa loại phòng thành công!');
+        
+        // If deleted room type is currently selected, reset form
+        if (selectedType?.roomTypeID === roomType.roomTypeID) {
+          resetForm();
+        }
+        
+        await loadRoomTypes();
+      } else {
+        alert(`Lỗi: ${response.message}`);
+      }
+    } catch (error) {
+      console.error('Error deleting room type:', error);
+      alert('Có lỗi xảy ra khi xóa loại phòng!');
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const handleSave = async (e) => {
@@ -206,12 +238,26 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
                     `}
                   >
                     <div className="flex justify-between items-start">
-                      <h4 className="font-bold text-gray-800 text-sm">
+                      <h4 className="font-bold text-gray-800 text-sm flex-1">
                         {roomType.typeName}
                       </h4>
-                      {selectedType?.roomTypeID === roomType.roomTypeID && (
-                        <PencilSquareIcon className="w-4 h-4 text-green-600" />
-                      )}
+                      <div className="flex items-center gap-1 ml-2">
+                        {selectedType?.roomTypeID === roomType.roomTypeID && (
+                          <PencilSquareIcon className="w-4 h-4 text-green-600" />
+                        )}
+                        <button
+                          onClick={(e) => handleDelete(e, roomType)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition disabled:opacity-50"
+                          title="Xóa loại phòng"
+                          disabled={deleting === roomType.roomTypeID}
+                        >
+                          {deleting === roomType.roomTypeID ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                          ) : (
+                            <TrashIcon className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                     <div className="mt-2 flex justify-between items-center text-xs">
                       <span className="text-gray-500">{roomType.capacity} người</span>

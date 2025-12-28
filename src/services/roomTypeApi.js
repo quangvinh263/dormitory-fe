@@ -39,3 +39,16 @@ export const createRoomType = async (data) => {
         return { success: false, message: error.response?.data?.message || 'Error creating room type' };
     }
 };
+
+export const deleteRoomType = async (roomTypeId) => {
+    try {
+        const response = await axios.delete(`${API_URL}/RoomType/${roomTypeId}`);
+        if (response.status === 200 || response.data.success) {
+            return { success: true, message: response.data?.message };
+        }
+        return { success: false, message: response.data?.message || 'Failed to delete room type' };
+    }
+    catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error deleting room type' };
+    }
+};
