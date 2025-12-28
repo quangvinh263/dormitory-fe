@@ -63,3 +63,15 @@ export const updateBuilding = async (data) => {
         return { success: false, message: error.response?.data?.message || 'Error updating building' };
     }
 };
+
+export const buildingsStats = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/Building/stats/admin`);
+        if (response.status === 200 || response.data.success) {
+            return { success: true, data: response.data?.data || [] };
+        }
+        return { success: false, message: response.data?.message || 'Failed to fetch building stats' };
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error fetching building stats' };
+    }
+};
