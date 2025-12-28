@@ -1,13 +1,14 @@
 // src/pages/admin/RoomTypeManagementModal.jsx
 
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, PencilSquareIcon, CheckIcon, SwatchIcon } from '@heroicons/react/24/outline';
-import { getRoomTypesInRegistration, updateRoomType } from '../../../services/roomTypeApi';
+import { XMarkIcon, PencilSquareIcon, CheckIcon, SwatchIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { getRoomTypesInRegistration, updateRoomType, createRoomType } from '../../../services/roomTypeApi';
 
 const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
   const [roomTypes, setRoomTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
+  const [isCreateMode, setIsCreateMode] = useState(false);
   const [editForm, setEditForm] = useState({
     typeID: '',
     typeName: '',
@@ -46,6 +47,7 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
 
   const resetForm = () => {
     setSelectedType(null);
+    setIsCreateMode(false);
     setEditForm({
       typeID: '',
       typeName: '',
@@ -56,6 +58,7 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
   };
 
   const handleSelectType = (roomType) => {
+    setIsCreateMode(false);
     setSelectedType(roomType);
     setEditForm({
       typeID: roomType.roomTypeID,
@@ -63,6 +66,18 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
       description: roomType.description,
       capacity: roomType.capacity,
       price: roomType.price
+    });
+  };
+
+  const handleCreateNew = () => {
+    setIsCreateMode(true);
+    setSelectedType(null);
+    setEditForm({
+      typeID: '',
+      typeName: '',
+      description: '',
+      capacity: 0,
+      price: 0
     });
   };
 
@@ -86,18 +101,31 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
 
     try {
       setSubmitting(true);
-      const response = await updateRoomType(editForm);
+      let response;
+
+      if (isCreateMode) {
+        // Create new room type
+        response = await createRoomType({
+          typeName: editForm.typeName,
+          description: editForm.description,
+          capacity: editForm.capacity,
+          price: editForm.price
+        });
+      } else {
+        // Update existing room type
+        response = await updateRoomType(editForm);
+      }
 
       if (response.success) {
-        alert('Cập nhật loại phòng thành công!');
+        alert(isCreateMode ? 'Tạo loại phòng mới thành công!' : 'Cập nhật loại phòng thành công!');
         await loadRoomTypes();
         resetForm();
       } else {
         alert(`Lỗi: ${response.message}`);
       }
     } catch (error) {
-      console.error('Error updating room type:', error);
-      alert('Có lỗi xảy ra khi cập nhật loại phòng!');
+      console.error('Error saving room type:', error);
+      alert('Có lỗi xảy ra khi xử lý yêu cầu!');
     } finally {
       setSubmitting(false);
     }
@@ -143,10 +171,18 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
           
           {/* CỘT TRÁI: DANH SÁCH (35%) */}
           <div className="w-[35%] border-r border-gray-200 flex flex-col bg-gray-50/50">
-            <div className="p-3 border-b border-gray-200 bg-white">
-              <div className="text-xs font-medium text-gray-500 mb-2">
+            <div className="p-3 border-b border-gray-200 bg-white flex justify-between items-center">
+              <div className="text-xs font-medium text-gray-500">
                 Chọn loại phòng để chỉnh sửa
               </div>
+              <button
+                onClick={handleCreateNew}
+                className="p-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+                title="Thêm loại phòng mới"
+                disabled={submitting}
+              >
+                <PlusIcon className="w-4 h-4" />
+              </button>
             </div>
             
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -191,10 +227,10 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
 
           {/* CỘT PHẢI: FORM (65%) */}
           <div className="flex-1 p-6 overflow-y-auto bg-white">
-            {selectedType ? (
+            {selectedType || isCreateMode ? (
               <>
                 <h3 className="text-md font-bold text-gray-800 mb-4 pb-2 border-b">
-                  Chỉnh sửa: {selectedType.typeName}
+                  {isCreateMode ? 'Thêm loại phòng mới' : `Chỉnh sửa: ${selectedType.typeName}`}
                 </h3>
                 
                 <form onSubmit={handleSave} className="space-y-4">
@@ -290,7 +326,7 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
                       ) : (
                         <>
                           <CheckIcon className="w-5 h-5" />
-                          Lưu thay đổi
+                          {isCreateMode ? 'Tạo mới' : 'Lưu thay đổi'}
                         </>
                       )}
                     </button>
@@ -302,6 +338,7 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
                 <SwatchIcon className="w-16 h-16 mb-4" />
                 <p className="text-lg font-medium">Chọn loại phòng để chỉnh sửa</p>
                 <p className="text-sm mt-2">Nhấn vào loại phòng bên trái để bắt đầu</p>
+                <p className="text-sm mt-1">hoặc nhấn nút + để thêm mới</p>
               </div>
             )}
           </div>
