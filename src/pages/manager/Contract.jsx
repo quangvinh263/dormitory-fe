@@ -1,4 +1,4 @@
-import { useState,useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowDownTrayIcon, BellAlertIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import * as contractApi from '../../services/contractApi'
@@ -15,6 +15,12 @@ export default function ContractPage() {
   const [stats, setStats] = useState(null);
   const [isRoomChangeModalOpen, setIsRoomChangeModalOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
+
+  const [filters, setFilters] = useState({
+    search: '',
+    status: '',
+    endDate: ''
+  });
 
   const fetchData = async () => {
     try {
@@ -42,6 +48,27 @@ export default function ContractPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const filteredContracts = useMemo(() => {
+    return contracts.filter(item => {
+      // 1. Lọc theo search (MSSV, Tên, Phòng)
+      const matchesSearch = !filters.search || 
+        item.studentName?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        item.studentID?.includes(filters.search) ||
+        item.roomName?.toLowerCase().includes(filters.search.toLowerCase());
+
+      // 2. Lọc theo trạng thái (Dựa trên logic ngày còn lại)
+      let matchesStatus = true;
+      if (filters.status === 'expired') matchesStatus = item.remainingDays < 0;
+      else if (filters.status === 'warning') matchesStatus = item.remainingDays >= 0 && item.remainingDays <= 14;
+      else if (filters.status === 'valid') matchesStatus = item.remainingDays > 14;
+
+      // 3. Lọc theo ngày kết thúc chính xác
+      const matchesDate = !filters.endDate || item.endDate === filters.endDate;
+
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [contracts, filters]);
 
   const handleOpenRoomChange = (contract) => {
     setSelectedContract(contract);
@@ -73,11 +100,15 @@ export default function ContractPage() {
       <ContractStats stats={stats} />
 
       {/* 3. Bộ lọc */}
-      <ContractFilter />
+      <ContractFilter
+        filters={filters} 
+        setFilters={setFilters} 
+        totalResults={filteredContracts.length}
+       />
 
       {/* 4. Bảng dữ liệu */}
       <ContractTable 
-        contracts={contracts}
+        contracts={filteredContracts}
         loading={loading}
         onRoomChange={handleOpenRoomChange} 
       />
