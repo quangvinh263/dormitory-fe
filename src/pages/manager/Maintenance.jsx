@@ -100,7 +100,6 @@ export default function MaintenanceDashboard() {
     }
     
     const fecth =async()=>{
-      setLoading(true);
       try
       {
         const listRes = await getMaintenances(filter);   // API 1: Lấy danh sách     // API 2: Lấy số liệu tổng quan (Server tính sẵn)

@@ -99,7 +99,7 @@ export default function Header({ user }) {
       return `Xin chào, ${user?.name || 'Quản Trị Viên'}`;
     }
     if (auth?.role === ROLES.STUDENT && studentData) {
-      return `${studentData.name} - ${studentData.code}`;
+      return `${studentData.name} - ${studentData.id}`;
     }
     return `${user?.name || ''} - ${user?.code || ''}`;
   };
