@@ -27,6 +27,7 @@ export default function ContractPage() {
         try
         {
           const contractRes = await getContractFiltered(filters);
+          console.log(contractRes);
           if (contractRes.success && contractRes.data )
           {
             setGlobalContract(contractRes.data.data);
@@ -53,7 +54,6 @@ export default function ContractPage() {
 
   useEffect(() => {
     const fetchContractsForTable = async () => {
-      setLoading(true);
       try {
         const res = await getContractFiltered(filters); // Có truyền filter
         if (res.success && Array.isArray(res.data)) {
