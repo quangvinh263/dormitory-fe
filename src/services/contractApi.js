@@ -169,5 +169,9 @@ export const getAllContracts = async () => {
     }
 }
 
+    export const remindBulk = async () => axios.post(`${API_URL}/Contract/remind-bulk`);
+
+    export const remindSingle = async (studentId) => axios.post(`${API_URL}/Contract/remind-single/${studentId}`);
+
 // alias
 export const getContractDetailById = getStudentContractDetail

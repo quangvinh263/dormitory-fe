@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ArrowDownTrayIcon, BellAlertIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import * as contractApi from '../../services/contractApi'
 import ContractStats from '../../components/features/manager/ContractStats';
 import ContractFilter from '../../components/features/manager/ContractFilter';
@@ -75,9 +75,40 @@ export default function ContractPage() {
     setIsRoomChangeModalOpen(true);
   };
 
+  const handleBulkReminder = async () => {
+    const toastId = toast.loading("Đang gửi thông báo...");
+    
+    try {
+      const res = await contractApi.remindBulk();
+      // 2. Cập nhật thành công
+      if (res && res.data) {
+         toast.success(res.data.message || "Gửi thành công!", { id: toastId });
+      } else {
+         toast.success("Đã gửi thông báo.", { id: toastId });
+      }
+    } catch (error) {
+      // 3. Cập nhật lỗi
+      const msg = error.response?.data?.message || 'Có lỗi xảy ra khi gửi thông báo';
+      toast.error(msg, { id: toastId });
+    }
+  };
+
+  // --- HÀM 2: Gửi nhắc nhở cá nhân ---
+  const handleSingleReminder = async (studentId) => {
+    const toastId = toast.loading("Đang gửi yêu cầu...");
+
+    try {
+      const res = await contractApi.remindSingle(studentId);
+      // 2. Cập nhật thành công
+      toast.success(res.data?.message || "Đã gửi nhắc nhở thành công!", { id: toastId });
+    } catch (error) {
+      // 3. Cập nhật lỗi
+      toast.error(error.response?.data?.message || "Không thể gửi thông báo.", { id: toastId });
+    }
+  };
   return (
     <div className="animate-fade-in-up space-y-6 pb-10">
-      
+      <Toaster position="bottom-right" reverseOrder={false} />
       {/* 1. Header Page */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -87,8 +118,12 @@ export default function ContractPage() {
         
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <Button variant="white" icon={<BellAlertIcon className="w-4 h-4"/>}>
-            Gửi nhắc nhở hàng loạt
+          <Button 
+            variant="white" 
+            icon={<BellAlertIcon className="w-4 h-4"/>}
+            onClick={handleBulkReminder}
+          >
+            Gửi thông báo hàng loạt
           </Button>
           <Button variant="primary" icon={<ArrowDownTrayIcon className="w-4 h-4"/>} className="bg-gray-900 text-white">
             Xuất báo cáo
@@ -111,6 +146,7 @@ export default function ContractPage() {
         contracts={filteredContracts}
         loading={loading}
         onRoomChange={handleOpenRoomChange} 
+        onRemind={handleSingleReminder}
       />
 
       {/* 5. Footer Info Alert (Màu xanh dương) */}

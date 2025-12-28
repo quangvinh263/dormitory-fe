@@ -2,9 +2,8 @@ import React from 'react';
 import { BellAlertIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Badge from '../../ui/Badge'; 
 
-const ContractTable = ({ contracts, onRoomChange, loading }) => {
+const ContractTable = ({ contracts, onRoomChange, onRemind, loading }) => {
 
-  // Quyết định trạng thái dựa trên số ngày còn lại (remainingDays) từ API
   const renderStatus = (daysLeft) => {
     if (daysLeft < 0) return <Badge type="danger">Đã hết hạn</Badge>;
     if (daysLeft <= 14) return <Badge type="warning">Sắp hết hạn</Badge>;
@@ -42,35 +41,55 @@ const ContractTable = ({ contracts, onRoomChange, loading }) => {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {contracts && contracts.length > 0 ? (
-              contracts.map((item) => (
-                <tr key={item.contractID} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-gray-900">{item.studentID}</td>
-                  <td className="px-6 py-4 font-medium">{item.studentName}</td>
-                  <td className="px-6 py-4 text-gray-500">
-                    {item.roomName} <span className="text-xs">({item.buildingName})</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {item.endDate ? new Date(item.endDate).toLocaleDateString('vi-VN') : '---'}
-                  </td>
-                  <td className="px-6 py-4">{renderDaysText(item.remainingDays)}</td>
-                  <td className="px-6 py-4">{renderStatus(item.remainingDays)}</td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex justify-center gap-2">
-                      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-                        <BellAlertIcon className="w-3.5 h-3.5" />
-                        Nhắc nhở
-                      </button>
-                      <button 
-                        onClick={() => onRoomChange(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-100 transition-colors shadow-sm"
-                      >
-                        <ArrowPathIcon className="w-4 h-4" />
-                        Đổi phòng
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              contracts.map((item) => {
+                const isExpired = item.remainingDays < 0; 
+                const showRemindButton = item.remainingDays <= 14;
+                return (
+                  <tr key={item.contractID} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 font-bold text-gray-900">{item.studentID}</td>
+                    <td className="px-6 py-4 font-medium">{item.studentName}</td>
+                    <td className="px-6 py-4 text-gray-500">
+                      {item.roomName} <span className="text-xs">({item.buildingName})</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {item.endDate ? new Date(item.endDate).toLocaleDateString('vi-VN') : '---'}
+                    </td>
+                    <td className="px-6 py-4">{renderDaysText(item.remainingDays)}</td>
+                    <td className="px-6 py-4">{renderStatus(item.remainingDays)}</td>
+                    
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center gap-2">
+                        {showRemindButton && (
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onRemind(item.studentID);
+                              }}
+                              title={isExpired ? "Gửi cảnh cáo" : "Gửi nhắc nhở gia hạn"}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all active:scale-95 shadow-sm
+                                ${isExpired 
+                                  ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300' 
+                                  : 'bg-white text-blue-600 border-gray-200 hover:bg-blue-50 hover:border-blue-200'
+                                }`}
+                            >
+                              <BellAlertIcon className={`w-3.5 h-3.5 ${isExpired ? 'animate-pulse' : ''}`} />
+                              {isExpired ? 'Gửi cảnh cáo' : 'Nhắc gia hạn'}
+                            </button>
+                        )}
+
+                        <button 
+                          onClick={() => onRoomChange(item)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-100 transition-colors shadow-sm"
+                        >
+                          <ArrowPathIcon className="w-4 h-4" />
+                          Đổi phòng
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan="7" className="px-6 py-10 text-center text-gray-400 italic">
