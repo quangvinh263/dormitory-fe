@@ -20,12 +20,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("refreshToken", refresh);
     localStorage.setItem("accountId", data.accountId);
     localStorage.setItem("role", data.role);
+    localStorage.setItem("buildingID", data.buildingID || "");
+    localStorage.setItem("buildingName", data.buildingName || "");
 
     setAuth({
       accessToken: token,
       refreshToken: refresh,
       accountId: data.accountId,
       role: data.role,
+      buildingID: data.buildingID,
+      buildingName: data.buildingName,
     });
   };
 
@@ -38,12 +42,19 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Logout API error:", error);
     } finally {
-      localStorage.clear();
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("accountId");
+      localStorage.removeItem("role");
+      localStorage.removeItem("buildingID");
+      localStorage.removeItem("buildingName");
       setAuth({
         accessToken: null,
         refreshToken: null,
         accountId: null,
         role: null,
+        buildingID: null,
+        buildingName: null,
       });
     }
   };
