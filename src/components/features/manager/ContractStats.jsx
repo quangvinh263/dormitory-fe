@@ -26,7 +26,7 @@ const ContractStats = ({stats}) => {
       />
       <StatCard 
         title="Sắp hết hạn" 
-        value={stats?.Warning ?? 0}
+        value={stats?.NearExpiration ?? 0}
         subtext="Trong 14 ngày tới" 
         type="warning" // Màu cam
         icon={<ClockIcon className="w-6 h-6"/>}

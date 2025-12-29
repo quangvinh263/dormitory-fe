@@ -77,12 +77,6 @@ export default function RoomDetailModal({ isOpen, onClose, room }) {
                  {getStatusLabel(room.status)}
                </Badge>
             </InfoItem>
-
-            <InfoItem label="Giá phòng">
-              <span className="text-green-600 font-bold">
-                {formatMoney(room.price)}/tháng
-              </span>
-            </InfoItem>
           </div>
 
           {/* Dòng mô tả (Full width) */}

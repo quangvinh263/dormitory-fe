@@ -6,7 +6,7 @@ import Button from '../../ui/Button';
 import Input from '../../ui/Input'; 
 import Select from '../../ui/Select'; 
 
-export default function RoomFilter({ filters = {}, onFilterChange, onClearFilters }) {
+export default function RoomFilter({ filters = {}, onFilterChange, onClearFilters, availableFloors = [] }) {
   const handleInputChange = (field, value) => {
     if (onFilterChange) {
       onFilterChange({
@@ -40,7 +40,7 @@ export default function RoomFilter({ filters = {}, onFilterChange, onClearFilter
       </div>
 
       {/* Form Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         
         {/* Tìm kiếm */}
         <div className="lg:col-span-2">
@@ -67,6 +67,17 @@ export default function RoomFilter({ filters = {}, onFilterChange, onClearFilter
           </Select>
         </div>
 
+        {/* Tầng */}
+        <div>
+          <Input
+            label="Tầng"
+            placeholder="Nhập số tầng"
+            type="number"
+            value={filters.floor || ''}
+            onChange={(e) => handleInputChange('floor', e.target.value)}
+          />
+        </div>
+
          {/* Loại phòng */}
          <div>
           <Select 
@@ -83,7 +94,7 @@ export default function RoomFilter({ filters = {}, onFilterChange, onClearFilter
         </div>
 
         {/* Sức chứa (Min - Max) */}
-        <div>
+        <div className="lg:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Sức chứa (Min - Max)</label>
           <div className="flex gap-2">
              <Input 
@@ -106,3 +117,10 @@ export default function RoomFilter({ filters = {}, onFilterChange, onClearFilter
     </Section>
   );
 }
+
+// // Floor filter
+// if (filters.floor) {
+//   filtered = filtered.filter(room => 
+//     String(parseInt(room.floor, 10)) === String(parseInt(filters.floor, 10))
+//   );
+// }
