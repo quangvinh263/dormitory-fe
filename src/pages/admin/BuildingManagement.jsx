@@ -53,8 +53,6 @@ const BuildingManagement = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const statsResponse = await buildingsStats();
-      console.log('Building Stats Response:', statsResponse);
       
       // 1. Load building stats
       const statsResponse = await buildingsStats();
@@ -105,10 +103,6 @@ const BuildingManagement = () => {
           
           if (firstBuilding.managerID) {
             await loadRoomsByManager(firstBuilding.managerID);
-          }
-          const statsResponse = await buildingsStats();
-          if (statsResponse.success) {
-            setStats(statsResponse.data);
           }
         }
       } else {

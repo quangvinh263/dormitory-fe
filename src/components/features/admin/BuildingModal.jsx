@@ -14,13 +14,22 @@ const BuildingModal = ({ isOpen, onClose, initialData, buildings }) => {
   const isEditMode = !!initialData;
 
   useEffect(() => {
-    if (initialData) {
-      setFormData({ 
-          BuildingName: initialData.buildingName, 
-          ManagerID: initialData.managerID 
-      });
-    } else {
-      setFormData({ BuildingName: '', ManagerID: '' });
+    if (isOpen) {
+      loadManagers();
+      
+      if (initialData) {
+        // Edit mode: set existing data
+        setFormData({
+          buildingName: initialData.buildingName || '',
+          managerID: initialData.managerID || ''
+        });
+      } else {
+        // Create mode: reset form
+        setFormData({
+          buildingName: '',
+          managerID: ''
+        });
+      }
     }
   }, [isOpen, initialData]);
 
