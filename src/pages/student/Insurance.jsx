@@ -21,7 +21,7 @@ export default function StudentInsurance() {
   
   // Data State
   const [studentId, setStudentId] = useState(null);
-  const {insuranceYear} = useState(new Date().getFullYear() + 1);
+  const [insuranceYear,setInsuranceYear] = useState(new Date().getFullYear() + 1);
   const [insurancePrice, setInsurancePrice] = useState(0);
   const [hospitalList, setHospitalList] = useState([]);
   const [currentInsurance, setCurrentInsurance] = useState(null);
@@ -40,7 +40,6 @@ export default function StudentInsurance() {
   useEffect(() => {
     let mounted = true;
     const accountId = auth?.accountId || localStorage.getItem('accountId');
-
     if (!accountId) {
       setError('Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.');
       setLoading(false);

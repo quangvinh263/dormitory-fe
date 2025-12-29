@@ -16,7 +16,8 @@ import RoomTypeModal from '../../components/features/admin/RoomTypeModal';
 import { 
   getBuildingsForRegistration, 
   getBuildingsWithManager, 
-  getRoomsResponseByManager 
+  getRoomsResponseByManager,
+  buildingsStats
 } from '../../services/buildingApi';
 import { getRoomTypesInRegistration } from '../../services/roomTypeApi';
 import { updateRoom, createRoom } from '../../services/roomApi';
@@ -27,6 +28,12 @@ const BuildingManagement = () => {
   const [buildingsWithManager, setBuildingsWithManager] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [roomTypes, setRoomTypes] = useState([]);
+  const [stats, setStats] = useState({
+    totalRooms: 0,
+    totalAvailableRooms: 0,
+    totalFullRooms: 0,
+    totalMaintenanceRooms: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBuildingID, setSelectedBuildingID] = useState(null);
@@ -46,7 +53,12 @@ const BuildingManagement = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
+      const statsResponse = await buildingsStats();
+      console.log('Building Stats Response:', statsResponse);
       
+      if (statsResponse.success) {
+        setStats(statsResponse.data);
+      }
       // 1. Load danh sách tòa nhà cơ bản
       const buildingsResponse = await getBuildingsForRegistration();
       console.log('Buildings Response:', buildingsResponse);
@@ -88,6 +100,10 @@ const BuildingManagement = () => {
           
           if (firstBuilding.managerID) {
             await loadRoomsByManager(firstBuilding.managerID);
+          }
+          const statsResponse = await buildingsStats();
+          if (statsResponse.success) {
+            setStats(statsResponse.data);
           }
         }
       } else {
