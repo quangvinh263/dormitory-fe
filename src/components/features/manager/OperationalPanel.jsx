@@ -21,8 +21,11 @@ export default function OperationalPanel() {
   const [error, setError] = useState('');
 
   const accountId = localStorage.getItem('accountId');
-  const [requests,setRequests]=useState([]);
+  const [requests,setRequests]=useState([])
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '123123213'; // Trả về chuỗi rỗng nếu không có ngày
+  }
   // Fetch violation data khi component mount
   useEffect(() => {
     const fetchViolationData = async () => {
@@ -44,7 +47,7 @@ export default function OperationalPanel() {
           name: item.studentName,
           room: item.roomName,
           violationCount: item.totalViolations,
-          violations: [] // Sẽ được load khi click xem chi tiết
+          violations: [] 
         }));
 
         setViolationData(mappedData);
@@ -60,13 +63,14 @@ export default function OperationalPanel() {
       {
         const payload ={
           keyword:'',
-          status:'',
+          status:'Pending',
           equipmentName:''
         }
         const maintenanceRes = await getMaintenances(payload);
+
         if (maintenanceRes.success && maintenanceRes.data)
         {
-          setRequests(maintenanceRes.data.slice(0,3))
+          setRequests(maintenanceRes.data.slice(0,5));
         }
         else
         {
@@ -83,7 +87,7 @@ export default function OperationalPanel() {
       fetchViolationData();
       fetchMaintenanceData();
     }
-  }, [accountId]);
+  }, [accountId,selectedRequest]);
 
   // Function để load chi tiết vi phạm của student
   const handleViewViolationDetail = async (student) => {
@@ -119,9 +123,6 @@ export default function OperationalPanel() {
       setSelectedStudent(student);
     }
   };
-
-  
-
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -209,9 +210,9 @@ export default function OperationalPanel() {
                       <span className="text-gray-400 text-xs">•</span>
                       <span className="font-medium text-gray-700 text-sm">{item.equipmentName.split('(')[0]}</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
-                    <p className="text-[10px] text-gray-400 mt-1">{item.issueDate}</p>
-                  </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                      <p className="text-[10px] text-gray-400 mt-1">{formatDate(item.issueDate)}</p>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2 self-end sm:self-center">
                   {item.status === 'Pending' && <span className="bg-red-100 text-red-700 text-[12px] px-2 py-1 rounded-full font-bold ">Chờ xử lý</span>}
@@ -235,6 +236,7 @@ export default function OperationalPanel() {
 
       <MaintenceDetailModal 
         request={selectedRequest}
+        
         onClose={() => setSelectedRequest(null)}
       />
     </>

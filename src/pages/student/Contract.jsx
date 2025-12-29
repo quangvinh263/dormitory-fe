@@ -27,7 +27,7 @@ export default function StudentContract() {
           setError(result.message || 'Không thể tải thông tin hợp đồng');
         }
       } catch (err) {
-        setError('Đã xảy ra lỗi khi tải dữ liệu');
+        setError('Đã xảy ra lỗi khi tải dữ liệu',err);
       } finally {
         setLoading(false);
       }

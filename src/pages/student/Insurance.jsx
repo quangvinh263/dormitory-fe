@@ -21,7 +21,7 @@ export default function StudentInsurance() {
   
   // Data State
   const [studentId, setStudentId] = useState(null);
-  const [insuranceYear, setInsuranceYear] = useState(new Date().getFullYear() + 1);
+  const {insuranceYear} = useState(new Date().getFullYear() + 1);
   const [insurancePrice, setInsurancePrice] = useState(0);
   const [hospitalList, setHospitalList] = useState([]);
   const [currentInsurance, setCurrentInsurance] = useState(null);
@@ -153,9 +153,7 @@ export default function StudentInsurance() {
         }
 
         // --- BƯỚC 2: LẤY INSURANCE ID ---
-        // Backend trả về data, ta cần tìm đúng field ID của bảo hiểm vừa tạo
         const regData = regRes.data || {};
-        // Tìm ID (Check kỹ console log xem backend trả về key là 'id', 'insuranceId' hay gì)
         const newInsuranceId = regData.insuranceId || regData.id || regData.healthInsuranceId;
 
         if (!newInsuranceId) {

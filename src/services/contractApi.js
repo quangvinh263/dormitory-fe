@@ -99,19 +99,18 @@ export const getDetailContract = async (contractId) => {
     }
 }
 
-export const getContractFiltered = async (keyword, buildingName, status) => {
+export const getContractFiltered = async (payload) => {
     try {
-        const params = {}
-        if (keyword) params.keyword = keyword
-        if (buildingName) params.buildingName = buildingName
-        if (status) params.status = status
-        const response = await axios.get(`${API_URL}/Contract/filtered`, { params })
+        const response = await axios.get(`${API_URL}/Contract`, { 
+            params: payload 
+        });
+
         if (response.status === 200 || response.data?.success) {
-            return { success: true, data: response.data?.dto ?? response.data }
+            return { success: true, data: response.data?.data };
         }
-        return { success: false, message: response.data?.message || 'Failed to fetch contracts' }
+        return { success: false, message: response.data?.message || 'Failed to fetch contracts' };
     } catch (error) {
-        return { success: false, message: error.response?.data?.message || 'Error fetching contracts' }
+        return { success: false, message: error.response?.data?.message || 'Error fetching contracts' };
     }
 }
 

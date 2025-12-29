@@ -6,6 +6,7 @@ import { getStudentInfo } from '../../services/studentApi';
 import { AuthContext } from '../../context/AuthContext';
 import useNotificationSignalR from '../../hooks/useNotificationSignalR';
 import { getLastestNotifications, markNotificationAsRead } from '../../services/notificationApi';
+import { getManagerInfo} from '../../services/managerApi';
 import { formatRelativeTime } from '../../utils/format'; // ✅ Import formatRelativeTime
 
 import StudentDropdown from './header/StudentDropdown';
@@ -13,7 +14,7 @@ import LogoutButton from './header/LogoutButton';
 
 export default function Header({ user }) {
   const { auth } = useContext(AuthContext);
-  const [studentData, setStudentData] = useState(null);
+  const [dataUser, setDataUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // State quản lý notifications - Khởi tạo với mảng rỗng
@@ -28,40 +29,55 @@ export default function Header({ user }) {
 
   // Fetch student data và notifications
   useEffect(() => {
-    const fetchStudentData = async () => {
-      if (auth.role === ROLES.STUDENT && auth.accountId) {
-        try {
-          // Fetch student info
-          const result = await getStudentInfo(auth.accountId);
-          if (result.success) {
-            setStudentData({
-              name: result.data.fullName || result.data.name,
-              code: result.data.studentID || result.data.studentCode,
-              email: result.data.email
-            });
-          }
+    let isMounted = true;
 
-          // Fetch notifications
-          const notiResult = await getLastestNotifications(auth.accountId);
-                    
-          // ✅ Fix: notiResult.notifications chứ không phải notiResult.data.notifications
-          if (notiResult && notiResult.notifications) {
-            setNotifications(notiResult.notifications);
-            setUnreadCount(notiResult.notifications.filter(n => !n.isRead).length);
-          }
-          
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        } finally {
-          setLoading(false);
+    const fetchData = async () => {
+
+
+      try {
+        let userInfoPromise;
+        console.log("Auth",auth);
+        if (auth.role === ROLES.STUDENT) {
+            userInfoPromise = getStudentInfo(auth.accountId);
+        } else if (auth.role === ROLES.MANAGER) {
+            userInfoPromise = getManagerInfo(auth.accountId); 
         }
-      } else {
-        setLoading(false);
+        
+        const [userRes, notiRes] = await Promise.all([
+          userInfoPromise,
+          getLastestNotifications(auth.accountId)
+        ]);
+
+        console.log("user",userRes.data);
+        console.log("Timf userr",user);
+        if (!isMounted) return;
+
+        if (userRes && userRes.success && userRes.data) {
+           const data = userRes.data;
+           setDataUser({ 
+             name: data.fullName || data.name , 
+             code: data.studentID || data.managerID || data.code || data.id, 
+             email: data.email
+           });
+        }
+
+        // --- Xử lý Notifications (Giữ nguyên) ---
+        const notificationsList = notiRes?.notifications || [];
+        if (Array.isArray(notificationsList)) {
+          setNotifications(notificationsList);
+          setUnreadCount(notificationsList.filter(n => !n.isRead).length);
+        }
+
+      } catch (error) {
+        console.error('Lỗi khi tải dữ liệu người dùng:', error);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
 
-    fetchStudentData();
-  }, [auth.role, auth.accountId]);
+    fetchData();
+    return () => { isMounted = false; };
+  }, [auth.role, auth.accountId])
 
   // Merge realtime notifications với notifications hiện tại
   useEffect(() => {
@@ -96,10 +112,13 @@ export default function Header({ user }) {
 
   const getSubText = () => {
     if (auth?.role === ROLES.ADMIN || user?.role === ROLES.ADMIN) {
-      return `Xin chào, ${user?.name || 'Quản Trị Viên'}`;
+      return `Xin chào, ${dataUser?.name || 'Quản Trị Viên'}`;
     }
-    if (auth?.role === ROLES.STUDENT && studentData) {
-      return `${studentData.name} - ${studentData.code}`;
+    if (auth?.role === ROLES.MANAGER || user?.role === ROLES.MANAGER) {
+      return `Xin chào, ${dataUser?.name }`;
+    }
+    if (auth?.role === ROLES.STUDENT && dataUser) {
+      return `${dataUser.name} - ${dataUser.code}`;
     }
     return `${user?.name || ''} - ${user?.code || ''}`;
   };
@@ -255,7 +274,7 @@ export default function Header({ user }) {
           </div>
 
           {(auth?.role === ROLES.STUDENT || user?.role === ROLES.STUDENT) ? (
-            <StudentDropdown user={studentData || user} />
+            <StudentDropdown user={dataUser || user} />
           ) : (
             <LogoutButton />
           )}
