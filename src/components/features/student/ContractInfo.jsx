@@ -17,6 +17,9 @@ export default function ContractInfo({ data }) {
     else if (status === 'Terminated') {
       return { type: 'warning', text: 'Đã chấm dứt' };
     }
+    else if (status === 'NearExpiration') {
+      return { type: 'warning', text: 'Sắp hết hạn' };
+    }
     return { type: 'default', text: status };
   };
 

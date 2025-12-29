@@ -116,6 +116,7 @@ export default function Maintenance() {
         const res = await createMaintenanceRequest(payload);
         if (res.success) {
           setIsCreateModalOpen(false);
+          window.location.reload();
           alert("Gửi yêu cầu thành công!");
         } else {
 

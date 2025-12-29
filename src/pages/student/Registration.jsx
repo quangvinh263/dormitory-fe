@@ -10,6 +10,11 @@ import { AuthContext } from '../../context/AuthContext';
 import RoomFilters from '../../components/features/student/RoomFilters';
 import RoomList from '../../components/features/student/RoomList';
 
+function extractFloor(roomName) {
+  const match = roomName.match(/^[A-Za-z]+(\d+)\./);
+  return match ? String(parseInt(match[1], 10)) : '';
+}
+
 export default function Registration() {
   const navigate = useNavigate();
   
@@ -17,7 +22,8 @@ export default function Registration() {
   const [filters, setFilters] = useState({
     building: 'all',
     type: 'all',
-    priceRange: 'all'
+    priceRange: 'all',
+    floor: ''
   });
 
   const [rooms, setRooms] = useState([]);
@@ -64,8 +70,8 @@ export default function Registration() {
         const requestData = {
           buildingId: filters.building === 'all' ? '' : filters.building,
           roomTypeId: filters.type === 'all' ? '' : filters.type,
-          price: filters.priceRange === 'all' ? 0 : 
-                 filters.priceRange === 'low' ? 1000000 :
+          price: filters.priceRange === 'all' ? 0 :
+                 filters.priceRange === 'low' ? 0 :
                  filters.priceRange === 'medium' ? 1500000 :
                  2000000,
           onlyAvailable: true
@@ -74,8 +80,6 @@ export default function Registration() {
         const result = await getRegistrationRooms(requestData);
         
         if (result.success) {
-          console.log('Fetched rooms:', result.data);
-          // Transform data từ API sang format UI cần
           const transformedRooms = result.data.map(room => ({
             id: room.roomId,
             name: room.roomName,
@@ -83,14 +87,34 @@ export default function Registration() {
             type: room.roomType,
             capacity: room.capacity,
             currentOccupancy: room.currentOccupancy,
-            pendingRegistrations: room.registeredOccupancy, // Số người đang đăng ký
+            pendingRegistrations: room.registeredOccupancy,
             price: room.price,
             gender: room.gender,
             fullRoomId: room.roomId,
-            fullRoomType: room.roomType
+            fullRoomType: room.roomType,
+            floor: extractFloor(room.roomName)
           }));
-          
-          setRooms(transformedRooms);
+
+          // Lọc client-side
+          let filteredRooms = transformedRooms;
+
+          // Lọc theo tầng
+          if (filters.floor) {
+            filteredRooms = filteredRooms.filter(room => room.floor === String(parseInt(filters.floor, 10)));
+          }
+
+          // Lọc theo giá tiền
+          if (filters.priceRange !== 'all') {
+            if (filters.priceRange === 'low') {
+              filteredRooms = filteredRooms.filter(room => room.price < 1000000);
+            } else if (filters.priceRange === 'medium') {
+              filteredRooms = filteredRooms.filter(room => room.price >= 1000000 && room.price <= 2000000);
+            } else if (filters.priceRange === 'high') {
+              filteredRooms = filteredRooms.filter(room => room.price > 2000000);
+            }
+          }
+
+          setRooms(filteredRooms);
         } else {
           setError(result.message || 'Không thể tải danh sách phòng');
         }

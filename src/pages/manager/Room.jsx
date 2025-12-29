@@ -35,10 +35,19 @@ export default function RoomDashboard() {
     status: '',
     roomType: '',
     minCapacity: '',
-    maxCapacity: ''
+    maxCapacity: '',
+    floor: ''
   });
 
   const accountId = localStorage.getItem('accountId');
+
+  // Hàm extract floor từ roomName
+  const extractFloor = (roomName) => {
+    // Lấy số ngay sau chữ cái đầu tiên và trước dấu chấm đầu tiên
+    // Ví dụ: A1.01 -> 1, B12.2 -> 12
+    const match = roomName.match(/^[A-Za-z]+(\d+)\./);
+    return match ? String(parseInt(match[1], 10)) : '';
+  };
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -71,6 +80,7 @@ export default function RoomDashboard() {
             current: r.currentOccupancy,
             max: r.capacity,
             price: 0,
+            floor: extractFloor(r.roomName),
             // Thêm dữ liệu gốc để filter
             originalData: r
           };
@@ -148,6 +158,11 @@ export default function RoomDashboard() {
       filtered = filtered.filter(room => room.max <= parseInt(filters.maxCapacity));
     }
 
+    // Floor filter
+    if (filters.floor) {
+      filtered = filtered.filter(room => room.floor.replace(/^0+/, '') === filters.floor.replace(/^0+/, ''));
+    }
+
     setFilteredRooms(filtered);
   }, [filters, rooms]);
 
@@ -192,6 +207,7 @@ export default function RoomDashboard() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
+        availableFloors={[...new Set(rooms.map(r => r.floor).filter(f => f))].sort()}
       />
 
       {/* Thông báo loading / error */}
@@ -208,7 +224,8 @@ export default function RoomDashboard() {
           Hiển thị {filteredRooms.length} phòng {rooms.length > 0 && `/ ${rooms.length} tổng`}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           {filteredRooms.map((room) => (
             <RoomCard 
               key={room.id} 

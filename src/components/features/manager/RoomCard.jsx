@@ -64,10 +64,7 @@ export default function RoomCard({ room, onClick }) {
           <span className="opacity-70">Sức chứa:</span>
           <span className="font-semibold">{room.current}/{room.max} người</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="opacity-70">Giá phòng:</span>
-          <span className="font-bold text-blue-700 text-sm">{formatMoney(room.price)}</span>
-        </div>
+
       </div>
 
       {/* Progress Bar */}
