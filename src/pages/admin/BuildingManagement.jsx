@@ -16,7 +16,8 @@ import RoomTypeModal from '../../components/features/admin/RoomTypeModal';
 import { 
   getBuildingsForRegistration, 
   getBuildingsWithManager, 
-  getRoomsResponseByManager 
+  getRoomsResponseByManager,
+  buildingsStats
 } from '../../services/buildingApi';
 import { getRoomTypesInRegistration } from '../../services/roomTypeApi';
 import { updateRoom, createRoom } from '../../services/roomApi';
@@ -27,6 +28,12 @@ const BuildingManagement = () => {
   const [buildingsWithManager, setBuildingsWithManager] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [roomTypes, setRoomTypes] = useState([]);
+  const [stats, setStats] = useState({
+    totalRooms: 0,
+    totalAvailableRooms: 0,
+    totalFullRooms: 0,
+    totalMaintenanceRooms: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBuildingID, setSelectedBuildingID] = useState(null);
@@ -47,14 +54,22 @@ const BuildingManagement = () => {
     try {
       setLoading(true);
       
-      // 1. Load danh sách tòa nhà cơ bản
+      // 1. Load building stats
+      const statsResponse = await buildingsStats();
+      console.log('Building Stats Response:', statsResponse);
+      
+      if (statsResponse.success) {
+        setStats(statsResponse.data);
+      }
+      
+      // 2. Load danh sách tòa nhà cơ bản
       const buildingsResponse = await getBuildingsForRegistration();
       console.log('Buildings Response:', buildingsResponse);
       
       if (buildingsResponse.success) {
         setBuildings(buildingsResponse.data);
         
-        // 2. Load thông tin tòa nhà với manager cho từng tòa
+        // 3. Load thông tin tòa nhà với manager cho từng tòa
         const buildingsWithManagerPromises = buildingsResponse.data.map(building => 
           getBuildingsWithManager(building.buildingID)
         );
@@ -80,7 +95,7 @@ const BuildingManagement = () => {
         
         setBuildingsWithManager(buildingsWithManagerData);
         
-        // 3. Tự động chọn tòa đầu tiên và load phòng
+        // 4. Tự động chọn tòa đầu tiên và load phòng
         if (buildingsWithManagerData.length > 0) {
           const firstBuilding = buildingsWithManagerData[0];
           setSelectedBuildingID(firstBuilding.buildingID);
@@ -217,9 +232,14 @@ const BuildingManagement = () => {
         if (response.success) {
           alert("Cập nhật phòng thành công!");
           setIsRoomModalOpen(false);
-          // Reload rooms để hiển thị data mới
+          // Reload rooms và stats
           if (selectedManagerID) {
             await loadRoomsByManager(selectedManagerID);
+          }
+          // Reload stats
+          const statsResponse = await buildingsStats();
+          if (statsResponse.success) {
+            setStats(statsResponse.data);
           }
         } else {
           alert(`Lỗi: ${response.message}`);
@@ -247,9 +267,14 @@ const BuildingManagement = () => {
         if (response.success) {
           alert("Tạo phòng mới thành công!");
           setIsRoomModalOpen(false);
-          // Reload rooms để hiển thị phòng mới
+          // Reload rooms và stats
           if (selectedManagerID) {
             await loadRoomsByManager(selectedManagerID);
+          }
+          // Reload stats
+          const statsResponse = await buildingsStats();
+          if (statsResponse.success) {
+            setStats(statsResponse.data);
           }
         } else {
           alert(`Lỗi: ${response.message}`);
@@ -316,7 +341,7 @@ const BuildingManagement = () => {
       </div>
 
       <div className='shrink-0'>
-        <BuildingStats rooms={rooms} />
+        <BuildingStats stats={stats} />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
@@ -353,7 +378,7 @@ const BuildingManagement = () => {
                         {b.buildingName}
                     </h4>
                     <p className="text-xs text-gray-500 mt-1">
-                      Quản lý: {b.managerName}
+                      Quản lý: {b.managerName ?? 'Chưa có quản lý'}
                     </p>
 
                   </div>

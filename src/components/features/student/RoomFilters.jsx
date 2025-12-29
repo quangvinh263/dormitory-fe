@@ -1,5 +1,6 @@
 import Section from '../../shared/Section';
 import Select from '../../ui/Select'; 
+import Input from '../../ui/Input'; // Thêm nếu chưa có
 import { FunnelIcon } from '@heroicons/react/24/outline';
 
 export default function RoomFilters({ filters, onChange, buildings = [], roomTypes = [], loading = false }) {
@@ -18,7 +19,7 @@ export default function RoomFilters({ filters, onChange, buildings = [], roomTyp
           {loading && <span className="text-sm text-gray-500">(Đang tải...)</span>}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           
           {/* Lọc theo Tòa */}
           <Select 
@@ -40,7 +41,7 @@ export default function RoomFilters({ filters, onChange, buildings = [], roomTyp
           <Select 
               label="Loại phòng" 
               name="type"
-              value={filters.typeName}
+              value={filters.type}
               onChange={handleChange}
               disabled={loading}
           >
@@ -66,6 +67,16 @@ export default function RoomFilters({ filters, onChange, buildings = [], roomTyp
                 <option value="high">Trên 2 triệu</option>
           </Select>
 
+          {/* Lọc theo tầng */}
+          <Input
+            label="Tầng"
+            name="floor"
+            type="number"
+            placeholder="Nhập số tầng"
+            value={filters.floor || ''}
+            onChange={handleChange}
+            disabled={loading}
+          />
         </div>
       </div>
     </Section>

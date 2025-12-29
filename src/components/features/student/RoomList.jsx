@@ -44,7 +44,7 @@ export default function RoomList({ rooms, onSelectRoom }) {
       </div>
 
       {/* Room Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-fade-in-up delay-100">
         {rooms.map((room) => (
           <RoomCard 
             key={room.id} 
