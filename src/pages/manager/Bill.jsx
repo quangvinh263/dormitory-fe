@@ -65,8 +65,10 @@ export default function BillManagement() {
               month: '2-digit',
               year: 'numeric'
             }).replace(',', ''),
-            status: receipt.status.toLowerCase() === 'pending' ? 'pending' : 
-                   receipt.status.toLowerCase() === 'completed' ? 'completed' : 'rejected'
+            status: receipt.status.toLowerCase() === 'pending' ? 'pending' :
+                    receipt.status.toLowerCase() === 'success' ? 'completed' :
+                    receipt.status.toLowerCase() === 'rejected' ? 'rejected' :
+                    receipt.status.toLowerCase()
           }));
           
           setReceiptsData(mappedData);

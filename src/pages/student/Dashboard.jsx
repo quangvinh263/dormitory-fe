@@ -108,10 +108,10 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Trạng thái ở" 
-          value={contract?.status === 'Active' ? 'Đang ở' : 'Không hoạt động'} 
+          value={contract?.status === 'Active' || contract?.status === 'NearExpiration' ? 'Đang ở' : 'Không hoạt động'} 
           subtext={contract?.roomName ? `Phòng ${contract.roomName}` : 'Chưa có phòng'} 
           icon={<HomeIcon className="w-5 h-5"/>} 
-          type={contract?.status === 'Active' ? 'success' : 'default'} 
+          type={contract?.status === 'Active' || contract?.status === 'NearExpiration' ? 'success' : 'default'} 
         />
         <StatCard 
           title="Hóa đơn nợ" 
