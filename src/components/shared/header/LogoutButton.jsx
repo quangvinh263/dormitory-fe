@@ -14,9 +14,11 @@ export default function LogoutButton() {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('accountId');
+      localStorage.removeItem('role');
+      localStorage.removeItem('buildingID');
+      localStorage.removeItem('buildingName');
       navigate('/auth/login');
     }
-    
   };
 
   return (

@@ -43,8 +43,10 @@ export const signIn = async(data) => {
   try {
     const response = await axios.post(`${API_URL}/Auth/Login`, data);
     if (response.status === 200 || response.data.success) {
+       console.log('SignIn API Response:', response.data); // Debug log
         return { 
-            success: true, 
+            success: true,
+            ...response.data, 
             message: response.data?.message || 'Sign in successful',
             accesstoken: response.data.accessToken, 
             refreshtoken: response.data.refreshToken, 

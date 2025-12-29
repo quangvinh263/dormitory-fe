@@ -2,50 +2,26 @@ import React from 'react';
 import { BellAlertIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Badge from '../../ui/Badge'; 
 
-const ContractTable = ({ contracts, onRoomChange }) => {
+const ContractTable = ({ contracts, onRoomChange, onRemind, loading }) => {
 
-  // Helper: Format ngày từ yyyy-mm-dd sang dd/mm/yyyy
-  const formatDate = (dateString) => {
-    if (!dateString || dateString === '0001-01-01') return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN'); // Ra định dạng 20/08/2024
+  const renderStatus = (daysLeft) => {
+    if (daysLeft < 0) return <Badge type="danger">Đã hết hạn</Badge>;
+    if (daysLeft <= 14) return <Badge type="warning">Sắp hết hạn</Badge>;
+    return <Badge type="success">Còn hạn</Badge>;
   };
 
-  // Helper: Map trạng thái từ API sang UI Badge
-  const renderStatus = (status, remainingDays) => {
-    // Logic: Nếu API trả về status text hoặc dựa vào ngày còn lại
-    // Giả sử API trả về: "Active", "Expired", "NearExpiration"
-    
-    let type = 'success';
-    let label = 'Đang hiệu lực';
-
-    if (status === 'Expired' || remainingDays < 0) {
-        type = 'danger';
-        label = 'Đã hết hạn';
-    } else if (status === 'NearExpiration' || remainingDays <= 15) {
-        type = 'warning';
-        label = 'Sắp hết hạn';
-    }
-
-    return <Badge type={type}>{label}</Badge>;
-  };
-
-  // Helper: Render text ngày còn lại
   const renderDaysText = (days) => {
       if (days < 0) return <span className="text-red-600 font-bold">Quá hạn {Math.abs(days)} ngày</span>;
-      if (days === 0) return <span className="text-red-600 font-bold">Hết hạn hôm nay</span>;
-      if (days <= 7) return <span className="text-orange-600 font-bold">{days} ngày</span>;
-      if (days <= 15) return <span className="text-orange-500 font-medium">{days} ngày</span>;
+      if (days <= 14) return <span className="text-orange-600 font-bold">{days} ngày</span>;
       return <span className="text-green-600 font-medium">{days} ngày</span>;
   }
 
-  // Xử lý trường hợp không có dữ liệu
-  if (!contracts || contracts.length === 0) {
-      return (
-          <div className="p-8 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
-              Không tìm thấy hợp đồng nào phù hợp với bộ lọc.
-          </div>
-      );
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   return (
@@ -64,55 +40,63 @@ const ContractTable = ({ contracts, onRoomChange }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {contracts.map((item) => (
-              <tr key={item.contractID || item.studentID} className="hover:bg-gray-50 transition-colors">
-                
-                {/* 1. MSSV */}
-                <td className="px-6 py-4 font-bold text-gray-900">
-                    {item.studentID}
-                </td>
+            {contracts && contracts.length > 0 ? (
+              contracts.map((item) => {
+                const isExpired = item.remainingDays < 0; 
+                const showRemindButton = item.remainingDays <= 14;
+                return (
+                  <tr key={item.contractID} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 font-bold text-gray-900">{item.studentID}</td>
+                    <td className="px-6 py-4 font-medium">{item.studentName}</td>
+                    <td className="px-6 py-4 text-gray-500">
+                      {item.roomName} <span className="text-xs">({item.buildingName})</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {item.endDate ? new Date(item.endDate).toLocaleDateString('vi-VN') : '---'}
+                    </td>
+                    <td className="px-6 py-4">{renderDaysText(item.remainingDays)}</td>
+                    <td className="px-6 py-4">{renderStatus(item.remainingDays)}</td>
+                    
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center gap-2">
+                        {showRemindButton && (
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onRemind(item.studentID);
+                              }}
+                              title={isExpired ? "Gửi cảnh cáo" : "Gửi nhắc nhở gia hạn"}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all active:scale-95 shadow-sm
+                                ${isExpired 
+                                  ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300' 
+                                  : 'bg-white text-blue-600 border-gray-200 hover:bg-blue-50 hover:border-blue-200'
+                                }`}
+                            >
+                              <BellAlertIcon className={`w-3.5 h-3.5 ${isExpired ? 'animate-pulse' : ''}`} />
+                              {isExpired ? 'Gửi cảnh cáo' : 'Nhắc gia hạn'}
+                            </button>
+                        )}
 
-                {/* 2. Tên SV */}
-                <td className="px-6 py-4 font-medium">
-                    {item.studentName}
-                </td>
-
-                {/* 3. Phòng */}
-                <td className="px-6 py-4 text-gray-500">
-                    {item.roomName} <span className="text-xs text-gray-400"></span>
-                </td>
-
-                {/* 4. Ngày kết thúc */}
-                <td className="px-6 py-4">
-                    {formatDate(item.endDate)}
-                </td>
-
-                {/* 5. Số ngày còn lại */}
-                <td className="px-6 py-4">
-                    {renderDaysText(item.remainingDays)}
-                </td>
-
-                {/* 6. Trạng thái */}
-                <td className="px-6 py-4">
-                    {renderStatus(item.status, item.remainingDays)}
-                </td>
-
-                {/* 7. Button Thao tác */}
-                <td className="px-6 py-4 text-center gap-2 flex justify-center">
-                  <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm">
-                    <BellAlertIcon className="w-3.5 h-3.5" />
-                    Nhắc
-                  </button>
-                  <button 
-                        onClick={() => onRoomChange(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-100 hover:border-orange-200 transition-colors shadow-sm"
-                    >
-                        <ArrowPathIcon className="w-3.5 h-3.5" />
-                        Đổi phòng
-                    </button>
+                        <button 
+                          onClick={() => onRoomChange(item)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-100 transition-colors shadow-sm"
+                        >
+                          <ArrowPathIcon className="w-4 h-4" />
+                          Đổi phòng
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="7" className="px-6 py-10 text-center text-gray-400 italic">
+                  Không có dữ liệu hợp đồng nào được tìm thấy.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

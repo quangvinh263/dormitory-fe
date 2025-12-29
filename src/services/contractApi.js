@@ -63,9 +63,9 @@ export const confirmExtension = async (contractId, monthsAdded) => {
     }
 }
 
-export const changeRoom = async (payload) => {
+export const changeRoom = async (data) => {
     try {
-        const response = await axios.post(`${API_URL}/Contract/change-room`, payload)
+        const response = await axios.post(`${API_URL}/Contract/change-room`, data)
         if (response.status === 200 || response.data?.success) {
             return { success: true, data: response.data }
         }
@@ -114,11 +114,11 @@ export const getContractFiltered = async (payload) => {
     }
 }
 
-export const getContractOverview = async () => {
+export const getContractOverview = async (filter = {}) => {
     try {
-        const response = await axios.get(`${API_URL}/Contract/overview`)
+        const response = await axios.get(`${API_URL}/Contract/overview`, { params: filter })
         if (response.status === 200 || response.data?.success) {
-            return { success: true, data: response.data?.stat ?? response.data }
+            return { success: true, data: response.data?.data ?? response.data }
         }
         return { success: false, message: response.data?.message || 'Failed to fetch overview' }
     } catch (error) {
@@ -150,6 +150,27 @@ export const getPendingRequest = async (studentId) => {
     }
 }
 
+export const getAllContracts = async (filter = {}) => {
+    try {
+        const response = await axios.get(`${API_URL}/Contract`, { params: filter });
+        if (response.status === 200 || response.data?.success) {
+            return { 
+                success: true, 
+                data: response.data.dto ?? response.data.data ?? response.data
+            }
+        }
+        return { success: false, message: response.data?.message || 'Failed to fetch all contracts' }
+    } catch (error) {
+        return { 
+            success: false, 
+            message: error.response?.data?.message || 'Error fetching all contracts' 
+        }
+    }
+}
+
+    export const remindBulk = async () => axios.post(`${API_URL}/Contract/remind-bulk`);
+
+    export const remindSingle = async (studentId) => axios.post(`${API_URL}/Contract/remind-single/${studentId}`);
 
 // alias
 export const getContractDetailById = getStudentContractDetail
