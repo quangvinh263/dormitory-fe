@@ -40,7 +40,6 @@ export default function StudentInsurance() {
   useEffect(() => {
     let mounted = true;
     const accountId = auth?.accountId || localStorage.getItem('accountId');
-
     if (!accountId) {
       setError('Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.');
       setLoading(false);
