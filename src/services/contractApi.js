@@ -63,9 +63,9 @@ export const confirmExtension = async (contractId, monthsAdded) => {
     }
 }
 
-export const changeRoom = async (payload) => {
+export const changeRoom = async (data) => {
     try {
-        const response = await axios.post(`${API_URL}/Contract/change-room`, payload)
+        const response = await axios.post(`${API_URL}/Contract/change-room`, data)
         if (response.status === 200 || response.data?.success) {
             return { success: true, data: response.data }
         }

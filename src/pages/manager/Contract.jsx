@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useContext } from 'react';
 import { ArrowDownTrayIcon, BellAlertIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { toast, Toaster } from 'react-hot-toast';
 import { AuthContext } from "../../context/AuthContext";
-import * as contractApi from '../../services/contractApi'
+import * as contractApi from '../../services/contractApi';
+import * as roomApi from '../../services/roomApi';
 import ContractStats from '../../components/features/manager/ContractStats';
 import ContractFilter from '../../components/features/manager/ContractFilter';
 import ContractTable from '../../components/features/manager/ContractTable';
@@ -16,6 +17,8 @@ export default function ContractPage() {
   const [stats, setStats] = useState(null);
   const [isRoomChangeModalOpen, setIsRoomChangeModalOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
+  const [availableRooms, setAvailableRooms] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { auth } = useContext(AuthContext);
 
   const [filters, setFilters] = useState({
@@ -77,10 +80,75 @@ export default function ContractPage() {
     });
   }, [contracts, filters]);
 
-  const handleOpenRoomChange = (contract) => {
+  const handleOpenRoomChange = async (contract) => {
     setSelectedContract(contract);
-    setIsRoomChangeModalOpen(true);
+    try {
+        setLoading(true); // Loading chung của trang
+        const filterData = {
+            buildingId: auth.buildingID,
+            status: "Available"
+        };
+        
+        const res = await roomApi.getAvailableRooms(filterData);
+        
+        if (res.success) {
+            setAvailableRooms(res.data);
+            setIsRoomChangeModalOpen(true);
+        } else {
+            toast.error(res.message);
+        }
+    } catch (error) {
+        toast.error("Không thể tải danh sách phòng trống");
+    } finally {
+        setLoading(false);
+    }
   };
+
+  const handleConfirmRoomChange = async (formData) => {
+  try {
+    setIsSubmitting(true);
+
+    const payload = {
+      studentId: selectedContract.studentID,
+      newRoomId: formData.newRoomId,
+      reason: formData.reason,
+      managerNote: formData.note 
+    };
+
+    const res = await contractApi.changeRoom(payload);
+
+    if (res.success) {
+      const serverData = res.data; 
+
+      // KỊCH BẢN 1: Cần thanh toán thu thêm phí (Charge)
+      if (serverData.type === "Charge" && serverData.paymentUrl) {
+        toast.success("Đang chuyển hướng đến cổng thanh toán ZaloPay...");
+        
+        setTimeout(() => {
+          window.location.href = serverData.paymentUrl;
+        }, 1500);
+        return; 
+      }
+
+      // KỊCH BẢN 2: Đổi phòng thành công ngay (Hoàn tiền hoặc Miễn phí)
+      toast.success(serverData.message || "Đổi phòng thành công!");
+      setIsRoomChangeModalOpen(false);
+      fetchData();
+
+      // KỊCH BẢN 3: Có lỗi thanh toán nhưng đã tạo Receipt (trường hợp else trong Controller của bạn)
+      if (serverData.paymentError) {
+        toast.error(`Lỗi thanh toán: ${serverData.paymentError}. Vui lòng kiểm tra mục Hóa đơn.`);
+      }
+
+    } else {
+      toast.error(res.message || "Đổi phòng thất bại");
+    }
+  } catch (error) {
+    toast.error("Lỗi kết nối hệ thống khi đổi phòng");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleBulkReminder = async () => {
     const toastId = toast.loading("Đang gửi thông báo...");
@@ -171,6 +239,9 @@ export default function ContractPage() {
         isOpen={isRoomChangeModalOpen}
         onClose={() => setIsRoomChangeModalOpen(false)}
         contract={selectedContract}
+        availableRooms= {availableRooms}
+        onConfirm={handleConfirmRoomChange}
+        isLoading={isSubmitting}
       />
 
     </div>

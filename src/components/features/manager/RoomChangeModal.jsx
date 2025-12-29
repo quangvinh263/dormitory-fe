@@ -3,17 +3,8 @@ import { XMarkIcon, MagnifyingGlassIcon, CheckCircleIcon, ExclamationCircleIcon,
 import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/24/solid';
 import { formatCurrency } from '../../../utils/format';
 
-// --- MOCK DATA ---
-const MOCK_ROOMS = [
-  { id: 'R001', name: 'A.101', type: 'Dịch vụ 4 người', capacity: 4, current: 2, price: 1500000 },
-  { id: 'R002', name: 'A.102', type: 'Thường 8 người', capacity: 8, current: 5, price: 800000 },
-  { id: 'R003', name: 'B.201', type: 'Dịch vụ 2 người', capacity: 2, current: 1, price: 2500000 },
-  { id: 'R004', name: 'B.205', type: 'Thường 6 người', capacity: 6, current: 0, price: 1000000 },
-  { id: 'R005', name: 'C.303', type: 'Thường 8 người', capacity: 8, current: 7, price: 800000 },
-];
 
-const RoomChangeModal = ({ isOpen, onClose, contract }) => {
-  const [rooms, setRooms] = useState([]);
+const RoomChangeModal = ({ isOpen, onClose, contract, availableRooms, onConfirm, isLoading }) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [reason, setReason] = useState("0"); 
   const [note, setNote] = useState('');
@@ -21,7 +12,6 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
 
   useEffect(() => {
     if (isOpen) {
-      setRooms(MOCK_ROOMS);
       setSelectedRoom(null);
       setReason("0");
       setNote('');
@@ -29,26 +19,48 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
     }
   }, [isOpen]);
 
-  const filteredRooms = rooms.filter(room => 
-    room.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    room.name !== contract?.room 
+  const filteredRooms = (availableRooms || []).filter(room => 
+  room.roomName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+  room.roomName.trim() !== contract?.roomName
   );
 
-  const currentPrice = 1000000; 
-  const newPrice = selectedRoom?.price || 0;
-  const diffAmount = newPrice - currentPrice; 
+  // 1. Lấy số ngày còn lại trong hợp đồng
+  const remainingDays = contract?.remainingDays || 0;
+
+  // 2. Tính đơn giá ngày 
+  const dailyOldPrice = (contract?.roomPrice || 600000) / 365;
+  const dailyNewPrice = (selectedRoom?.price || 0) / 365;
+
+  // 3. Tính chênh lệch tổng cho những ngày còn lại
+  const remainingAmount = remainingDays * (dailyNewPrice - dailyOldPrice);
+
+  let finalAdjustment = 0;
+
+  if (reason === "0") {
+      // Hoàn 50% phí ngày còn lại phòng cũ
+      const refundOldRoom = (remainingDays * dailyOldPrice) * 0.5;
+      finalAdjustment = remainingAmount - refundOldRoom;
+  } else { // PersonalRequest
+      if (dailyNewPrice > dailyOldPrice) {
+          finalAdjustment = remainingAmount;
+      } else {
+          finalAdjustment = 0; 
+      }
+  }
+
+  const diffAmount = finalAdjustment;
   const isCharge = diffAmount > 0;
 
   const handleSubmit = () => {
-    console.log("Gửi yêu cầu đổi phòng:", {
-        contractId: contract.id,
-        newRoomId: selectedRoom?.id,
-        reason,
-        note,
-        diffAmount
+    if (!selectedRoom) return;
+
+    onConfirm({
+      contractId: contract.id,
+      newRoomId: selectedRoom.roomID,
+      reason: parseInt(reason),
+      note: note,
+      diffAmount: diffAmount
     });
-    alert(`Đã xác nhận đổi sang phòng ${selectedRoom?.name}`);
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -66,9 +78,9 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
               Đổi phòng sinh viên
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              SV: <span className="font-semibold text-blue-700">{contract?.name}</span> ({contract?.id}) 
+              SV: <span className="font-semibold text-blue-700">{contract?.studentName}</span> ({contract?.studentID}) 
               <span className="mx-2 hidden sm:inline">•</span> 
-              <span className="block sm:inline">Hiện tại: <span className="font-semibold text-gray-800">{contract?.room}</span></span>
+              <span className="block sm:inline">Hiện tại: <span className="font-semibold text-gray-800">{contract?.roomName}</span></span>
             </p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition text-gray-400 hover:text-red-500">
@@ -77,12 +89,9 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
         </div>
 
         {/* BODY: Thay đổi chính ở đây */}
-        {/* flex-col cho Mobile, lg:flex-row cho Desktop */}
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           
           {/* CỘT TRÁI: ĐIỀU KHIỂN */}
-          {/* w-full trên Mobile, w-[350px] trên Desktop */}
-          {/* border-b trên Mobile, border-r trên Desktop */}
           <div className="w-full lg:w-[350px] flex-shrink-0 bg-gray-50 lg:border-r border-b border-gray-200 p-5 flex flex-col overflow-y-auto max-h-[40%] lg:max-h-full">
             
             <div className="space-y-5 flex-1">
@@ -94,8 +103,9 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
                   onChange={(e) => setReason(e.target.value)}
                   className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2"
                 >
-                  <option value="0">Theo yêu cầu cá nhân</option>
-                  <option value="1">Do sự cố KTX / Sửa chữa</option>
+                  <option value="0">Lỗi từ phía KTX (Hỏng hóc, sửa chữa)</option>
+                  <option value="1">Yêu cầu cá nhân</option>
+                  <option value="2">Lý do khác</option>
                 </select>
               </div>
 
@@ -105,7 +115,7 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
                 <textarea 
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  rows={3} // Giảm row tí cho gọn trên mobile
+                  rows={3} 
                   className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 resize-none"
                   placeholder="Nhập chi tiết..."
                 />
@@ -114,34 +124,34 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
               {/* CARD TÓM TẮT CHI PHÍ (Ẩn trên mobile nếu chưa chọn phòng để tiết kiệm chỗ, hoặc hiện luôn cũng được) */}
               <div className={`rounded-xl border p-4 transition-all ${selectedRoom ? 'bg-white border-blue-200 shadow-sm' : 'bg-gray-100 border-dashed border-gray-300'}`}>
                 <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-wide border-b pb-2 mb-3">Tạm tính chi phí</h3>
-                
+
                 {selectedRoom ? (
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Phòng mới:</span>
-                      <span className="font-medium text-gray-900">{selectedRoom.name}</span>
+                      <span className="text-gray-500">Số ngày còn lại:</span>
+                      <span className="font-medium">{remainingDays} ngày</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Giá phòng:</span>
-                      <span>{formatCurrency(newPrice)}</span>
+                      <span className="text-gray-500">Chênh lệch/ngày:</span>
+                      <span>{formatCurrency(dailyNewPrice - dailyOldPrice)}</span>
                     </div>
                     
                     <div className="border-t border-dashed my-2 pt-2">
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-700">Chênh lệch:</span>
-                        <span className={`font-bold ${diffAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {diffAmount > 0 ? '+' : ''}{formatCurrency(diffAmount)}
+                        <span className="font-medium text-gray-700">Tổng cộng {isCharge ? 'thu thêm' : 'hoàn trả'}:</span>
+                        <span className={`font-bold ${isCharge ? 'text-red-600' : 'text-green-600'}`}>
+                          {formatCurrency(Math.abs(diffAmount))}
                         </span>
                       </div>
-                      <p className="text-xs text-right text-gray-400 mt-1 italic">
-                        {diffAmount > 0 ? '*Cần thu thêm phí' : '*Sẽ hoàn tiền'}
+                      <p className="text-[10px] text-gray-400 mt-1 italic leading-tight">
+                        {reason === "0" 
+                          ? "*Đã bao gồm hỗ trợ 50% tiền phòng cũ do lỗi KTX" 
+                          : "*Tính dựa trên chênh lệch giá phòng đến hết hợp đồng"}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center text-gray-400 py-2 sm:py-6 text-sm italic">
-                    Chọn phòng để xem phí
-                  </div>
+                  <div className="text-center text-gray-400 py-6 text-sm italic">Chọn phòng để xem phí</div>
                 )}
               </div>
             </div>
@@ -185,13 +195,13 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
             <div className="flex-1 overflow-y-auto p-5 bg-gray-50/30">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                 {filteredRooms.map((room) => {
-                  const isSelected = selectedRoom?.id === room.id;
-                  const availableSlots = room.capacity - room.current;
-                  const isFull = availableSlots <= 0;
+                  const isSelected = selectedRoom?.roomID === room.roomID;
+                  const availableSlots = room.availableBeds;
+                  const isFull = room.availableBeds <= 0;
 
                   return (
                     <div 
-                      key={room.id}
+                      key={room.roomID}
                       onClick={() => !isFull && setSelectedRoom(room)}
                       className={`
                         relative p-4 rounded-xl border-2 transition-all cursor-pointer bg-white group
@@ -207,7 +217,7 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
 
                       <div className="flex justify-between items-start mb-2">
                         <h4 className={`font-bold text-lg ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
-                          {room.name}
+                          {room.roomName}
                         </h4>
                         {!isSelected && (
                             <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border
@@ -221,9 +231,9 @@ const RoomChangeModal = ({ isOpen, onClose, contract }) => {
                       </div>
 
                       <div className="text-sm text-gray-500 space-y-1">
-                        <p>{room.type}</p>
+                        <p>{room.roomType}</p>
                         <p className="font-semibold text-gray-700">
-                          {formatCurrency(room.price)} <span className="font-normal text-gray-400">/tháng</span>
+                          {formatCurrency(room.price)} <span className="font-normal text-gray-400">/năm</span>
                         </p>
                       </div>
                     </div>
