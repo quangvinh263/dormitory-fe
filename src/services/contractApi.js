@@ -115,9 +115,9 @@ export const getContractFiltered = async (keyword, buildingName, status) => {
     }
 }
 
-export const getContractOverview = async () => {
+export const getContractOverview = async (filter = {}) => {
     try {
-        const response = await axios.get(`${API_URL}/Contract/overview`)
+        const response = await axios.get(`${API_URL}/Contract/overview`, { params: filter })
         if (response.status === 200 || response.data?.success) {
             return { success: true, data: response.data?.data ?? response.data }
         }
@@ -151,9 +151,9 @@ export const getPendingRequest = async (studentId) => {
     }
 }
 
-export const getAllContracts = async () => {
+export const getAllContracts = async (filter = {}) => {
     try {
-        const response = await axios.get(`${API_URL}/Contract`)
+        const response = await axios.get(`${API_URL}/Contract`, { params: filter });
         if (response.status === 200 || response.data?.success) {
             return { 
                 success: true, 

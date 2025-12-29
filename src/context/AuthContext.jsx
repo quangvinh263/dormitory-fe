@@ -9,6 +9,8 @@ export const AuthProvider = ({ children }) => {
     refreshToken: localStorage.getItem("refreshToken"),
     accountId: localStorage.getItem("accountId"),
     role: localStorage.getItem("role"),
+    buildingID: localStorage.getItem("buildingID"),
+    buildingName: localStorage.getItem("buildingName"),
   });
 
   const login = (data) => {

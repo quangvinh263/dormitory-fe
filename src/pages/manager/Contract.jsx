@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useContext } from 'react';
 import { ArrowDownTrayIcon, BellAlertIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { toast, Toaster } from 'react-hot-toast';
+import { AuthContext } from "../../context/AuthContext";
 import * as contractApi from '../../services/contractApi'
 import ContractStats from '../../components/features/manager/ContractStats';
 import ContractFilter from '../../components/features/manager/ContractFilter';
@@ -15,6 +16,7 @@ export default function ContractPage() {
   const [stats, setStats] = useState(null);
   const [isRoomChangeModalOpen, setIsRoomChangeModalOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
+  const { auth } = useContext(AuthContext);
 
   const [filters, setFilters] = useState({
     search: '',
@@ -22,12 +24,17 @@ export default function ContractPage() {
     endDate: ''
   });
 
+ 
+
   const fetchData = async () => {
     try {
+      const params = {
+        buildingID: auth.buildingID || ''
+      }
       setLoading(true);
       const [contractsRes, statsRes] = await Promise.all([
-        contractApi.getAllContracts(),
-        contractApi.getContractOverview()
+        contractApi.getAllContracts(params),
+        contractApi.getContractOverview(params)
       ]);
 
       if (contractsRes.success) {
