@@ -21,7 +21,7 @@ export default function StudentInsurance() {
   
   // Data State
   const [studentId, setStudentId] = useState(null);
-  const {insuranceYear} = useState(new Date().getFullYear() + 1);
+  const [insuranceYear, setInsuranceYear] = useState(new Date().getFullYear() + 1);
   const [insurancePrice, setInsurancePrice] = useState(0);
   const [hospitalList, setHospitalList] = useState([]);
   const [currentInsurance, setCurrentInsurance] = useState(null);
@@ -73,11 +73,13 @@ export default function StudentInsurance() {
 
             if (priceRes.success && priceRes.data) {
                 setInsurancePrice(priceRes.data.price || priceRes.data.amount || 0);
+                setInsuranceYear(priceRes.data.year || yearToFetch);
             }
 
             if (hospitalRes.success && Array.isArray(hospitalRes.data)) {
                 setHospitalList(hospitalRes.data);
             }
+
 
         } catch (err) {
             if (mounted) setError(`Lỗi tải dữ liệu: ${err.message}`);
