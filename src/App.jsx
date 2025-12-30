@@ -157,11 +157,11 @@ export default function App() {
              <Route path="payment" element={<Payment />} />
              <Route path="maintenance" element={<Maintenance />} />
              <Route path="utility" element={<Utility />} />
-             <Route path="payment-success" element={<UtilityPaymentSuccess />} />
+             <Route path="utility-payment-success" element={<UtilityPaymentSuccess />} />
              <Route path="insurance" element={<Insurance />} />
              <Route path="violations" element={<Violations />} />
              <Route path="utility/payment" element={<UtilityPayment />} />
-             <Route path="renew-success" element={<ContractPaymentSuccess />} />
+             <Route path="renewal-payment-success" element={<ContractPaymentSuccess />} />
              <Route path="/student/payment-result" element={<PaymentResult />} />
           </Route>
 

@@ -27,7 +27,7 @@ const PaymentResult = () => {
           switch (paymentData.paymentType) {
             case PAYMENT_TYPES.RENEWAL:
               // Lưu ý: route này phải trùng với route bạn định nghĩa trong App.js cho trang ContractPaymentSuccess
-              navigate(`/student/renew-success?${params}`, { state: stateData, replace: true });
+              navigate(`/student/renew-payment-success?${params}`, { state: stateData, replace: true });
               break;
               
             case PAYMENT_TYPES.REGISTRATION:

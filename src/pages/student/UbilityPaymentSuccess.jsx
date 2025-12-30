@@ -1,22 +1,41 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircleIcon, ArrowDownTrayIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 
 export default function UtilityPaymentSuccess() {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const [data, setData] = useState(null);
   
-  // Lấy data từ URL params (ZaloPay trả về)
-  // Ví dụ URL: /payment-success?amount=425000&appid=2554&apptransid=250420_123456&bankcode=ATM&checksum=...&status=1
-  const [transaction, setTransaction] = useState({
-    amount: searchParams.get('amount') || 425000,
-    transId: searchParams.get('apptransid') || `VNPAY_HD082024_${Date.now()}`, // Fallback giả lập
-    info: 'Thanh toán hóa đơn tháng 08/2024',
-    time: new Date().toLocaleString('vi-VN'),
-    invoiceCode: 'HD082024',
-    month: '08/2024'
-  });
+  useEffect(() => {
+    // 1. Lấy dữ liệu từ state được truyền từ PaymentResult
+    const paymentData = location.state?.paymentData;
+    console.log("Dữ liệu thanh toán điện nước nhận được:", paymentData);
+
+    // 2. Validate: Nếu không có data (F5 hoặc truy cập trực tiếp), quay về trang danh sách hóa đơn
+    if (!paymentData) {
+      navigate('/student/utility', { replace: true });
+    } else {
+      setData(paymentData);
+    }
+  }, [location, navigate]);
+
+  // Hàm format tiền tệ
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(amount);
+  };
+
+  // Hàm format ngày tháng
+  const formatDate = (timestamp) => {
+    if (!timestamp) return new Date().toLocaleString('vi-VN');
+    return new Date(timestamp).toLocaleString('vi-VN');
+  };
+
+  if (!data) return null;
 
   return (
     <div className="w-full space-y-6">
@@ -32,42 +51,57 @@ export default function UtilityPaymentSuccess() {
             
             <div>
                <h1 className="text-xl font-bold text-green-600">Thanh toán thành công!</h1>
-               <p className="text-sm text-gray-500 mt-1">Mã giao dịch: <span className="font-bold text-gray-700">{transaction.transId}</span></p>
+               <p className="text-sm text-gray-500 mt-1">
+                 Mã giao dịch: <span className="font-bold text-gray-700">{data.transId || data.zpTransId}</span>
+               </p>
             </div>
          </div>
 
          {/* 2. Body Info */}
          <div className="p-6 space-y-6">
             
-            {/* Thông báo chính */}
+            {/* Thông báo chính & Số tiền */}
             <div className="bg-green-50 border border-green-100 rounded-lg p-4 space-y-2">
-               <p className="text-sm text-green-800 font-medium">
-                  {transaction.info} đã thành công.
+               <p className="text-sm text-green-800 font-medium text-center">
+                  Hóa đơn dịch vụ đã được thanh toán.
                </p>
-               <p className="text-green-700 font-bold text-lg">
-                  Số tiền: {Number(transaction.amount).toLocaleString()}đ
+               <p className="text-green-700 font-bold text-2xl text-center">
+                  {formatCurrency(data.amount)}
                </p>
             </div>
 
             {/* Chi tiết giao dịch */}
             <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-               <h3 className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2 mb-2">Thông tin giao dịch:</h3>
+               <h3 className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2 mb-2">
+                 Thông tin giao dịch:
+               </h3>
                
+               {/* Mã tham chiếu */}
                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Mã hóa đơn:</span>
-                  <span className="font-medium text-gray-900">{transaction.invoiceCode}</span>
+                  <span className="text-gray-500">Mã tham chiếu:</span>
+                  <span className="font-medium text-gray-900">{data.transId}</span>
                </div>
-               <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Tháng:</span>
-                  <span className="font-medium text-gray-900">{transaction.month}</span>
-               </div>
-               <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Số tiền:</span>
-                  <span className="font-bold text-gray-900">{Number(transaction.amount).toLocaleString()}đ</span>
-               </div>
+
+               {/* Thời gian */}
                <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Thời gian:</span>
-                  <span className="font-medium text-gray-900">{transaction.time}</span>
+                  <span className="font-medium text-gray-900">
+                    {formatDate(data.serverTime || Date.now())}
+                  </span>
+               </div>
+
+               {/* Nội dung (Có xử lý xuống dòng nếu dài) */}
+               <div className="flex justify-between items-start text-sm">
+                  <span className="text-gray-500 shrink-0 mr-4 pt-0.5">Nội dung:</span>
+                  <span className="font-medium text-gray-900 text-right break-words flex-1">
+                    {data.description || "Thanh toán hóa đơn dịch vụ"}
+                  </span>
+               </div>
+
+               {/* Trạng thái */}
+               <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Trạng thái:</span>
+                  <span className="font-bold text-green-600">Đã thanh toán</span>
                </div>
             </div>
          </div>
