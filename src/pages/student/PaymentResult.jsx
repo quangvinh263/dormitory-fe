@@ -40,18 +40,20 @@ const PaymentResult = () => {
             case PAYMENT_TYPES.HEALTH_INSURANCE:
               navigate(`/student/insurance-payment-success?${params}`, { state: stateData, replace: true });
               break;
+            case PAYMENT_TYPES.MAINTENANCE:
+              navigate(`/student/maintenance-payment-success?${params}`, { state: stateData, replace: true });
+              break;
             default:
               console.warn("Loại thanh toán không xác định:", paymentData.paymentType);
               navigate('/student', { replace: true });
           }
         } else {
             // Trường hợp API trả về success: false
-             navigate('/student/dashboard', { replace: true });
+             navigate('/student', { replace: true });
         }
       } catch (error) {
         console.error("Lỗi khi lấy kết quả thanh toán:", error);
-        // Nếu lỗi 401 thì hệ thống thường tự redirect login, còn lỗi khác thì về dashboard
-        navigate('/student/dashboard', { replace: true });
+        navigate('/student', { replace: true });
       }
     };
     processPayment();

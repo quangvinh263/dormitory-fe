@@ -63,7 +63,7 @@ const ContractPaymentSuccess = () => {
                 {/* Thông báo chính & Số tiền */}
                 <div className="bg-green-50 border border-green-100 rounded-lg p-4 space-y-2">
                    <p className="text-sm text-green-800 font-medium text-center">
-                      Hóa đơn gia hạn hợp đồng đã được thanh toán.
+                      Hóa đơn bảo trì sửa chữa thiết bị đã được thanh toán thành công.
                    </p>
                    <p className="text-green-700 font-bold text-2xl text-center">
                       {formatCurrency(data.amount)}
@@ -120,7 +120,7 @@ const ContractPaymentSuccess = () => {
                 <Button 
                    className="flex-1 justify-center"
                    icon={<ArrowLeftIcon className="w-4 h-4"/>}
-                   onClick={() => navigate('/student/extension')} // Quay về trang Điện nước
+                   onClick={() => navigate('/student/maintenance')} // Quay về trang Điện nước
                 >
                    Quay lại
                 </Button>
