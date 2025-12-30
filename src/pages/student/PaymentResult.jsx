@@ -27,17 +27,19 @@ const PaymentResult = () => {
           switch (paymentData.paymentType) {
             case PAYMENT_TYPES.RENEWAL:
               // Lưu ý: route này phải trùng với route bạn định nghĩa trong App.js cho trang ContractPaymentSuccess
-              navigate(`/student/renew-payment-success?${params}`, { state: stateData, replace: true });
+              navigate(`/student/renewal-payment-success?${params}`, { state: stateData, replace: true });
               break;
               
             case PAYMENT_TYPES.REGISTRATION:
-              navigate(`/student/registration-success?${params}`, { state: stateData, replace: true });
+              navigate(`/student/registration-payment-success?${params}`, { state: stateData, replace: true });
               break;
               
             case PAYMENT_TYPES.UTILITY:
               navigate(`/student/utility-payment-success?${params}`, { state: stateData, replace: true });
               break;
-              
+            case PAYMENT_TYPES.HEALTH_INSURANCE:
+              navigate(`/student/insurance-payment-success?${params}`, { state: stateData, replace: true });
+              break;
             default:
               console.warn("Loại thanh toán không xác định:", paymentData.paymentType);
               navigate('/student', { replace: true });

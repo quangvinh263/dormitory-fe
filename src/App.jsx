@@ -44,6 +44,7 @@ import Violations from './pages/student/Violations';
 import UtilityPayment from './pages/student/UtilityPayment';
 import PaymentResult from './pages/student/PaymentResult';
 import ContractPaymentSuccess from './pages/student/ContractPaymentSuccess';
+import InsurancePaymentSuccess from './pages/student/InsurancePaymentSuccess';
 
 // Component để xử lý redirect dựa trên authentication
 function AuthRedirect() {
@@ -162,6 +163,7 @@ export default function App() {
              <Route path="violations" element={<Violations />} />
              <Route path="utility/payment" element={<UtilityPayment />} />
              <Route path="renewal-payment-success" element={<ContractPaymentSuccess />} />
+             <Route path="insurance-payment-success" element={<InsurancePaymentSuccess />} />
              <Route path="/student/payment-result" element={<PaymentResult />} />
           </Route>
 

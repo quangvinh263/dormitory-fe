@@ -63,13 +63,12 @@ const ContractPaymentSuccess = () => {
                 {/* Thông báo chính & Số tiền */}
                 <div className="bg-green-50 border border-green-100 rounded-lg p-4 space-y-2">
                    <p className="text-sm text-green-800 font-medium text-center">
-                      Hóa đơn gia hạn hợp đồng đã được thanh toán.
+                      Hóa đơn bảo hiểm y tế năm { new Date().getFullYear()+1} đã được thanh toán.
                    </p>
                    <p className="text-green-700 font-bold text-2xl text-center">
                       {formatCurrency(data.amount)}
                    </p>
                 </div>
-    
                 {/* Chi tiết giao dịch */}
                 <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                    <h3 className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2 mb-2">
@@ -120,7 +119,7 @@ const ContractPaymentSuccess = () => {
                 <Button 
                    className="flex-1 justify-center"
                    icon={<ArrowLeftIcon className="w-4 h-4"/>}
-                   onClick={() => navigate('/student/utility')} // Quay về trang Điện nước
+                   onClick={() => navigate('/student/insurance')} // Quay về trang Bảo hiểm
                 >
                    Quay lại
                 </Button>
