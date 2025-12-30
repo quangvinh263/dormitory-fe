@@ -20,3 +20,12 @@ export const ROLE_THEME = {
     title: 'Ký Túc Xá Sinh Viên',
   },
 };
+
+export const PAYMENT_TYPES = {
+  REGISTRATION: "Registration",
+  RENEWAL: "RenewalContract",
+  UTILITY: "Utility",
+  HEALTH_INSURANCE: "HealthInsurance",
+  MAINTENANCE: "MaintenanceFee",
+  ROOM_CHANGE: "RoomChangeCharge"
+};

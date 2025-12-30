@@ -38,11 +38,15 @@ import Payment from './pages/student/Payment';
 import RenewContract from './pages/student/RenewContract';
 import Maintenance from './pages/student/Maintenance';
 import Utility from './pages/student/Utility';
-import PaymentSuccess from './pages/student/UbilityPaymentSuccess';
+import UtilityPaymentSuccess from './pages/student/UbilityPaymentSuccess';
 import Insurance from './pages/student/Insurance';
 import Violations from './pages/student/Violations';
 import UtilityPayment from './pages/student/UtilityPayment';
 import PaymentResult from './pages/student/PaymentResult';
+import ContractPaymentSuccess from './pages/student/ContractPaymentSuccess';
+import InsurancePaymentSuccess from './pages/student/InsurancePaymentSuccess';
+import MaintenancePaymentSuccess from './pages/student/MaintenancePaymentSuccess';
+import RegisPaymentSuccess from './pages/student/RegisPaymentSuccess';
 
 // Component để xử lý redirect dựa trên authentication
 function AuthRedirect() {
@@ -156,10 +160,14 @@ export default function App() {
              <Route path="payment" element={<Payment />} />
              <Route path="maintenance" element={<Maintenance />} />
              <Route path="utility" element={<Utility />} />
-             <Route path="payment-success" element={<PaymentSuccess />} />
+             <Route path="utility-payment-success" element={<UtilityPaymentSuccess />} />
              <Route path="insurance" element={<Insurance />} />
              <Route path="violations" element={<Violations />} />
              <Route path="utility/payment" element={<UtilityPayment />} />
+             <Route path="renewal-payment-success" element={<ContractPaymentSuccess />} />
+             <Route path="insurance-payment-success" element={<InsurancePaymentSuccess />} />
+             <Route path="maintenance-payment-success" element={<MaintenancePaymentSuccess />} />
+             <Route path="regis-payment-success" element={<RegisPaymentSuccess />} />
              <Route path="/student/payment-result" element={<PaymentResult />} />
           </Route>
 
