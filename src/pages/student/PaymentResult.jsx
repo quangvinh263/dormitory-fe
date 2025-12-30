@@ -31,7 +31,7 @@ const PaymentResult = () => {
               break;
               
             case PAYMENT_TYPES.REGISTRATION:
-              navigate(`/student/registration-payment-success?${params}`, { state: stateData, replace: true });
+              navigate(`/student/regis-payment-success?${params}`, { state: stateData, replace: true });
               break;
               
             case PAYMENT_TYPES.UTILITY:

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircleIcon, ArrowDownTrayIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 
-const ContractPaymentSuccess = () => {
+const MaintenancePaymentSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -132,4 +132,4 @@ const ContractPaymentSuccess = () => {
   );
 };
 
-export default ContractPaymentSuccess;
+export default MaintenancePaymentSuccess;
