@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircleIcon, ArrowDownTrayIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 
-export default function PaymentSuccess() {
+export default function UtilityPaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   

@@ -74,6 +74,16 @@ export const processZaloPayCallback = async (payload) => {
   }
 }
 
+export const getResultFromZaloPayCallback = async(appTransId) => {
+  try {
+    const response = await axios.get(`${API_URL}/Payment/result/${appTransId}`)
+    if (response.status === 200 || response.data?.success) return { success: true, data: response.data }
+    return { success: false, message: response.data?.message || 'Failed to get result from ZaloPay callback' }
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error getting result from ZaloPay callback' }
+  }
+}
+
 export default {
   createZaloPayLinkForRegistration,
   createZaloPayLinkForRenewal,
@@ -81,5 +91,6 @@ export default {
   createZaloPayLinkForHealthInsurance,
   createZaloPayLinkForRoomChange,
   processZaloPayCallback,
+  getResultFromZaloPayCallback
 }
 
