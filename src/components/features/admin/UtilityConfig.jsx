@@ -1,11 +1,111 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { BoltIcon } from '@heroicons/react/24/outline';
+import { getActiveParameter } from '../../../services/utilityBillApi';
+import { createParameterConfig } from '../../../services/adminApi';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const UtilityConfig = () => {
-  const [config, setConfig] = useState({ elec: 3500, water: 15000, maintain: 50000 });
+const UtilityConfig = forwardRef((props, ref) => {
+  const [config, setConfig] = useState({ elec: 3500, water: 15000 });
+  const [originalConfig, setOriginalConfig] = useState({ elec: 3500, water: 15000 });
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const formatVND = (v) => new Intl.NumberFormat('vi-VN').format(v);
-  const totalExample = useMemo(() => (100 * config.elec) + (5 * config.water) + config.maintain, [config]);
+  const totalExample = useMemo(() => (100 * config.elec) + (5 * config.water), [config]);
+
+  const hasUnsavedChanges = () => {
+    return config.elec !== originalConfig.elec || config.water !== originalConfig.water;
+  };
+
+  const saveConfig = async () => {
+    const parameterData = {
+      defaultElectricityPrice: config.elec,
+      defaultWaterPrice: config.water,
+    };
+    const result = await createParameterConfig(parameterData);
+    if (result.success) {
+      setOriginalConfig({ ...config });
+    }
+    return result;
+  };
+
+  useImperativeHandle(ref, () => ({
+    hasUnsavedChanges,
+    saveConfig
+  }));
+
+  // Intercept navigation
+  useEffect(() => {
+    const handleNavigation = (e) => {
+      if (hasUnsavedChanges()) {
+        const confirmLeave = window.confirm(
+          'Bạn có chỉnh sửa chưa được lưu. Xác nhận rời đi?'
+        );
+        if (!confirmLeave) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+      return true;
+    };
+
+    // Lắng nghe click trên tất cả các link
+    const links = document.querySelectorAll('a[href]');
+    links.forEach(link => {
+      link.addEventListener('click', handleNavigation);
+    });
+
+    // Lắng nghe popstate (back/forward button)
+    const handlePopState = (e) => {
+      if (hasUnsavedChanges()) {
+        const confirmLeave = window.confirm(
+          'Bạn có chỉnh sửa chưa được lưu. Xác nhận rời đi?'
+        );
+        if (!confirmLeave) {
+          e.preventDefault();
+          window.history.pushState(null, '', location.pathname);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      links.forEach(link => {
+        link.removeEventListener('click', handleNavigation);
+      });
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [config, originalConfig, location]);
+
+  useEffect(() => {
+    const fetchActiveParameter = async () => {
+      const result = await getActiveParameter();
+      if (result.success && result.data) {
+        const newConfig = {
+          elec: result.data.defaultElectricityPrice,
+          water: result.data.defaultWaterPrice,
+        };
+        setConfig(newConfig);
+        setOriginalConfig(newConfig);
+      }
+    };
+
+    fetchActiveParameter();
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [config, originalConfig]);
 
   return (
     <div className="w-full bg-white rounded-2xl border border-gray-200 p-6 shadow-sm animate-fade-in">
@@ -80,6 +180,6 @@ const UtilityConfig = () => {
       </div>
     </div>
   );
-};
+});
 
 export default UtilityConfig;
