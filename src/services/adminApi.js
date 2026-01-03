@@ -37,3 +37,4 @@ export const createParameterConfig = async (data) => {
         return { success: false, message: error.response?.data?.message || 'Error creating parameter' };
     }
 };
+

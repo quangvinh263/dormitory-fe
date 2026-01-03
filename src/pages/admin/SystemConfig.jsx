@@ -1,21 +1,35 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/ui/Button';
 import UtilityConfig from '../../components/features/admin/UtilityConfig';
 import InsuranceConfig from '../../components/features/admin/InsuranceConfig';
-import { createParameterConfig } from '../../services/adminApi';
 
 const SystemConfig = () => {
   const [activeTab, setActiveTab] = useState('utility');
+  const [hasChanges, setHasChanges] = useState(false);
   const utilityConfigRef = useRef(null);
+  const insuranceConfigRef = useRef(null);
 
   const configTabs = [
     { id: 'utility', label: 'Điện nước' },
     { id: 'insurance', label: 'Bảo hiểm' },
   ];
 
+  // Kiểm tra thay đổi từ cả 2 tab
+  useEffect(() => {
+    const checkChanges = setInterval(() => {
+      const utilityHasChanges = utilityConfigRef.current?.hasUnsavedChanges() || false;
+      const insuranceHasChanges = insuranceConfigRef.current?.hasUnsavedChanges() || false;
+      setHasChanges(utilityHasChanges || insuranceHasChanges);
+    }, 500);
+
+    return () => clearInterval(checkChanges);
+  }, []);
+
   const handleTabChange = (tabId) => {
-    if (activeTab === 'utility' && utilityConfigRef.current?.hasUnsavedChanges()) {
+    const currentRef = activeTab === 'utility' ? utilityConfigRef : insuranceConfigRef;
+    
+    if (currentRef.current?.hasUnsavedChanges()) {
       if (window.confirm('Bạn có chỉnh sửa chưa được lưu. Xác nhận rời đi?')) {
         setActiveTab(tabId);
       }
@@ -28,7 +42,14 @@ const SystemConfig = () => {
     if (activeTab === 'utility') {
       const result = await utilityConfigRef.current?.saveConfig();
       if (result?.success) {
-        alert('Cấu hình đã được lưu thành công!');
+        alert('Cấu hình điện nước đã được lưu thành công!');
+      } else {
+        alert('Lưu cấu hình thất bại: ' + (result?.message || 'Vui lòng thử lại.'));
+      }
+    } else if (activeTab === 'insurance') {
+      const result = await insuranceConfigRef.current?.saveConfig();
+      if (result?.success) {
+        alert('Cấu hình bảo hiểm đã được lưu thành công!');
       } else {
         alert('Lưu cấu hình thất bại: ' + (result?.message || 'Vui lòng thử lại.'));
       }
@@ -48,6 +69,7 @@ const SystemConfig = () => {
           icon={<CloudArrowUpIcon />}
           className="font-bold whitespace-nowrap"
           onClick={handleSaveConfig}
+          disabled={!hasChanges}
         >
           Lưu cấu hình
         </Button>
@@ -73,7 +95,7 @@ const SystemConfig = () => {
         {activeTab === 'utility' ? (
           <UtilityConfig ref={utilityConfigRef} />
         ) : (
-          <InsuranceConfig />
+          <InsuranceConfig ref={insuranceConfigRef} />
         )}
       </div>
     </div>
