@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Badge from '../../../ui/Badge';
-import { getAvailableRooms, getEquipmentByRoom } from '../../../../services/roomAPI';
+import { getAvailableRooms, getEquipmentByRoom } from '../../../../services/roomApi';
 
 const EquipmentReport = () => {
   // --- 1. STATE ---
