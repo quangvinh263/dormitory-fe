@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { 
+  exportAvailableRooms, 
+  exportExpiredContracts, 
+  exportStudentContracts, 
+  exportPriorityStudents, 
+  exportRoomEquipment, 
+  exportManagers 
+} from '../../services/reportApi';
 
 // 1. Imports Components Chung
 import ReportStats from '../../components/features/admin/ReportStats';
@@ -17,13 +25,48 @@ import ManagerReport from '../../components/features/admin/contents/ManagerRepor
 const SystemReport = () => {
   const [activeTab, setActiveTab] = useState('capacity'); // 'capacity' hoặc 'finance'
   const [currentReport, setCurrentReport] = useState('empty_rooms'); // Tab con (Phòng trống, HĐ...)
+  const [exporting, setExporting] = useState(false);
+
+  // Mapping các report với export function tương ứng
+  const exportFunctions = {
+    'empty_rooms': exportAvailableRooms,
+    'expired_contracts': exportExpiredContracts,
+    'student_contracts': exportStudentContracts,
+    'priority_students': exportPriorityStudents,
+    'equipment': exportRoomEquipment,
+    'managers': exportManagers
+  };
+
+  // Hàm xuất báo cáo chung
+  const handleExport = async () => {
+    const exportFunction = exportFunctions[currentReport];
+
+    if (!exportFunction) {
+      alert('Chức năng xuất báo cáo chưa được hỗ trợ cho loại báo cáo này');
+      return;
+    }
+
+    try {
+      setExporting(true);
+      const result = await exportFunction();
+      
+      if (!result.success) {
+        alert(result.message || 'Đã xảy ra lỗi khi xuất báo cáo');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Đã xảy ra lỗi khi xuất báo cáo');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Hàm render nội dung tương ứng với menu con (Chỉ dùng cho Công suất)
   const renderDetailReport = () => {
     switch (currentReport) {
       case 'empty_rooms': return <EmptyRoomsReport />;
       case 'expired_contracts': return <ExpiredContractsReport />;
-      case 'all_contracts': return <StudentContractsReport />;
+      case 'student_contracts': return <StudentContractsReport />;
       case 'priority_students': return <PriorityStudentsReport />;
       case 'equipment': return <EquipmentReport />;
       case 'managers': return <ManagerReport />;
@@ -69,9 +112,20 @@ const SystemReport = () => {
                             Tạo và xuất các loại báo cáo hệ thống (chỉ dành cho Quản lý và Admin)
                         </p>
                     </div>
-                    <button className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition shadow-sm">
-                        <ArrowDownTrayIcon className="w-4 h-4"/> <span>Xuất báo cáo</span>
-                    </button>
+                    {!['expired_contracts', 'student_contracts', 'equipment'].includes(currentReport) && (
+                        <button 
+                            onClick={handleExport}
+                            disabled={exporting}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm ${
+                                exporting 
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                                    : 'bg-white border border-gray-200 text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                            }`}
+                        >
+                            <ArrowDownTrayIcon className="w-4 h-4"/> 
+                            <span>{exporting ? 'Đang xuất...' : 'Xuất báo cáo'}</span>
+                        </button>
+                    )}
                 </div>
 
                 {/* Nội dung bên trong khung trắng */}

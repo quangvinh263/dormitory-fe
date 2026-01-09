@@ -1,32 +1,77 @@
-import React, { useState } from 'react';
-import { MagnifyingGlassIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from 'react';
+import { MagnifyingGlassIcon, CalendarIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import Badge from '../../../ui/Badge';
+import { getContractsByStudentId, exportStudentContracts } from '../../../../services/reportApi';
 
 const StudentContractsReport = () => {
   const [studentId, setStudentId] = useState('');
   const [contracts, setContracts] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [exporting, setExporting] = useState(false);
+  const itemsPerPage = 10;
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
     if (!studentId.trim()) return;
-    setHasSearched(true);
-
-    // MOCK DATA: Mô phỏng logic BE update trực tiếp vào bản ghi cũ
-    // Dữ liệu chỉ gồm các trường cơ bản từ StudentContractDto của bạn
-    if (studentId === 'SV001') {
-        setContracts([
-            { 
-              ContractID: 'HĐ-SV001-A101', 
-              StudentName: 'Nguyễn Văn A', 
-              RoomName: 'A.101', 
-              StartDate: '2023-09-01', // Ngày vào đầu tiên
-              EndDate: '2025-06-30',   // Ngày kết thúc mới nhất (đã cập nhật)
-              ContractStatus: 'Active'
-            }
-        ]);
-    } else {
+    
+    try {
+      setLoading(true);
+      setError(null);
+      setHasSearched(true);
+      setCurrentPage(1);
+      
+      const result = await getContractsByStudentId(studentId.trim());
+      
+      if (result.success) {
+        setContracts(result.data || []);
+      } else {
+        setError(result.message || 'Không thể tải dữ liệu hợp đồng');
         setContracts([]);
+      }
+    } catch (err) {
+      setError('Đã xảy ra lỗi khi tải dữ liệu');
+      setContracts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(contracts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = contracts.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handleExport = async () => {
+    if (!studentId.trim()) {
+      alert('Vui lòng nhập MSSV để xuất báo cáo');
+      return;
+    }
+    try {
+      setExporting(true);
+      const result = await exportStudentContracts(studentId.trim());
+      if (!result.success) {
+        alert(result.message || 'Đã xảy ra lỗi khi xuất báo cáo');
+      }
+    } catch (err) {
+      alert('Đã xảy ra lỗi khi xuất báo cáo');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -40,8 +85,25 @@ const StudentContractsReport = () => {
             <p className="text-sm text-gray-500 mt-0.5">Xem thời hạn hợp đồng hiện tại của sinh viên</p>
         </div>
         
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Export Button */}
+          {hasSearched && contracts.length > 0 && (
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm ${
+                exporting
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              {exporting ? 'Đang xuất...' : 'Xuất Excel'}
+            </button>
+          )}
+          
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="flex items-center gap-2">
             <div className="relative">
                 <input 
                     type="text" 
@@ -55,7 +117,8 @@ const StudentContractsReport = () => {
             <button type="submit" className="px-3 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition shadow-sm">
                 Tra cứu
             </button>
-        </form>
+          </form>
+        </div>
       </div>
 
       {/* TABLE */}
@@ -70,45 +133,127 @@ const StudentContractsReport = () => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {!hasSearched ? (
+          {loading ? (
+             <tr>
+                <td colSpan="5" className="px-6 py-10 text-center text-gray-500 text-sm">
+                   Đang tải dữ liệu...
+                </td>
+             </tr>
+          ) : error ? (
+             <tr>
+                <td colSpan="5" className="px-6 py-10 text-center text-red-500 text-sm">
+                   {error}
+                </td>
+             </tr>
+          ) : !hasSearched ? (
              <tr>
                 <td colSpan="5" className="px-6 py-10 text-center text-gray-400 text-sm">
-                   Vui lòng nhập Mã số sinh viên để xem thông tin hợp đồng.
+                   Vui lòng nhập Mã số sinh viên để tra cứu hợp đồng.
                 </td>
              </tr>
           ) : contracts.length === 0 ? (
              <tr>
                 <td colSpan="5" className="px-6 py-10 text-center text-gray-500 text-sm">
-                   Không tìm thấy hợp đồng nào cho sinh viên này.
+                   Không tìm thấy hợp đồng nào.
                 </td>
              </tr>
           ) : (
-             contracts.map((item, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-gray-900 text-sm">{item.ContractID}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{item.StudentName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{item.RoomName}</td>
+             currentData.map((item, i) => {
+                const startDate = item.startDate || item.StartDate;
+                const endDate = item.endDate || item.EndDate;
+                const contractStatus = item.status || item.contractStatus;
+                const formattedStartDate = startDate ? new Date(startDate).toLocaleDateString('vi-VN') : 'N/A';
+                const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString('vi-VN') : 'N/A';
+                
+                return (
+                <tr key={item.contractID || item.ContractID || i} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-900 text-sm">{item.contractID || item.ContractID}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{item.studentName || item.StudentName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{item.roomName || item.RoomName}</td>
                   
                   {/* Cột Thời gian hiển thị rõ ràng ngày bắt đầu và ngày kết thúc mới nhất */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 px-3 py-1.5 rounded-md w-fit border border-gray-200">
                         <CalendarIcon className="w-4 h-4 text-gray-500"/>
-                        <span className="font-medium">{item.StartDate}</span>
+                        <span className="font-medium">{formattedStartDate}</span>
                         <span className="text-gray-400">→</span>
-                        <span className="font-bold text-blue-700">{item.EndDate}</span>
+                        <span className="font-bold text-blue-700">{formattedEndDate}</span>
                     </div>
                   </td>
 
                   <td className="px-6 py-4" align="center">
-                    {item.ContractStatus === 'Active' 
+                    {contractStatus === 'Active' 
                         ? <Badge type="success">Đang hiệu lực</Badge> 
                         : <Badge type="default">Đã kết thúc</Badge>}
                   </td>
                 </tr>
-             ))
+                );
+             })
           )}
         </tbody>
       </table>
+      
+      {/* Pagination */}
+      {!loading && contracts.length > 0 && totalPages > 1 && (
+        <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Hiển thị {startIndex + 1} - {Math.min(endIndex, contracts.length)} trong tổng số {contracts.length} hợp đồng
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrevious}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border'
+              }`}
+            >
+              Trước
+            </button>
+            
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, index) => {
+                const page = index + 1;
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === page
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                } else if (page === currentPage - 2 || page === currentPage + 2) {
+                  return <span key={page} className="px-2 text-gray-400">...</span>;
+                }
+                return null;
+              })}
+            </div>
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                currentPage === totalPages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border'
+              }`}
+            >
+              Sau
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
