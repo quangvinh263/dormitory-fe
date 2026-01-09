@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Badge from '../../../ui/Badge';
-import { getExpiredContracts } from '../../../../services/reportApi';
+import { getExpiredContracts, exportExpiredContracts } from '../../../../services/reportApi';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 const ExpiredContractsReport = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [exporting, setExporting] = useState(false);
   const itemsPerPage = 10;
   const [olderThan, setOlderThan] = useState(new Date().toISOString().slice(0, 10));
 
@@ -56,6 +58,20 @@ const ExpiredContractsReport = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const result = await exportExpiredContracts(olderThan);
+      if (!result.success) {
+        alert(result.message || 'Đã xảy ra lỗi khi xuất báo cáo');
+      }
+    } catch (err) {
+      alert('Đã xảy ra lỗi khi xuất báo cáo');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white border rounded-xl overflow-hidden shadow-sm animate-fade-in p-8">
@@ -81,7 +97,21 @@ const ExpiredContractsReport = () => {
       <div className="p-4 border-b bg-gray-50">
         <div className="flex justify-between items-center">
           <h3 className="font-bold text-gray-800 text-md">Hợp đồng hết hạn / Sắp hết hạn</h3>
-          <span className="text-sm text-gray-500">Tìm thấy {data.length} hợp đồng</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500">Tìm thấy {data.length} hợp đồng</span>
+            <button
+              onClick={handleExport}
+              disabled={exporting || data.length === 0}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm ${
+                exporting || data.length === 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              {exporting ? 'Đang xuất...' : 'Xuất Excel'}
+            </button>
+          </div>
         </div>
         {/* Khu vực Input */}
         <div className="pt-2 flex items-center gap-2">
