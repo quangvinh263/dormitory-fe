@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import Badge from '../../../ui/Badge';
 import { getAvailableRooms, getEquipmentByRoom } from '../../../../services/roomApi';
+import { exportRoomEquipment } from '../../../../services/reportApi';
 
 const EquipmentReport = () => {
   // --- 1. STATE ---
@@ -11,6 +13,7 @@ const EquipmentReport = () => {
   const [equipments, setEquipments] = useState([]); // Kết quả thiết bị
   const [loading, setLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // --- 2. GỌI API LẤY LIST PHÒNG (Chạy 1 lần khi mở trang) ---
   useEffect(() => {
@@ -82,6 +85,25 @@ const EquipmentReport = () => {
         setLoading(false); 
     }
   };
+
+  const handleExport = async () => {
+    if (!selectedRoomId) {
+      alert('Vui lòng chọn phòng để xuất báo cáo');
+      return;
+    }
+    try {
+      setExporting(true);
+      const result = await exportRoomEquipment(selectedRoomId);
+      if (!result.success) {
+        alert(result.message || 'Đã xảy ra lỗi khi xuất báo cáo');
+      }
+    } catch (err) {
+      alert('Đã xảy ra lỗi khi xuất báo cáo');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Helper render màu trạng thái
   const renderStatusBadge = (status) => {
     const s = status?.toLowerCase() || '';
@@ -99,7 +121,24 @@ const EquipmentReport = () => {
             <h3 className="font-bold text-gray-800 text-md">Tra cứu Thiết bị</h3>
         </div>
 
-        <form onSubmit={handleSearch} className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Export Button */}
+          {isSearching && equipments.length > 0 && (
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm ${
+                exporting
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              {exporting ? 'Đang xuất...' : 'Xuất Excel'}
+            </button>
+          )}
+
+          <form onSubmit={handleSearch} className="flex items-center gap-2">
             
             {/* 1. SELECT TÒA NHÀ */}
             <select 
@@ -137,7 +176,8 @@ const EquipmentReport = () => {
             >
                 {loading ? '...' : 'Xem'}
             </button>
-        </form>
+          </form>
+        </div>
       </div>
 
       {/* TABLE HIỂN THỊ */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, CalendarIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import Badge from '../../../ui/Badge';
-import { getContractsByStudentId } from '../../../../services/reportApi';
+import { getContractsByStudentId, exportStudentContracts } from '../../../../services/reportApi';
 
 const StudentContractsReport = () => {
   const [studentId, setStudentId] = useState('');
@@ -10,6 +10,7 @@ const StudentContractsReport = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [exporting, setExporting] = useState(false);
   const itemsPerPage = 10;
 
   const handleSearch = async (e) => {
@@ -56,6 +57,24 @@ const StudentContractsReport = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
+  const handleExport = async () => {
+    if (!studentId.trim()) {
+      alert('Vui lòng nhập MSSV để xuất báo cáo');
+      return;
+    }
+    try {
+      setExporting(true);
+      const result = await exportStudentContracts(studentId.trim());
+      if (!result.success) {
+        alert(result.message || 'Đã xảy ra lỗi khi xuất báo cáo');
+      }
+    } catch (err) {
+      alert('Đã xảy ra lỗi khi xuất báo cáo');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="bg-white border rounded-xl overflow-hidden shadow-sm animate-fade-in">
       
@@ -66,8 +85,25 @@ const StudentContractsReport = () => {
             <p className="text-sm text-gray-500 mt-0.5">Xem thời hạn hợp đồng hiện tại của sinh viên</p>
         </div>
         
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Export Button */}
+          {hasSearched && contracts.length > 0 && (
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm ${
+                exporting
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              {exporting ? 'Đang xuất...' : 'Xuất Excel'}
+            </button>
+          )}
+          
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="flex items-center gap-2">
             <div className="relative">
                 <input 
                     type="text" 
@@ -81,7 +117,8 @@ const StudentContractsReport = () => {
             <button type="submit" className="px-3 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition shadow-sm">
                 Tra cứu
             </button>
-        </form>
+          </form>
+        </div>
       </div>
 
       {/* TABLE */}
