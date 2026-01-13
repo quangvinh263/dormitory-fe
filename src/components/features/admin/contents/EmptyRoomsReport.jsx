@@ -100,11 +100,11 @@ const EmptyRoomsReport = () => {
                     <td className="px-6 py-4 font-bold text-gray-900 text-sm">{item.roomName || item.id}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{item.roomType || item.type}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{item.capacity}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{item.currentOccupancy || item.current || 0}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.occupied || item.current || 0}</td>
                     <td className="px-6 py-4 text-sm font-medium">{(item.price || 0).toLocaleString()}đ</td>
                     <td className="px-6 py-4">
                       <Badge type="success">
-                        Còn {item.capacity - (item.currentOccupancy || item.current || 0)} chỗ
+                        Còn {item.capacity - (item.occupied || item.current || 0)} chỗ
                       </Badge>
                     </td>
                   </tr>

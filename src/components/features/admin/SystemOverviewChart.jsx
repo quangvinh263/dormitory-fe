@@ -81,7 +81,10 @@ const SystemOverviewChart = () => {
                   className={`h-4 rounded-full ${b.color} transition-all duration-1000`} 
                   style={{ width: `${b.fill}%` }}
                 ></div>
-                <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white font-bold drop-shadow-md">
+                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold drop-shadow-md"
+                  style={{
+                    color: b.fill > 50 ? 'white' : '#374151' // Trắng nếu >50%, xám đậm nếu <=50%
+                  }}>
                   Lấp đầy {b.fill}%
                 </span>
               </div>
