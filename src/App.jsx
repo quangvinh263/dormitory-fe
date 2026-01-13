@@ -168,7 +168,7 @@ export default function App() {
              <Route path="insurance-payment-success" element={<InsurancePaymentSuccess />} />
              <Route path="maintenance-payment-success" element={<MaintenancePaymentSuccess />} />
              <Route path="regis-payment-success" element={<RegisPaymentSuccess />} />
-             <Route path="/student/payment-result" element={<PaymentResult />} />
+             <Route path="payment-result" element={<PaymentResult />} />
           </Route>
 
         </Route>
