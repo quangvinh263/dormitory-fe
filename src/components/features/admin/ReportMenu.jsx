@@ -12,7 +12,7 @@ const ReportMenu = ({ activeTab, onChange }) => {
   const menus = [
     { id: 'empty_rooms', label: 'Phòng trống', icon: HomeModernIcon },
     { id: 'expired_contracts', label: 'HĐ Hết hạn', icon: DocumentTextIcon },
-    { id: 'all_contracts', label: 'DS Hợp đồng', icon: UserGroupIcon },
+    { id: 'student_contracts', label: 'Thông tin Hợp đồng', icon: UserGroupIcon },
     { id: 'priority_students', label: 'SV Ưu tiên', icon: StarIcon },
     { id: 'equipment', label: 'Trang thiết bị', icon: WrenchScrewdriverIcon },
     { id: 'managers', label: 'Nhân sự BQL', icon: UserCircleIcon },
