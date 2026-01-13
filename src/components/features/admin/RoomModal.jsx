@@ -85,7 +85,7 @@ const RoomModal = ({
 
   return (
     <div className="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden transform-gpu animate-fade-in">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto transform-gpu animate-fade-in">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <HomeModernIcon className="w-5 h-5 text-blue-600"/>

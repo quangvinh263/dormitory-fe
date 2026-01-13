@@ -272,89 +272,100 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
           </div>
 
           {/* CỘT PHẢI: FORM (65%) */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white">
+          <div className="flex-1 flex flex-col bg-white overflow-hidden">
             {selectedType || isCreateMode ? (
               <>
-                <h3 className="text-md font-bold text-gray-800 mb-4 pb-2 border-b">
-                  {isCreateMode ? 'Thêm loại phòng mới' : `Chỉnh sửa: ${selectedType.typeName}`}
-                </h3>
-                
-                <form onSubmit={handleSave} className="space-y-4">
-                  {/* Tên loại phòng */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tên loại phòng <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="typeName"
-                      value={editForm.typeName}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="VD: VIP 2 người"
-                      disabled={submitting}
-                      required
-                    />
-                  </div>
+                {/* 1. HEADER CỦA FORM (Cố định) */}
+                <div className="p-6 border-b border-gray-200 shrink-0">
+                  <h3 className="text-md font-bold text-gray-800">
+                    {isCreateMode ? 'Thêm loại phòng mới' : `Chỉnh sửa: ${selectedType.typeName}`}
+                  </h3>
+                </div>
 
-                  {/* Sức chứa & Đơn giá */}
-                  <div className="grid grid-cols-2 gap-4">
+                {/* FORM WRAPPER - Chiếm toàn bộ không gian còn lại */}
+                <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden">
+                  
+                  {/* 2. NỘI DUNG INPUTS (Cho phép cuộn dọc) */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    
+                    {/* Tên loại phòng */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Sức chứa (người) <span className="text-red-500">*</span>
+                        Tên loại phòng <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="number"
-                        name="capacity"
-                        value={editForm.capacity}
+                        type="text"
+                        name="typeName"
+                        value={editForm.typeName}
                         onChange={handleChange}
-                        min="1"
                         className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="VD: VIP 2 người"
                         disabled={submitting}
                         required
                       />
                     </div>
 
+                    {/* Sức chứa & Đơn giá */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Sức chứa (người) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          name="capacity"
+                          value={editForm.capacity}
+                          onChange={handleChange}
+                          min="1"
+                          className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          disabled={submitting}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Đơn giá (VNĐ/tháng) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          name="price"
+                          value={editForm.price}
+                          onChange={handleChange}
+                          min="0"
+                          step="100000"
+                          className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          disabled={submitting}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mô tả tiện ích */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Đơn giá (VNĐ/tháng) <span className="text-red-500">*</span>
+                        Mô tả tiện ích
                       </label>
-                      <input
-                        type="number"
-                        name="price"
-                        value={editForm.price}
+                      <textarea
+                        name="description"
+                        value={editForm.description}
                         onChange={handleChange}
-                        min="0"
-                        step="100000"
-                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows="5"
+                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                        placeholder="VD: Máy lạnh, tủ lạnh riêng, bao điện nước..."
                         disabled={submitting}
-                        required
                       />
                     </div>
+                    {/* Thêm div rỗng để tạo khoảng trống dưới cùng khi cuộn nếu cần */}
+                    <div className="h-4"></div>
                   </div>
 
-                  {/* Mô tả tiện ích */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mô tả tiện ích
-                    </label>
-                    <textarea
-                      name="description"
-                      value={editForm.description}
-                      onChange={handleChange}
-                      rows="3"
-                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                      placeholder="VD: Máy lạnh, tủ lạnh riêng, bao điện nước..."
-                      disabled={submitting}
-                    />
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="pt-2 flex justify-end gap-3">
+                  {/* 3. FOOTER CHỨA NÚT ACTION (Cố định ở đáy) */}
+                  <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3 shrink-0">
                     <button
                       type="button"
                       onClick={resetForm}
-                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
+                      className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-white transition"
                       disabled={submitting}
                     >
                       Hủy
@@ -377,10 +388,12 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
                       )}
                     </button>
                   </div>
+
                 </form>
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              // Empty State (Giữ nguyên nhưng thêm flex-1 để căn giữa đúng)
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
                 <SwatchIcon className="w-16 h-16 mb-4" />
                 <p className="text-lg font-medium">Chọn loại phòng để chỉnh sửa</p>
                 <p className="text-sm mt-2">Nhấn vào loại phòng bên trái để bắt đầu</p>
@@ -388,7 +401,6 @@ const RoomTypeModal = ({ isOpen, onClose, onUpdateRoomTypes }) => {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>
