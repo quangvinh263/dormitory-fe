@@ -8,6 +8,7 @@ import { AuthContext } from '../../context/AuthContext'
 import { getStudentContractDetail, createRenewalRequest,getPendingRequest } from '../../services/contractApi'
 import { getStudentInfo } from '../../services/studentApi'
 import { createZaloPayLinkForRenewal } from '../../services/paymentApi'
+import { getHistoryContractsByAccountId } from '../../services/contractApi'
 
 export default function RenewContract() {
   const navigate = useNavigate()
@@ -22,6 +23,7 @@ export default function RenewContract() {
   const [studentId, setStudentId] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [pendingReq, setPendingReq] = useState(null);
+  const [history, setHistory] = useState([]);
   
   useEffect(() => {
     const appTransId = searchParams.get('apptransid');
@@ -55,9 +57,10 @@ export default function RenewContract() {
       const studentId = stuRes.data.studentID || stuRes.data.studentID || stuRes.data.id;
       setStudentId(studentId);
 
-      const [contractRes, pendingRes] = await Promise.all([
+      const [contractRes, pendingRes, historyRes] = await Promise.all([
           getStudentContractDetail(accountId),
-          getPendingRequest(studentId)
+          getPendingRequest(studentId),
+          getHistoryContractsByAccountId(accountId)
         ]);
       if (!mounted) return;
       if (contractRes.success && contractRes.data) {
@@ -70,6 +73,9 @@ export default function RenewContract() {
           setPendingReq(pendingRes.data.data); 
         } else {
           setPendingReq(null); // Không có đơn chờ
+        }
+      if (historyRes.success && historyRes.data) {
+          setHistory(historyRes.data);
         }
     } 
     catch (err) 
@@ -412,6 +418,59 @@ export default function RenewContract() {
 
       </div>
     </Section>
+
+    {/* 4. LỊCH SỬ GIA HẠN HỢP ĐỒNG */}
+    {history && history.length > 0 && (
+      <Section>
+        <div className="space-y-4">
+          <h3 className="font-bold text-lg text-gray-900">Lịch sử gia hạn hợp đồng</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Mã hóa đơn</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Thời gian</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Nội dung</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Số tiền</th>
+                  <th className="text-center py-3 px-4 text-sm font-semibold text-gray-600">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((item, index) => (
+                  <tr key={item.receiptId || index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4 text-sm font-medium text-gray-900">{item.receiptId || '-'}</td>
+                    <td className="py-3 px-4 text-sm text-gray-600">
+                      {item.printTime ? new Date(item.printTime).toLocaleDateString('vi-VN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : '-'}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600">{item.content || '-'}</td>
+                    <td className="py-3 px-4 text-sm text-right font-medium text-gray-900">
+                      {item.amount ? item.amount.toLocaleString('vi-VN') + ' đ' : '0 đ'}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        item.status === 'Success' || item.status === 'Completed' || item.status === 'Paid'
+                          ? 'bg-green-100 text-green-800'
+                          : item.status === 'Pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {item.status === 'Success' ? 'Thành công' : item.status || 'Không rõ'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </Section>
+    )}
   </div>
   )
 }

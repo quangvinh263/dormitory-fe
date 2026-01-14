@@ -174,3 +174,15 @@ export const getAllContracts = async (filter = {}) => {
 
 // alias
 export const getContractDetailById = getStudentContractDetail
+
+export const getHistoryContractsByAccountId = async (accountId) => {
+    try {
+        const response = await axios.get(`${API_URL}/Contract/history/${accountId}`)
+        if (response.status === 200 || response.data?.success) {
+            return { success: true, data: response.data?.data ?? response.data?.dto ?? response.data }
+        }
+        return { success: false, message: response.data?.message || 'Failed to fetch contract history' }
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error fetching contract history' }
+    }
+}
