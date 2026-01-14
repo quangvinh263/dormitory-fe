@@ -73,3 +73,17 @@ export const getViolationsByStudentAccount = async (accountId) => {
         return { success: false, message: error.response?.data?.message || 'Error fetching violations for student account' };
     }
 };
+
+export const deleteViolation = async (violationId, managerAccountId) => {
+    try {
+        const response = await axios.delete(`${API_URL}/Violation/${violationId}`, {
+            params: { managerAccountId }
+        });
+        if (response.status === 200 || response.data.success) {
+            return { success: true, message: response.data?.message || 'Violation deleted successfully' };
+        }
+        return { success: false, message: response.data?.message || 'Failed to delete violation' };
+    } catch (error) {
+        return { success: false, message: error.response?.data?.message || 'Error deleting violation' };
+    }
+};

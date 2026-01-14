@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
-import { getAllViolationsForManager, updateViolationResolution, createViolationReport } from '../../services/violationApi';
+import { getAllViolationsForManager, updateViolationResolution, createViolationReport, deleteViolation } from '../../services/violationApi';
 
 import ViolationStats from '../../components/features/manager/ViolationStats';
 import ViolationFilter from '../../components/features/manager/ViolationFilter';
@@ -26,6 +26,7 @@ export default function ViolationDashboard() {
   const [error, setError] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const accountId = localStorage.getItem('accountId');
 
@@ -220,6 +221,38 @@ export default function ViolationDashboard() {
     setIsModalOpen(false);
   };
 
+  // Xử lý xóa vi phạm
+  const handleDeleteViolation = async (violation) => {
+    try {
+      setDeleteLoading(true);
+
+      const violationId = violation.originalData?.violationId || violation.id;
+      
+      if (!violationId) {
+        throw new Error('Không thể xóa vi phạm này (không có ID hợp lệ)');
+      }
+
+      // Gọi API xóa vi phạm
+      const deleteResult = await deleteViolation(violationId, accountId);
+
+      if (!deleteResult.success) {
+        throw new Error(deleteResult.message || 'Không thể xóa vi phạm');
+      }
+
+      // Refresh danh sách vi phạm sau khi xóa thành công
+      await fetchViolations();
+
+      // Đóng modal và hiển thị thông báo thành công
+      setIsModalOpen(false);
+      alert('Xóa vi phạm thành công! Hợp đồng của sinh viên đã được khôi phục (nếu có).');
+
+    } catch (err) {
+      alert(`Lỗi: ${err.message}`);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   // Filter tableData based on filters
   const filteredTableData = useMemo(() => {
     let filtered = [...tableData];
@@ -357,11 +390,13 @@ export default function ViolationDashboard() {
       isOpen={isModalOpen}
       onClose={() => setIsModalOpen(false)}
       onSubmit={handleModalSubmit}
+      onDelete={handleDeleteViolation}
       mode={modalMode}
       initialData={selectedViolation}
       allViolations={violations}
       updateLoading={updateLoading}
       createLoading={createLoading}
+      deleteLoading={deleteLoading}
     />
   </div>
 );

@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
-import { XMarkIcon, ExclamationTriangleIcon, ClockIcon, EyeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ExclamationTriangleIcon, ClockIcon, EyeIcon, CheckCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { getContractsByStudentId } from '../../../services/reportApi';
 
 const ViolationModal = ({ 
   isOpen, 
   onClose, 
   onSubmit, 
+  onDelete,
   mode = 'create', 
   initialData, 
   allViolations = [], 
   updateLoading = false,
-  createLoading = false 
+  createLoading = false,
+  deleteLoading = false 
 }) => {
   
   // State mặc định
@@ -37,7 +39,7 @@ const ViolationModal = ({
   const isCreate = mode === 'create';
   const isView = mode === 'view';
   const isUpdate = mode === 'update';
-  const isLoading = updateLoading || createLoading;
+  const isLoading = updateLoading || createLoading || deleteLoading;
 
   // Hàm chuyển đổi trạng thái hợp đồng từ tiếng Anh sang tiếng Việt
   const translateContractStatus = (status) => {
@@ -135,6 +137,20 @@ const ViolationModal = ({
   const handleCloseHistoryModal = () => {
     setHistoryModalOpen(false);
     setSelectedHistoryViolation(null);
+  };
+
+  // Xử lý xóa vi phạm
+  const handleDelete = () => {
+    if (!onDelete || !initialData) return;
+    
+    const confirmDelete = window.confirm(
+      'Bạn có chắc chắn muốn xóa vi phạm này?\n\n' +
+      'Hành động này sẽ giảm nhẹ cho sinh viên và có thể khôi phục hợp đồng nếu sinh viên đã bị chấm dứt hợp đồng do vi phạm.'
+    );
+    
+    if (confirmDelete) {
+      onDelete(initialData);
+    }
   };
 
   if (!isOpen) return null;
@@ -380,17 +396,42 @@ const ViolationModal = ({
               </div>
 
               {/* Footer Buttons */}
-              <div className="flex justify-end items-center gap-3 pt-2">
-                  <button 
-                  type="button" 
-                  onClick={onClose}
-                  disabled={isLoading}
-                  className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                  {isView ? "Đóng" : "Hủy"}
-                  </button>
+              <div className="flex justify-between items-center gap-3 pt-2">
+                  <div>
+                    {/* Nút Xóa Vi Phạm - chỉ hiện khi không phải create mode */}
+                    {!isCreate && onDelete && (
+                      <button 
+                        type="button" 
+                        onClick={handleDelete}
+                        disabled={isLoading}
+                        className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deleteLoading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Đang xóa...</span>
+                          </>
+                        ) : (
+                          <>
+                            <TrashIcon className="w-4 h-4" />
+                            <span>Xóa vi phạm</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   
-                  {!isView && (
+                  <div className="flex items-center gap-3">
+                    <button 
+                    type="button" 
+                    onClick={onClose}
+                    disabled={isLoading}
+                    className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                    {isView ? "Đóng" : "Hủy"}
+                    </button>
+                    
+                    {!isView && (
                       <button 
                       type="submit" 
                       disabled={isLoading}
@@ -409,6 +450,7 @@ const ViolationModal = ({
                       )}
                       </button>
                   )}
+              </div>
               </div>
 
               </form>
@@ -485,10 +527,35 @@ const ViolationModal = ({
               </div>
 
               {/* Footer Modal Lịch Sử */}
-              <div className="flex justify-end pt-4 border-t border-gray-100">
+              <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                {/* Nút Xóa Vi Phạm Cũ */}
+                {onDelete && (
+                  <button 
+                    onClick={() => {
+                      handleCloseHistoryModal();
+                      onDelete(selectedHistoryViolation);
+                    }}
+                    disabled={deleteLoading}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deleteLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Đang xóa...</span>
+                      </>
+                    ) : (
+                      <>
+                        <TrashIcon className="w-4 h-4" />
+                        <span>Xóa vi phạm này</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                
                 <button 
                   onClick={handleCloseHistoryModal}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                  disabled={deleteLoading}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
                   Đóng
                 </button>
