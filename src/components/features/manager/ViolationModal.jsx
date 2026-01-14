@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
-import { XMarkIcon, ExclamationTriangleIcon, ClockIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ExclamationTriangleIcon, ClockIcon, EyeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { getContractsByStudentId } from '../../../services/reportApi';
 
 const ViolationModal = ({ 
   isOpen, 
@@ -27,6 +28,29 @@ const ViolationModal = ({
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedHistoryViolation, setSelectedHistoryViolation] = useState(null);
 
+  // State cho thông tin sinh viên
+  const [studentInfo, setStudentInfo] = useState(null);
+  const [loadingStudent, setLoadingStudent] = useState(false);
+  const [studentError, setStudentError] = useState('');
+
+  // Biến kiểm tra chế độ (phải khai báo trước khi dùng trong useEffect)
+  const isCreate = mode === 'create';
+  const isView = mode === 'view';
+  const isUpdate = mode === 'update';
+  const isLoading = updateLoading || createLoading;
+
+  // Hàm chuyển đổi trạng thái hợp đồng từ tiếng Anh sang tiếng Việt
+  const translateContractStatus = (status) => {
+    const statusMap = {
+      'Active': 'Đang hiệu lực',
+      'Expired': 'Hết hạn',
+      'Terminated': 'Đã chấm dứt',
+      'Pending': 'Chờ xử lý',
+      'Cancelled': 'Đã hủy'
+    };
+    return statusMap[status] || status;
+  };
+
   useEffect(() => {
     if (isOpen) {
         if (initialData && mode !== 'create') {
@@ -39,15 +63,56 @@ const ViolationModal = ({
             });
         } else {
             setFormData(defaultState);
+            setStudentInfo(null);
+            setStudentError('');
         }
     }
   }, [isOpen, initialData, mode]);
 
-  // Biến kiểm tra chế độ
-  const isCreate = mode === 'create';
-  const isView = mode === 'view';
-  const isUpdate = mode === 'update';
-  const isLoading = updateLoading || createLoading;
+  // Effect để tìm thông tin sinh viên khi nhập MSSV (chỉ ở chế độ create)
+  useEffect(() => {
+    if (!isCreate || !formData.studentId || formData.studentId.trim() === '') {
+      setStudentInfo(null);
+      setStudentError('');
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setLoadingStudent(true);
+        setStudentError('');
+        
+        const result = await getContractsByStudentId(formData.studentId);
+        
+        if (!result.success || !result.data || result.data.length === 0) {
+          setStudentError('Không tìm thấy thông tin sinh viên');
+          setStudentInfo(null);
+          return;
+        }
+
+        // Lấy hợp đồng gần nhất (đang active hoặc mới nhất)
+        const activeContract = result.data.find(contract => 
+          contract.contractStatus === 'Active' || contract.contractStatus === 'Đang hiệu lực'
+        );
+        const latestContract = activeContract || result.data[0];
+
+        setStudentInfo({
+          studentName: latestContract.studentName || 'N/A',
+          roomName: latestContract.roomName || 'N/A',
+          contractStatus: translateContractStatus(latestContract.contractStatus) || 'N/A'
+        });
+        setStudentError('');
+        
+      } catch (error) {
+        setStudentError('Lỗi khi tải thông tin sinh viên');
+        setStudentInfo(null);
+      } finally {
+        setLoadingStudent(false);
+      }
+    }, 500); // Debounce 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.studentId, isCreate]);
 
   // [LOGIC] Lọc lịch sử vi phạm
   const history = useMemo(() => {
@@ -197,6 +262,39 @@ const ViolationModal = ({
                         placeholder="Nhập MSSV"
                         required={isCreate}
                     />
+                    
+                    {/* Hiển thị trạng thái loading/error/success khi tìm sinh viên */}
+                    {isCreate && formData.studentId && (
+                      <div className="mt-2">
+                        {loadingStudent && (
+                          <div className="flex items-center gap-2 text-blue-600 text-xs">
+                            <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <span>Đang tìm sinh viên...</span>
+                          </div>
+                        )}
+                        
+                        {!loadingStudent && studentError && (
+                          <div className="text-red-600 text-xs flex items-center gap-1">
+                            <ExclamationTriangleIcon className="w-3 h-3" />
+                            <span>{studentError}</span>
+                          </div>
+                        )}
+                        
+                        {!loadingStudent && studentInfo && !studentError && (
+                          <div className="bg-green-50 border border-green-200 rounded-md p-3 space-y-1">
+                            <div className="flex items-center gap-2 text-green-700 text-xs font-semibold mb-2">
+                              <CheckCircleIcon className="w-4 h-4" />
+                              <span>Tìm thấy sinh viên</span>
+                            </div>
+                            <div className="text-sm text-gray-700">
+                              <div><span className="font-semibold">Họ tên:</span> {studentInfo.studentName}</div>
+                              <div><span className="font-semibold">Phòng:</span> {studentInfo.roomName}</div>
+                              <div><span className="font-semibold">Trạng thái HĐ:</span> {studentInfo.contractStatus}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Phòng - chỉ hiện khi không phải create */}
